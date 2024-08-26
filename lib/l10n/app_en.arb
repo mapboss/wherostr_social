@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appTitle": "Wherostr EN",
+  "@appTitle": {
+    "description": "The application title"
+  },
+  "language": "Language",
+  "theme": "Theme",
+  "login": "Login"
+}

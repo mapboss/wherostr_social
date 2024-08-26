@@ -1,0 +1,217 @@
+PODS:
+  - appcheck (1.0.3):
+    - Flutter
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+  - device_info_plus (0.0.1):
+    - Flutter
+  - file_selector_ios (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_keyboard_visibility (0.0.1):
+    - Flutter
+  - flutter_secure_storage (6.0.0):
+    - Flutter
+  - geocoding_ios (1.0.5):
+    - Flutter
+  - geolocator_apple (1.2.0):
+    - Flutter
+  - GoogleDataTransport (9.4.1):
+    - GoogleUtilities/Environment (~> 7.7)
+    - nanopb (< 2.30911.0, >= 2.30908.0)
+    - PromisesObjC (< 3.0, >= 1.2)
+  - GoogleMLKit/BarcodeScanning (6.0.0):
+    - GoogleMLKit/MLKitCore
+    - MLKitBarcodeScanning (~> 5.0.0)
+  - GoogleMLKit/MLKitCore (6.0.0):
+    - MLKitCommon (~> 11.0.0)
+  - GoogleToolboxForMac/Defines (4.2.1)
+  - GoogleToolboxForMac/Logger (4.2.1):
+    - GoogleToolboxForMac/Defines (= 4.2.1)
+  - "GoogleToolboxForMac/NSData+zlib (4.2.1)":
+    - GoogleToolboxForMac/Defines (= 4.2.1)
+  - GoogleUtilities/Environment (7.13.3):
+    - GoogleUtilities/Privacy
+    - PromisesObjC (< 3.0, >= 1.2)
+  - GoogleUtilities/Logger (7.13.3):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (7.13.3)
+  - GoogleUtilities/UserDefaults (7.13.3):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilitiesComponents (1.1.0):
+    - GoogleUtilities/Logger
+  - GTMSessionFetcher/Core (3.5.0)
+  - image_picker_ios (0.0.1):
+    - Flutter
+  - local_auth_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - MapLibre (6.5.0)
+  - maplibre_gl (0.0.1):
+    - Flutter
+    - MapLibre (= 6.5.0)
+  - MLImage (1.0.0-beta5)
+  - MLKitBarcodeScanning (5.0.0):
+    - MLKitCommon (~> 11.0)
+    - MLKitVision (~> 7.0)
+  - MLKitCommon (11.0.0):
+    - GoogleDataTransport (< 10.0, >= 9.4.1)
+    - GoogleToolboxForMac/Logger (< 5.0, >= 4.2.1)
+    - "GoogleToolboxForMac/NSData+zlib (< 5.0, >= 4.2.1)"
+    - GoogleUtilities/UserDefaults (< 8.0, >= 7.13.0)
+    - GoogleUtilitiesComponents (~> 1.0)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3.2)
+  - MLKitVision (7.0.0):
+    - GoogleToolboxForMac/Logger (< 5.0, >= 4.2.1)
+    - "GoogleToolboxForMac/NSData+zlib (< 5.0, >= 4.2.1)"
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3.2)
+    - MLImage (= 1.0.0-beta5)
+    - MLKitCommon (~> 11.0)
+  - mobile_scanner (5.2.1):
+    - Flutter
+    - GoogleMLKit/BarcodeScanning (~> 6.0.0)
+  - nanopb (2.30910.0):
+    - nanopb/decode (= 2.30910.0)
+    - nanopb/encode (= 2.30910.0)
+  - nanopb/decode (2.30910.0)
+  - nanopb/encode (2.30910.0)
+  - package_info_plus (0.4.5):
+    - Flutter
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - PromisesObjC (2.4.0)
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - sqflite (0.0.3):
+    - Flutter
+    - FlutterMacOS
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - wakelock_plus (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - appcheck (from `.symlinks/plugins/appcheck/ios`)
+  - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/ios`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - file_selector_ios (from `.symlinks/plugins/file_selector_ios/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
+  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
+  - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
+  - maplibre_gl (from `.symlinks/plugins/maplibre_gl/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - sqflite (from `.symlinks/plugins/sqflite/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
+  - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
+
+SPEC REPOS:
+  trunk:
+    - GoogleDataTransport
+    - GoogleMLKit
+    - GoogleToolboxForMac
+    - GoogleUtilities
+    - GoogleUtilitiesComponents
+    - GTMSessionFetcher
+    - MapLibre
+    - MLImage
+    - MLKitBarcodeScanning
+    - MLKitCommon
+    - MLKitVision
+    - nanopb
+    - PromisesObjC
+
+EXTERNAL SOURCES:
+  appcheck:
+    :path: ".symlinks/plugins/appcheck/ios"
+  audioplayers_darwin:
+    :path: ".symlinks/plugins/audioplayers_darwin/ios"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  file_selector_ios:
+    :path: ".symlinks/plugins/file_selector_ios/ios"
+  Flutter:
+    :path: Flutter
+  flutter_keyboard_visibility:
+    :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
+  flutter_secure_storage:
+    :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  geocoding_ios:
+    :path: ".symlinks/plugins/geocoding_ios/ios"
+  geolocator_apple:
+    :path: ".symlinks/plugins/geolocator_apple/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
+  local_auth_darwin:
+    :path: ".symlinks/plugins/local_auth_darwin/darwin"
+  maplibre_gl:
+    :path: ".symlinks/plugins/maplibre_gl/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  sqflite:
+    :path: ".symlinks/plugins/sqflite/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  video_player_avfoundation:
+    :path: ".symlinks/plugins/video_player_avfoundation/darwin"
+  wakelock_plus:
+    :path: ".symlinks/plugins/wakelock_plus/ios"
+
+SPEC CHECKSUMS:
+  appcheck: e1ab9d4e03736f03e0401554a134d1ed502d7629
+  audioplayers_darwin: 877d9a4d06331c5c374595e46e16453ac7eafa40
+  device_info_plus: 97af1d7e84681a90d0693e63169a5d50e0839a0d
+  file_selector_ios: f0670c1064a8c8450e38145d8043160105d0b97c
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
+  flutter_secure_storage: d33dac7ae2ea08509be337e775f6b59f1ff45f12
+  geocoding_ios: d7460f56e80e118d57678efe5c2cdc888739ff18
+  geolocator_apple: 6cbaf322953988e009e5ecb481f07efece75c450
+  GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
+  GoogleMLKit: 97ac7af399057e99182ee8edfa8249e3226a4065
+  GoogleToolboxForMac: d1a2cbf009c453f4d6ded37c105e2f67a32206d8
+  GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
+  GoogleUtilitiesComponents: 679b2c881db3b615a2777504623df6122dd20afe
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  local_auth_darwin: 66e40372f1c29f383a314c738c7446e2f7fdadc3
+  MapLibre: 0ebfa9329d313cec8bf0a5ba5a336a1dc903785e
+  maplibre_gl: 943a491fffb3337c1b9de57fd377206d18c16e34
+  MLImage: 1824212150da33ef225fbd3dc49f184cf611046c
+  MLKitBarcodeScanning: 10ca0845a6d15f2f6e911f682a1998b68b973e8b
+  MLKitCommon: afec63980417d29ffbb4790529a1b0a2291699e1
+  MLKitVision: e858c5f125ecc288e4a31127928301eaba9ae0c1
+  mobile_scanner: 131a34df36b024cc53457809fb991700f16f72d7
+  nanopb: 438bc412db1928dac798aa6fd75726007be04262
+  package_info_plus: 58f0028419748fad15bf008b270aaa8e54380b1c
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
+  url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
+  video_player_avfoundation: 7c6c11d8470e1675df7397027218274b6d2360b3
+  wakelock_plus: 78ec7c5b202cab7761af8e2b2b3d0671be6c4ae1
+
+PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
+
+COCOAPODS: 1.15.2

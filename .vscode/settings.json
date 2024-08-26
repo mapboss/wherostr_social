@@ -1,0 +1,19 @@
+{
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[dart]": { "editor.defaultFormatter": "Dart-Code.dart-code" },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "quickfix.insertSemicolon": "always"
+  }
+}
