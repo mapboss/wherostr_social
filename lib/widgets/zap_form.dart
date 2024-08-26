@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/zap_utils.dart';
@@ -29,7 +30,7 @@ const List<int> zapAmountPresets = [
 
 class ZapForm extends StatefulWidget {
   final NostrUser user;
-  final NostrEvent? event;
+  final DataEvent? event;
 
   const ZapForm({
     super.key,

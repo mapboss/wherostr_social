@@ -66,6 +66,36 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
   MapLibreMapController? _mapController;
   bool _loading = true;
   Completer<Map<String, dynamic>>? _sourceLoaded;
+  NostrEventsStream? _newEventStream;
+  StreamSubscription? _newEventListener;
+
+  void _subscribe(DateTime since) {
+    final relays = context.read<AppStatesProvider>().me.relayList.clone();
+    _newEventStream = NostrService.subscribe([
+      NostrFilter(
+        kinds: const [1],
+        additionalFilters: {
+          "#g": fullExtentGeohash,
+        },
+      )
+    ], relays: relays);
+    _newEventListener = _newEventStream!.stream.listen((event) {});
+  }
+
+  Future<void> _unsubscribe() async {
+    try {
+      if (_newEventListener != null) {
+        await _newEventListener!.cancel();
+        _newEventListener = null;
+      }
+      if (_newEventStream != null) {
+        _newEventStream!.close();
+        _newEventStream = null;
+      }
+    } catch (err) {
+      print('unsubscribe: $err');
+    }
+  }
 
   Future<Map<String, dynamic>> _fetchSource() {
     final relays = context.read<AppStatesProvider>().me.relayList.clone();

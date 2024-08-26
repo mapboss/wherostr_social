@@ -97,6 +97,7 @@ class AppStatesProvider with ChangeNotifier {
     } else {
       me.initRelays(relays);
       await Future.wait([
+        me.fetchFollower(),
         me.fetchFollowing(),
         me.fetchMuteList(),
         me.fetchFollowSets(),

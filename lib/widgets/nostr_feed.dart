@@ -4,13 +4,14 @@ import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 
 class NostrFeed extends StatefulWidget {
-  final Widget Function(BuildContext context, NostrEvent event) itemBuilder;
+  final Widget Function(BuildContext context, DataEvent event) itemBuilder;
   final List<int> kinds;
   final DataRelayList? relays;
   final List<String>? authors;
@@ -20,7 +21,7 @@ class NostrFeed extends StatefulWidget {
   final List<String>? e;
   final Map<String, dynamic>? additionalFilters;
   final int limit;
-  final bool Function(NostrEvent event)? itemFilter;
+  final bool Function(DataEvent event)? itemFilter;
   final bool reverse;
   final bool isAscending;
   final bool autoRefresh;
@@ -60,11 +61,11 @@ class NostrFeedState extends State<NostrFeed> {
   bool _initialized = false;
   bool _loading = false;
   bool _hasMore = true;
-  final List<NostrEvent> _allItems = [];
-  final List<NostrEvent> _newItems = [];
+  final List<DataEvent> _allItems = [];
+  final List<DataEvent> _newItems = [];
   final Map<String, Widget> _postItems = {};
   List<String> _muteList = [];
-  List<NostrEvent> _items = [];
+  List<DataEvent> _items = [];
   ScrollController? _scrollController;
 
   @override
@@ -192,7 +193,7 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
-  bool filterEvent(NostrEvent event) {
+  bool filterEvent(DataEvent event) {
     return widget.itemFilter?.call(event) != false &&
         (widget.includeReplies || !isReply(event: event)) &&
         (widget.includeMuted || _muteList.contains(event.pubkey) != true);
@@ -213,7 +214,7 @@ class NostrFeedState extends State<NostrFeed> {
       )
     ], relays: widget.relays);
     _newEventListener = _newEventStream!.stream.listen((event) {
-      insertNewItem(event);
+      insertNewItem(DataEvent.fromEvent(event));
     });
   }
 
@@ -252,7 +253,7 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
-  void insertNewItem(NostrEvent event) {
+  void insertNewItem(DataEvent event) {
     _allItems.insert(0, event);
     if (!filterEvent(event)) return;
     print('insertNewItem: ${event.id}');
@@ -284,7 +285,7 @@ class NostrFeedState extends State<NostrFeed> {
       e: widget.e,
       additionalFilters: widget.additionalFilters,
     );
-    List<NostrEvent> newItems = await NostrService.fetchEvents(
+    List<DataEvent> newItems = await NostrService.fetchEvents(
       [filter],
       eoseRatio: 1,
       isAscending: widget.isAscending,
@@ -320,7 +321,7 @@ class NostrFeedState extends State<NostrFeed> {
     });
   }
 
-  void _fetchMoreItems(NostrEvent? e) async {
+  void _fetchMoreItems(DataEvent? e) async {
     if (_initialized != true || _loading == true) return;
     if (e == null) return;
     setState(() {
@@ -341,7 +342,7 @@ class NostrFeedState extends State<NostrFeed> {
       e: widget.e,
       additionalFilters: widget.additionalFilters,
     );
-    List<NostrEvent> newItems = await NostrService.fetchEvents(
+    List<DataEvent> newItems = await NostrService.fetchEvents(
       [filter],
       eoseRatio: 1,
       isAscending: widget.isAscending,
@@ -398,7 +399,7 @@ class NostrFeedState extends State<NostrFeed> {
     return false;
   }
 
-  Future<void> _fetchUsersFromEvents(List<NostrEvent> events) async {
+  Future<void> _fetchUsersFromEvents(List<DataEvent> events) async {
     Set<String> pubkeySet = <String>{};
     for (var e in events) {
       pubkeySet.add(e.pubkey);
@@ -433,7 +434,7 @@ class NostrFeedState extends State<NostrFeed> {
     );
   }
 
-  Future<void> _fetchRelatedEventsFromEvents(List<NostrEvent> events) async {
+  Future<void> _fetchRelatedEventsFromEvents(List<DataEvent> events) async {
     Set<String> idSet = <String>{};
     for (var e in events) {
       if (e.kind == 1) {

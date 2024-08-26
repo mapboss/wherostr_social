@@ -58,17 +58,14 @@ extension OutBoxModel on Nostr {
                   relay: relay.url,
                   retryOnError: true,
                   retryOnClose: false,
-                  onRelayListening: null,
                   shouldReconnectToRelayOnNotice: true,
                   connectionTimeout: timeout,
                   ignoreConnectionException: false,
                   lazyListeningToRelays: false,
-                  onRelayConnectionError: (relayUrl, error, relayWebSocket) {
-                    utils.log('onRelayConnectionError: $relayUrl $error');
-                  },
-                  onRelayConnectionDone: (relayUrl, relayWebSocket) {
-                    utils.log('onRelayConnectionDone: $relayUrl');
-                  },
+                  onNoticeMessageFromRelay: null,
+                  onRelayListening: null,
+                  onRelayConnectionError: null,
+                  onRelayConnectionDone: null,
                 );
                 completer.complete(relay.url);
               })

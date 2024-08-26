@@ -192,32 +192,32 @@ class NostrUser {
       print('fetchFollower.cache: ${followers.length}');
       return followers;
     }
-    NostrFilter request = NostrFilter(kinds: const [3], p: [pubkey]);
-    final events = await NostrService.fetchEvents(
-      [request],
-      eoseRatio: 1,
-      timeout: const Duration(seconds: 3),
-      relays: _relayList,
-    );
-    if (events.isEmpty) {
-      return [];
-    }
-    final pubkeyList = events.map((item) => item.pubkey);
-    _followers = pubkeyList.toSet().toList();
+    // NostrFilter request = NostrFilter(kinds: const [3], p: [pubkey]);
+    // final events = await NostrService.fetchEvents(
+    //   [request],
+    //   eoseRatio: 1,
+    //   timeout: const Duration(seconds: 3),
+    //   relays: _relayList,
+    // );
+    // if (events.isEmpty) {
+    //   return [];
+    // }
+    // final pubkeyList = events.map((item) => item.pubkey);
+    // _followers = pubkeyList.toSet().toList();
     // print('fetchFollower: ${_followers!.length}');
 
-    // var total = await _countFollower(pubkey);
-    // _followers = List.generate(total, (counter) => "Item $counter");
-    // print('fetchFollower: ${_followers!.length}');
+    var total = await _countFollower(pubkey);
+    _followers = List.generate(total, (counter) => "Item $counter");
+    print('fetchFollower: ${_followers!.length}');
     return followers;
   }
 
-  // Future<int> _countFollower(String pub) async {
-  //   NostrFilter filter = NostrFilter(kinds: const [3], p: [pub]);
-  //   final total = await NostrService.countEvent(filter);
-  //   print('countFollower.total: $total');
-  //   return total;
-  // }
+  Future<int> _countFollower(String pub) async {
+    NostrFilter filter = NostrFilter(kinds: const [3], p: [pub]);
+    final total = await NostrService.countEvent(filter);
+    print('countFollower.total: $total');
+    return total;
+  }
 
   Future<List<String>> fetchInterestSets([bool force = false]) async {
     print('fetchInterestSets');

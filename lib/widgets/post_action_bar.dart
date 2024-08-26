@@ -17,7 +17,7 @@ import 'package:wherostr_social/widgets/post_compose.dart';
 import 'package:wherostr_social/widgets/zap_form.dart';
 
 class PostActionBar extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
 
   const PostActionBar({super.key, required this.event});
 
@@ -35,6 +35,7 @@ class _PostActionBarState extends State<PostActionBar> {
   double _zapCount = 0;
   bool _isReposted = false;
   bool _isReacted = false;
+  bool _isZapped = false;
   String? _emojiUrl;
 
   @override
@@ -54,8 +55,10 @@ class _PostActionBarState extends State<PostActionBar> {
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
     );
+
     NostrService.fetchEvents([filter]).then((events) {
       if (mounted) {
+        widget.event.relatedEvents.addAll(events);
         updateCounts(events);
         subscribe();
       }
@@ -78,7 +81,9 @@ class _PostActionBarState extends State<PostActionBar> {
       ),
     ]);
     _newEventListener = _newEventStream!.stream.listen((event) {
-      updateCounts([event]);
+      final e = DataEvent.fromEvent(event);
+      widget.event.relatedEvents.add(e);
+      updateCounts([e]);
     });
   }
 
@@ -98,6 +103,7 @@ class _PostActionBarState extends State<PostActionBar> {
       final me = context.read<AppStatesProvider>().me;
       bool isReposted = false;
       bool isReacted = false;
+      bool isZapped = false;
       String? emojiUrl;
       int repostCount = _repostCount;
       int commentCount = _commentCount;
@@ -135,6 +141,14 @@ class _PostActionBarState extends State<PostActionBar> {
             if (event.tags != null) {
               List<String>? bolt11Tag =
                   event.tags!.where((tag) => tag[0] == 'bolt11').firstOrNull;
+              List<String>? desc =
+                  event.tags?.singleWhere((tag) => tag[0] == 'description');
+
+              if (desc?.elementAtOrNull(1) != null) {
+                if (me.pubkey == jsonDecode(desc!.elementAt(1))?['pubkey']) {
+                  isZapped = true;
+                }
+              }
               if (bolt11Tag != null) {
                 double amount =
                     Bolt11PaymentRequest(bolt11Tag[1]).amount.toDouble() *
@@ -148,6 +162,7 @@ class _PostActionBarState extends State<PostActionBar> {
       setState(() {
         _isReposted = isReposted;
         _isReacted = isReacted;
+        _isZapped = isZapped;
         _emojiUrl = emojiUrl;
         _repostCount = repostCount;
         _commentCount = commentCount;
@@ -354,7 +369,9 @@ class _PostActionBarState extends State<PostActionBar> {
               ),
               icon: Icon(
                 Icons.electric_bolt,
-                color: themeExtension.textDimColor,
+                color: _isZapped
+                    ? themeExtension.warningColor
+                    : themeExtension.textDimColor,
               ),
               style: const ButtonStyle(
                 padding: WidgetStatePropertyAll(

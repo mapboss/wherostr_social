@@ -1,9 +1,9 @@
-import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
@@ -12,7 +12,7 @@ import 'package:wherostr_social/widgets/post_compose.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
 
 class PostDetails extends StatefulWidget {
-  final NostrEvent? event;
+  final DataEvent? event;
   final String? eventId;
 
   const PostDetails({
@@ -26,7 +26,7 @@ class PostDetails extends StatefulWidget {
 }
 
 class _PostDetailsState extends State<PostDetails> {
-  NostrEvent? _event;
+  DataEvent? _event;
 
   @override
   void initState() {
@@ -35,7 +35,7 @@ class _PostDetailsState extends State<PostDetails> {
   }
 
   void initialize() async {
-    NostrEvent? event;
+    DataEvent? event;
     if (widget.event != null) {
       event = widget.event;
     } else if (widget.eventId != null) {

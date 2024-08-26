@@ -13,10 +13,16 @@ final searchRelays = DataRelayList.fromListString([
   // 'wss://relay.roli.social',
   // 'wss://relay.rushmi0.win',
 ]);
+final countRelays = DataRelayList.fromListString([
+  'wss://relay.nostr.band',
+  // 'wss://relay.roli.social',
+  // 'wss://relay.rushmi0.win',
+]);
 
 class NostrService {
   static Nostr instance = Nostr();
   static Nostr searchInstance = Nostr();
+  static Nostr countInstance = Nostr();
   static Map<String, DataEvent> eventList = {};
   static Map<String, NostrUser> profileList = {};
 
@@ -35,6 +41,23 @@ class NostrService {
       );
     }
     return null;
+  }
+
+  static Future<int> countEvent(NostrFilter filter) async {
+    try {
+      countInstance.enableLogs();
+      final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
+      Completer<NostrCountResponse> completer = Completer();
+      countInstance.relaysService.sendCountEventToRelays(
+        countEvent,
+        onCountResponse: (relay, countResponse) =>
+            completer.complete(countResponse),
+      );
+      return completer.future.then((v) => v.count);
+    } catch (err) {
+      print('countEvent: $err');
+    }
+    return 0;
   }
 
   static Future<DataEvent?> fetchEventById(
@@ -351,6 +374,10 @@ class NostrService {
       ),
       instance.initRelays(
         AppRelays.relays,
+        timeout: timeout,
+      ),
+      countInstance.initRelays(
+        countRelays,
         timeout: timeout,
       )
     ]);

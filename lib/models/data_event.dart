@@ -42,6 +42,8 @@ class DataEvent extends NostrEvent {
   @override
   int? kind;
 
+  final List<DataEvent> relatedEvents = [];
+
   DataEvent({
     this.pubkey = '',
     this.kind,

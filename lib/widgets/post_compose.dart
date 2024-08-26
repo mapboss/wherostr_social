@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -26,8 +25,8 @@ import 'package:wherostr_social/widgets/profile_list.dart';
 const uuid = Uuid();
 
 class PostCompose extends StatefulWidget {
-  final NostrEvent? quotedEvent;
-  final NostrEvent? referencedEvent;
+  final DataEvent? quotedEvent;
+  final DataEvent? referencedEvent;
   final bool isReply;
 
   const PostCompose({

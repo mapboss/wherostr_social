@@ -19,7 +19,7 @@ import 'package:wherostr_social/widgets/post_proof_of_work_chip.dart';
 import 'package:wherostr_social/widgets/resize_observer.dart';
 
 class PostItem extends StatelessWidget {
-  final NostrEvent event;
+  final DataEvent event;
   final bool enableShowProfileAction;
   final bool enableMenu;
   final bool enableTap;
