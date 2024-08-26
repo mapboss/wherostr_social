@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:text_parser/text_parser.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
+import 'package:wherostr_social/widgets/facebook_preview.dart';
 import 'package:wherostr_social/widgets/http_url_display.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/services/nostr.dart';
@@ -19,7 +20,11 @@ import 'package:wherostr_social/widgets/hashtag_search.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 import 'package:wherostr_social/widgets/post_item_loader.dart';
+import 'package:wherostr_social/widgets/rumble_preview.dart';
+import 'package:wherostr_social/widgets/tiktok_preview.dart';
+import 'package:wherostr_social/widgets/twitch_preview.dart';
 import 'package:wherostr_social/widgets/video_player.dart';
+import 'package:wherostr_social/widgets/youtube_preview.dart';
 
 class PostContent extends StatefulWidget {
   final String content;
@@ -200,6 +205,31 @@ class _PostContentState extends State<PostContent>
         // case TiktokMatcher:
         // case RumbleMatcher:
         case UrlMatcher:
+          if (widget.enablePreview &&
+              RegExp(YouTubeMatcher().pattern).hasMatch(element.text)) {
+            widgets.add(YoutubePreviewElement(url: element.text));
+            continue;
+          }
+          if (widget.enablePreview &&
+              RegExp(FacebookMatcher().pattern).hasMatch(element.text)) {
+            widgets.add(FacebookPreviewElement(url: element.text));
+            continue;
+          }
+          if (widget.enablePreview &&
+              RegExp(RumbleMatcher().pattern).hasMatch(element.text)) {
+            widgets.add(RumblePreviewElement(url: element.text));
+            continue;
+          }
+          if (widget.enablePreview &&
+              RegExp(TiktokMatcher().pattern).hasMatch(element.text)) {
+            widgets.add(TiktokPreviewElement(url: element.text));
+            continue;
+          }
+          if (widget.enablePreview &&
+              RegExp(TwitchMatcher().pattern).hasMatch(element.text)) {
+            widgets.add(TwitchPreviewElement(url: element.text));
+            continue;
+          }
           widgets.add(
             HttpUrlDisplayElement(
                 text: element.text,
