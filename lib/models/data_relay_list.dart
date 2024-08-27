@@ -1,7 +1,10 @@
+import 'dart:collection';
+
+import 'package:dart_nostr/dart_nostr.dart';
 import 'package:wherostr_social/models/data_relay.dart';
 
-class DataRelayList {
-  List<DataRelay>? items;
+class DataRelayList extends ListBase<DataRelay> {
+  List<DataRelay>? items = [];
   List<String>? get all => items?.map((e) => e.url).toList();
   List<String>? get writeRelays =>
       items?.where((e) => e.marker != 'read').map((e) => e.url).toList();
@@ -10,7 +13,7 @@ class DataRelayList {
 
   DataRelayList({
     this.items = const [],
-  });
+  }) : length = items?.length ?? 0;
 
   factory DataRelayList.fromList(List<DataRelay>? relays) {
     return DataRelayList(items: relays);
@@ -26,6 +29,9 @@ class DataRelayList {
                 DataRelay(url: e.elementAt(1), marker: e.elementAtOrNull(2)))
             .toList());
   }
+  factory DataRelayList.fromEvent(NostrEvent? event) {
+    return DataRelayList.fromTags(event?.tags);
+  }
 
   List<List<String>> toTags() {
     return items
@@ -36,21 +42,6 @@ class DataRelayList {
 
   DataRelayList clone() {
     return DataRelayList.fromList(items?.map((e) => e.clone()).toList());
-  }
-
-  void add(DataRelay value) {
-    items ??= [];
-    items?.add(value);
-  }
-
-  bool remove(DataRelay? value) {
-    items ??= [];
-    return items!.remove(value);
-  }
-
-  bool contains(DataRelay? value) {
-    items ??= [];
-    return items!.contains(value);
   }
 
   int indexWhere(bool Function(DataRelay) test, [int start = 0]) {
@@ -79,12 +70,21 @@ class DataRelayList {
     return DataRelayList(items: list);
   }
 
-  List<DataRelay>? toList() {
-    return items?.toList();
-  }
-
   @override
   String toString() {
     return items?.map((e) => e.url).join(', ') ?? '';
+  }
+
+  @override
+  int length;
+
+  @override
+  operator [](int index) {
+    return items![index];
+  }
+
+  @override
+  void operator []=(int index, value) {
+    items![index] = value;
   }
 }
