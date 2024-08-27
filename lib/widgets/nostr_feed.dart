@@ -180,16 +180,20 @@ class NostrFeedState extends State<NostrFeed> {
         oldWidget.isAscending != widget.isAscending ||
         oldRelay != newRelay) {
       unsubscribe().whenComplete(() {
-        clearState();
-        initialize();
+        if (mounted) {
+          clearState();
+          initialize();
+        }
       });
     }
     final muteList = context.read<AppStatesProvider>().me.muteList;
     if (_muteList.length != muteList.length) {
-      setState(() {
-        _muteList = muteList.toList();
-        _items = _allItems.where(filterEvent).toList();
-      });
+      if (mounted) {
+        setState(() {
+          _muteList = muteList.toList();
+          _items = _allItems.where(filterEvent).toList();
+        });
+      }
     }
   }
 
@@ -257,21 +261,27 @@ class NostrFeedState extends State<NostrFeed> {
     _allItems.insert(0, event);
     if (!filterEvent(event)) return;
     print('insertNewItem: ${event.id}');
-    setState(() {
-      if (widget.isAscending == false) {
-        _newItems.insert(0, event);
-      } else {
-        _newItems.add(event);
+    if (mounted) {
+      setState(() {
+        if (widget.isAscending == false) {
+          _newItems.insert(0, event);
+        } else {
+          _newItems.add(event);
+        }
+      });
+      if (widget.autoRefresh) {
+        _showNewItems();
       }
-    });
-    if (widget.autoRefresh) {
-      _showNewItems();
     }
   }
 
   Future<void> initialize() async {
     final muteList = context.read<AppStatesProvider>().me.muteList.toList();
-    _muteList.addAll(muteList);
+    if (mounted) {
+      setState(() {
+        _muteList.addAll(muteList);
+      });
+    }
 
     DateTime until = DateTime.timestamp().add(const Duration(days: 1));
     NostrFilter filter = NostrFilter(
@@ -300,33 +310,33 @@ class NostrFeedState extends State<NostrFeed> {
     }
 
     subscribe(DateTime.timestamp());
-    setState(() {
-      _initialized = true;
-      _loading = false;
-      if (newItems.isNotEmpty) {
-        _allItems.addAll(newItems);
-        _items = _allItems.where(filterEvent).toList();
-        if (_items.length < 30) {
-          if (widget.isAscending && !widget.reverse) {
-            _hasMore = false;
-          } else if (widget.reverse == false) {
-            _fetchMoreItems(_items.last);
-          } else if (widget.reverse) {
-            _fetchMoreItems(_items.first);
+    if (mounted) {
+      setState(() {
+        _initialized = true;
+        _loading = false;
+        if (newItems.isNotEmpty) {
+          _allItems.addAll(newItems);
+          _items = _allItems.where(filterEvent).toList();
+          if (_items.length < 30) {
+            if (widget.isAscending && !widget.reverse) {
+              _hasMore = false;
+            } else if (widget.reverse == false) {
+              _fetchMoreItems(_items.last);
+            } else if (widget.reverse) {
+              _fetchMoreItems(_items.first);
+            }
           }
+        } else {
+          _hasMore = false;
         }
-      } else {
-        _hasMore = false;
-      }
-    });
+      });
+    }
   }
 
   void _fetchMoreItems(DataEvent? e) async {
     if (_initialized != true || _loading == true) return;
     if (e == null) return;
-    setState(() {
-      _loading = true;
-    });
+    _loading = true;
     DateTime? until;
     DateTime? since;
     until = e.createdAt!.subtract(const Duration(milliseconds: 10));
@@ -354,17 +364,19 @@ class NostrFeedState extends State<NostrFeed> {
         _fetchRelatedEventsFromEvents(newItems)
       ]);
     }
-    setState(() {
-      _loading = false;
-      if (newItems.isNotEmpty) {
-        _allItems.addAll(newItems);
-      }
-      newItems = newItems.where(filterEvent).toList();
-      _hasMore = newItems.isNotEmpty;
-      if (newItems.isNotEmpty) {
-        _items.addAll(newItems);
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        if (newItems.isNotEmpty) {
+          _allItems.addAll(newItems);
+        }
+        newItems = newItems.where(filterEvent).toList();
+        _hasMore = newItems.isNotEmpty;
+        if (newItems.isNotEmpty) {
+          _items.addAll(newItems);
+        }
+      });
+    }
   }
 
   Future<void> _showNewItems() async {
@@ -377,13 +389,15 @@ class NostrFeedState extends State<NostrFeed> {
       _items.addAll(_newItems);
     }
     var items = _items;
-    setState(() {
-      _newItems.clear();
-    });
-    await future;
-    setState(() {
-      _items = items;
-    });
+    if (mounted) {
+      setState(() {
+        _newItems.clear();
+      });
+      await future;
+      setState(() {
+        _items = items;
+      });
+    }
   }
 
   bool _handleNotification(ScrollNotification scrollNotification) {

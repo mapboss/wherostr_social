@@ -128,7 +128,10 @@ extension OutBoxModel on Nostr {
       relays: readRelays,
       onEose: (relay, ease) {
         eose += 1;
-        relaysService.closeEventsSubscription(ease.subscriptionId, relay);
+        try {
+          relaysService.closeEventsSubscription(ease.subscriptionId, relay);
+        } catch (err) {}
+        if (completer.isCompleted) return;
         if (eose >= relayLength / eoseRatio) {
           final items = events.values.toList();
           if (isAscending == false) {
@@ -136,6 +139,7 @@ extension OutBoxModel on Nostr {
           } else {
             items.sort((a, b) => a.createdAt!.compareTo(b.createdAt!));
           }
+          relaysService.closeEventsSubscription(ease.subscriptionId);
           completer.complete(items);
         }
       },
@@ -166,8 +170,9 @@ extension OutBoxModel on Nostr {
       }
       return items;
     }).whenComplete(() {
-      sub.cancel();
-      nostrStream.close();
+      sub.cancel().whenComplete(() {
+        nostrStream.close();
+      });
     });
   }
 }

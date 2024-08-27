@@ -163,11 +163,16 @@ class NostrService {
       request: request,
       onEose: (relay, ease) {
         eose += 1;
-        NostrService.instance.relaysService
-            .closeEventsSubscription(ease.subscriptionId, relay);
+        try {
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId, relay);
+        } catch (err) {}
+        if (completer.isCompleted) return;
         if (eose >= instance.relaysService.relaysList!.length / 2) {
           final items = events.values.toList();
           items.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId);
           completer.complete(items.first);
         }
       },
@@ -190,8 +195,9 @@ class NostrService {
         return items.first;
       },
     ).whenComplete(() {
-      sub.cancel();
-      nostrStream.close();
+      sub.cancel().whenComplete(() {
+        nostrStream.close();
+      });
     });
   }
 
@@ -224,9 +230,14 @@ class NostrService {
       relays: readRelays,
       onEose: (relay, ease) {
         eose += 1;
-        NostrService.instance.relaysService
-            .closeEventsSubscription(ease.subscriptionId, relay);
+        try {
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId, relay);
+        } catch (err) {}
+        if (completer.isCompleted == true) return;
         if (eose >= readRelays!.length / 1.1) {
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId);
           completer.complete(events.values.toList());
         }
       },
@@ -252,8 +263,9 @@ class NostrService {
     return completer.future
         .timeout(timeout, onTimeout: () => events.values.toList())
         .whenComplete(() {
-      sub.cancel();
-      nostrStream.close();
+      sub.cancel().whenComplete(() {
+        nostrStream.close();
+      });
     });
   }
 
@@ -307,12 +319,17 @@ class NostrService {
       relays: readRelays,
       onEose: (relay, ease) {
         eose += 1;
-        NostrService.instance.relaysService
-            .closeEventsSubscription(ease.subscriptionId, relay);
+        try {
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId, relay);
+        } catch (err) {}
+        if (completer.isCompleted == true) return;
         if (events.isNotEmpty) {
           return completer.complete(events.values.first);
         }
         if (eose >= readRelays!.length / 1.1) {
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId);
           completer.complete(NostrUser(pubkey: pubkey));
         }
       },
@@ -336,8 +353,9 @@ class NostrService {
     return completer.future
         .timeout(timeout, onTimeout: () => events.values.first)
         .whenComplete(() {
-      sub.cancel();
-      nostrStream.close();
+      sub.cancel().whenComplete(() {
+        nostrStream.close();
+      });
     });
   }
 

@@ -55,7 +55,6 @@ class _MapUIState extends State<MapUI> with AutomaticKeepAliveClientMixin {
 
   @override
   void dispose() {
-    _mapController?.dispose();
     super.dispose();
   }
 
