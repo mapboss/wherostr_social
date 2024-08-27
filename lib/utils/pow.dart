@@ -20,7 +20,7 @@ Future<Completer<DataEvent>> minePow(DataEvent unsigned,
       event.createdAt = DateTime.fromMillisecondsSinceEpoch(now);
     }
     tag[1] = (++count).toString();
-    event.id = event.getEventId();
+    event.id = event.generateEventId();
     int currentDiff =
         Nostr.instance.utilsService.countDifficultyOfHex(event.id!);
     if (currentDiff >= targetDifficulty) {

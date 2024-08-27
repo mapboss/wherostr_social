@@ -2,7 +2,7 @@ import 'package:wherostr_social/utils/safe_parser.dart';
 
 final matcher = RegExp(r'(\w+)\s(.*)');
 
-class IMetadata {
+class IMetaTag {
   final String url;
   final String mimeType;
   final String? blurhash;
@@ -15,7 +15,7 @@ class IMetadata {
   final int? size;
   final List<String>? fallback;
 
-  IMetadata({
+  IMetaTag({
     required this.url,
     required this.mimeType,
     this.blurhash,
@@ -29,8 +29,8 @@ class IMetadata {
     this.fallback,
   });
 
-  factory IMetadata.fromNostrBuildAPI(Map<String, dynamic> data) {
-    return IMetadata(
+  factory IMetaTag.fromNostrBuildAPI(Map<String, dynamic> data) {
+    return IMetaTag(
       url: data['url']?.toString().toLowerCase() ?? "",
       mimeType: data['mime']?.toString().toLowerCase() ?? "",
       blurhash: SafeParser.parseString(data['blurhash']),
@@ -44,8 +44,8 @@ class IMetadata {
     );
   }
 
-  factory IMetadata.fromNIP94(Map<String, dynamic> data) {
-    return IMetadata(
+  factory IMetaTag.fromNIP94(Map<String, dynamic> data) {
+    return IMetaTag(
       url: data['url']?.toString().toLowerCase() ?? "",
       mimeType: data['m']?.toString().toLowerCase() ?? "",
       blurhash: SafeParser.parseString(data['blurhash']),
@@ -58,7 +58,7 @@ class IMetadata {
       size: SafeParser.parseInt(data['size']),
     );
   }
-  factory IMetadata.fromTag(List<String> tag) {
+  factory IMetaTag.fromTag(List<String> tag) {
     try {
       if (tag.elementAtOrNull(0) != 'imeta') throw Exception('Invalid tag');
       Map<String, dynamic> data = {};
@@ -69,7 +69,7 @@ class IMetadata {
         if (key == null || value == null) return;
         data[key] = value;
       });
-      return IMetadata.fromNIP94(data);
+      return IMetaTag.fromNIP94(data);
     } catch (err) {
       print('fromTag: ERROR: $err');
       rethrow;

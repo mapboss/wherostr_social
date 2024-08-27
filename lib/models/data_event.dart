@@ -44,6 +44,9 @@ class DataEvent extends NostrEvent {
 
   final List<DataEvent> relatedEvents = [];
 
+  Map<String, List<List<String>>>? _tagIndex;
+  Map<String, List<List<String>>> get tagIndex => _tagIndex ?? {};
+
   DataEvent({
     this.pubkey = '',
     this.kind,
@@ -117,7 +120,48 @@ class DataEvent extends NostrEvent {
     );
   }
 
-  String getEventId() {
+  String? getId() {
+    if (kind != null && kind! >= 30000 && kind! < 40000) {
+      // replaceable kind
+      return getTagValue('d');
+    }
+    return id;
+  }
+
+  String? getTagValue(String tagName) {
+    _genTagIndex();
+    return tagIndex[tagName]?.elementAtOrNull(0)?.elementAtOrNull(1);
+  }
+
+  List<String>? getTagValues(String tagName) {
+    _genTagIndex();
+    return tagIndex[tagName]?.map((e) => e.elementAt(1)).toList();
+  }
+
+  List<String>? getMatchedTag(String tagName) {
+    _genTagIndex();
+    return tagIndex[tagName]?.elementAtOrNull(0)?.toList();
+  }
+
+  List<List<String>>? getMatchedTags(String tagName) {
+    _genTagIndex();
+    return tagIndex[tagName];
+  }
+
+  Map<String, List<List<String>>> _genTagIndex() {
+    if (_tagIndex != null) {
+      return tagIndex;
+    }
+    _tagIndex = {};
+    tags?.forEach((e) {
+      final key = e.elementAt(0);
+      _tagIndex![key] ??= [];
+      _tagIndex![key]!.add(e);
+    });
+    return tagIndex;
+  }
+
+  String generateEventId() {
     var eventId = NostrEvent.getEventId(
       kind: kind!,
       content: content ?? '',
@@ -159,7 +203,7 @@ class DataEvent extends NostrEvent {
       if (difficulty != null) {
         await minePow(this, difficulty);
       } else if (id?.isEmpty != false) {
-        id = getEventId();
+        id = generateEventId();
       }
       if (sig?.isEmpty != false) {
         sig ??= keyPairs!.sign(id!);
@@ -213,6 +257,31 @@ class DataEvent extends NostrEvent {
     }
   }
 
+  addTag(String tag, String value, [String? marker, String? other]) {
+    _tagIndex ??= {};
+    _tagIndex![tag] ??= [];
+    final tagValue = [
+      tag,
+      value,
+      if (marker != null) ...["", marker],
+      if (marker != null && other != null) other
+    ];
+    _tagIndex![tag]!.add(tagValue);
+    addTagIfNew(tagValue);
+  }
+
+  addTagUser(String pubkey, [String? marker]) {
+    addTag('e', pubkey, marker);
+  }
+
+  addTagEvent(String id, [String? marker, String? other]) {
+    addTag('e', id, marker, other);
+  }
+
+  addTagReference(String id, [String? marker]) {
+    addTag('a', id, marker);
+  }
+
   Future<void> generateContentTags() async {
     var elements = await contentParser.parse(content!);
     for (var element in elements) {
@@ -224,23 +293,23 @@ class DataEvent extends NostrEvent {
           if (nostrUrl.startsWith('npub')) {
             var data =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-            addTagIfNew(['p', data, '', 'mention']);
+            addTagUser(data, 'mention');
           } else if (nostrUrl.startsWith('nprofile')) {
             var data = NostrService.instance.utilsService
                 .decodeNprofileToMap(nostrUrl)['pubkey'];
-            addTagIfNew(['p', data, '', 'mention']);
+            addTagUser(data, 'mention');
           } else if (nostrUrl.startsWith('nevent')) {
             var data =
                 NostrService.instance.utilsService.decodeNeventToMap(nostrUrl);
-            addTagIfNew(["e", data['eventId'], "", "mention", pubkey]);
+            addTagEvent(data['eventId'], 'mention', pubkey);
             if (data['pubkey'] != null) {
               addTagIfNew(["p", data['pubkey']]);
             }
           } else if (nostrUrl.startsWith('note')) {
             var id =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-            addTagIfNew(["e", id, "", "mention", pubkey]);
-            addTagIfNew(["p", pubkey]);
+            addTagEvent(id, 'mention', pubkey);
+            addTagUser(pubkey);
           } else if (nostrUrl.startsWith('naddr')) {
             var hexdata =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
@@ -262,20 +331,20 @@ class DataEvent extends NostrEvent {
               }
             }
             var id = '$kind:$pubkey:$identifier';
-            addTagIfNew(["a", id, "", "mention"]);
+            addTagReference(id, "mention");
             if (pubkey != null) {
-              addTagIfNew(["p", pubkey]);
+              addTagUser(pubkey);
             }
           }
           continue;
 
         case HashTagMatcher:
           final hashtag = element.text.substring(1);
-          addTagIfNew(["t", hashtag.trim().toLowerCase()]);
+          addTag("t", hashtag.trim().toLowerCase());
           continue;
 
         case CustomEmojiMatcher:
-          addTagIfNew(["emoji", element.text]);
+          addTag("emoji", element.text);
           continue;
       }
     }
