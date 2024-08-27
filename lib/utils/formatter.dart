@@ -41,7 +41,7 @@ String formatTime(DateTime? date) {
   if (date == null) {
     return '';
   }
-  final now = DateTime.now();
+  final now = DateTime.timestamp();
   if (now.year == date.year && now.month == date.month && now.day == date.day) {
     return timeago.format(date, locale: 'en_short');
   } else {
@@ -54,7 +54,7 @@ String formatTimeAgo(DateTime? date) {
   if (date == null) {
     return '';
   }
-  final now = DateTime.now();
+  final now = DateTime.timestamp();
   if (now.year == date.year && now.month == date.month && now.day == date.day) {
     return '${timeago.format(date, locale: 'en_short')}${now.minute == date.minute ? '' : ' ago'}';
   } else {

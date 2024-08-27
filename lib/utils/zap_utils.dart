@@ -77,7 +77,7 @@ Completer<NostrEvent> waitZapReceipt(NostrEvent zapRequest, String invoice) {
       a: a?.isNotEmpty == true ? a! : null,
       p: p?.isNotEmpty == true ? p! : null,
       kinds: const [9735],
-      since: DateTime.now(),
+      since: DateTime.timestamp(),
     );
     var sub = NostrService.subscribe([request]);
     var listener = sub.stream.listen((NostrEvent event) {

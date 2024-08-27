@@ -31,7 +31,7 @@ class DataEvent extends NostrEvent {
   String? id;
 
   @override
-  DateTime? createdAt = DateTime.now();
+  DateTime? createdAt = DateTime.timestamp();
 
   @override
   String? content = '';
@@ -60,7 +60,7 @@ class DataEvent extends NostrEvent {
           sig: sig ?? '',
           content: content ?? '',
           kind: kind,
-          createdAt: createdAt ?? DateTime.now(),
+          createdAt: createdAt ?? DateTime.timestamp(),
         );
 
   factory DataEvent.deserialized(String data) =>
@@ -68,7 +68,7 @@ class DataEvent extends NostrEvent {
 
   factory DataEvent.fromEvent(NostrEvent data) {
     final tagsToUse = data.tags ?? [];
-    final createdAtToUse = data.createdAt ?? DateTime.now();
+    final createdAtToUse = data.createdAt ?? DateTime.timestamp();
     final contentToUse = SafeParser.parseString(data.content);
     final kindToUse = SafeParser.parseInt(data.kind);
     final pubkeyToUse = SafeParser.parseString(data.pubkey);
@@ -121,7 +121,7 @@ class DataEvent extends NostrEvent {
     var eventId = NostrEvent.getEventId(
       kind: kind!,
       content: content ?? '',
-      createdAt: createdAt ?? DateTime.now(),
+      createdAt: createdAt ?? DateTime.timestamp(),
       tags: tags ?? [],
       pubkey: pubkey,
     );
@@ -154,12 +154,11 @@ class DataEvent extends NostrEvent {
       if (pubkey.isEmpty) {
         pubkey = keyPairs!.public;
       }
-      createdAt = DateTime.now();
+      createdAt = DateTime.timestamp();
       content ??= '';
       if (difficulty != null) {
         await minePow(this, difficulty);
-      }
-      if (id?.isEmpty != false) {
+      } else if (id?.isEmpty != false) {
         id = getEventId();
       }
       if (sig?.isEmpty != false) {
