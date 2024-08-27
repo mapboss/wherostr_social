@@ -294,10 +294,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "48fb74bc20b47a994127d23e0d7fa6d1081a0c35"
+      resolved-ref: fa9e97cb919bf5bdda2e946b87e12b567d8e0f95
       url: "https://github.com/mapboss/dart_nostr.git"
     source: git
-    version: "8.2.2"
+    version: "8.2.1"
   dart_quill_delta:
     dependency: transitive
     description:

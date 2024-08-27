@@ -1,16 +1,17 @@
 // ignore_for_file: type_literal_in_constant_pattern
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:any_link_preview/any_link_preview.dart';
 import 'package:convert/convert.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:text_parser/text_parser.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
-import 'package:wherostr_social/widgets/facebook_preview.dart';
-import 'package:wherostr_social/widgets/http_url_display.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
@@ -20,11 +21,7 @@ import 'package:wherostr_social/widgets/hashtag_search.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 import 'package:wherostr_social/widgets/post_item_loader.dart';
-import 'package:wherostr_social/widgets/rumble_preview.dart';
-import 'package:wherostr_social/widgets/tiktok_preview.dart';
-import 'package:wherostr_social/widgets/twitch_preview.dart';
 import 'package:wherostr_social/widgets/video_player.dart';
-import 'package:wherostr_social/widgets/youtube_preview.dart';
 
 class PostContent extends StatefulWidget {
   final String content;
@@ -205,37 +202,40 @@ class _PostContentState extends State<PostContent>
         // case TiktokMatcher:
         // case RumbleMatcher:
         case UrlMatcher:
-          if (widget.enablePreview &&
-              RegExp(YouTubeMatcher().pattern).hasMatch(element.text)) {
-            widgets.add(YoutubePreviewElement(url: element.text));
-            continue;
-          }
-          if (widget.enablePreview &&
-              RegExp(FacebookMatcher().pattern).hasMatch(element.text)) {
-            widgets.add(FacebookPreviewElement(url: element.text));
-            continue;
-          }
-          if (widget.enablePreview &&
-              RegExp(RumbleMatcher().pattern).hasMatch(element.text)) {
-            widgets.add(RumblePreviewElement(url: element.text));
-            continue;
-          }
-          if (widget.enablePreview &&
-              RegExp(TiktokMatcher().pattern).hasMatch(element.text)) {
-            widgets.add(TiktokPreviewElement(url: element.text));
-            continue;
-          }
-          if (widget.enablePreview &&
-              RegExp(TwitchMatcher().pattern).hasMatch(element.text)) {
-            widgets.add(TwitchPreviewElement(url: element.text));
-            continue;
-          }
-          widgets.add(
-            HttpUrlDisplayElement(
+          if (widget.enablePreview) {
+            widgets.add(
+              WidgetSpan(
+                child: InkWell(
+                  onTap: widget.enableElementTap
+                      ? () => launchUrl(Uri.parse(element.text))
+                      : null,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          color: themeData.colorScheme.surfaceDim,
+                          child: LinkPreview(
+                            url: element.text,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          } else {
+            widgets.add(
+              LinkElement(
                 text: element.text,
                 style: TextStyle(color: themeData.colorScheme.primary),
-                enableElementTap: widget.enableElementTap),
-          );
+                enableElementTap: widget.enableElementTap,
+              ),
+            );
+          }
           continue;
         // case NostrNEventMatcher:
         // case NostrNoteMatcher:
@@ -422,4 +422,115 @@ class _PostContentState extends State<PostContent>
       ),
     );
   }
+}
+
+class LinkPreview extends StatefulWidget {
+  final String url;
+
+  const LinkPreview({
+    super.key,
+    required this.url,
+  });
+
+  @override
+  State<LinkPreview> createState() => _LinkPreviewState();
+}
+
+class _LinkPreviewState extends State<LinkPreview> {
+  Metadata? _metadata;
+
+  @override
+  void initState() {
+    super.initState();
+    initialize();
+  }
+
+  void initialize() async {
+    try {
+      final metadata = await AnyLinkPreview.getMetadata(
+        link: widget.url,
+      );
+      if (mounted) {
+        setState(() {
+          _metadata = metadata;
+        });
+      }
+    } catch (error) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ThemeData themeData = Theme.of(context);
+    MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
+    final image = _metadata?.image;
+    final title = _metadata?.title;
+    final desc = _metadata?.desc;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (image != null)
+          FadeInImage(
+            placeholder: MemoryImage(kTransparentImage),
+            image: AppUtils.getImageProvider(image),
+            fadeInDuration: const Duration(milliseconds: 300),
+            fadeInCurve: Curves.easeIn,
+            fit: BoxFit.cover,
+          ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              const Icon(Icons.link),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  widget.url,
+                  style: TextStyle(
+                    color: themeExtension.textDimColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              title,
+              style: themeData.textTheme.titleMedium,
+            ),
+          ),
+        if (desc != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              desc,
+              style: TextStyle(
+                color: themeExtension.textDimColor,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+class LinkElement extends TextSpan {
+  LinkElement({
+    required String text,
+    super.style,
+    bool enableElementTap = true,
+    TextDecoration decoration = TextDecoration.none,
+  }) : super(
+            text: text.length > 28 ? '${text.substring(0, 28)}...' : text,
+            recognizer: TapGestureRecognizer()
+              ..onTap =
+                  enableElementTap ? () => launchUrl(Uri.parse(text)) : null);
 }
