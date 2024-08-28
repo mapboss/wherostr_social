@@ -300,6 +300,7 @@ class NostrFeedState extends State<NostrFeed> {
       eoseRatio: 1,
       isAscending: widget.isAscending,
       relays: widget.relays,
+      timeout: const Duration(seconds: 10),
     );
 
     // if (newItems.isNotEmpty) {
@@ -357,6 +358,7 @@ class NostrFeedState extends State<NostrFeed> {
       eoseRatio: 1,
       isAscending: widget.isAscending,
       relays: widget.relays,
+      timeout: const Duration(seconds: 10),
     );
     // if (newItems.isNotEmpty) {
     //   await Future.wait([
@@ -380,7 +382,7 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   Future<void> _showNewItems() async {
-    var future = _fetchUsersFromEvents(_newItems);
+    // var future = _fetchUsersFromEvents(_newItems);
     if (widget.isAscending == false) {
       _allItems.insertAll(0, _newItems);
       _items.insertAll(0, _newItems);
@@ -392,9 +394,6 @@ class NostrFeedState extends State<NostrFeed> {
     if (mounted) {
       setState(() {
         _newItems.clear();
-      });
-      await future;
-      setState(() {
         _items = items;
       });
     }

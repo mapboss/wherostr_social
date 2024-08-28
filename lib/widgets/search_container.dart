@@ -63,9 +63,14 @@ class _SearchContainerState extends State<SearchContainer> {
     List<NostrUser>? resultsFromSearch;
     if (keyword != '') {
       try {
-        resultsFromSearch = (await NostrService.search(keyword, kinds: [0]))
-            .map((item) => NostrUser.fromDataEvent(item))
-            .toList();
+        resultsFromSearch =
+            (await NostrService.search(keyword, kinds: [0])).map((item) {
+          if (NostrService.profileList.containsKey(item.pubkey)) {
+            return NostrService.profileList[item.pubkey]!;
+          }
+          NostrService.profileList[item.pubkey] = NostrUser.fromEvent(item);
+          return NostrService.profileList[item.pubkey]!;
+        }).toList();
       } catch (error) {}
     }
     return resultsFromSearch;

@@ -68,7 +68,7 @@ class ProfileList extends StatelessWidget {
     if (keyword != '') {
       try {
         resultsFromSearch = (await NostrService.search(keyword, kinds: [0]))
-            .map((item) => NostrUser.fromDataEvent(item))
+            .map((item) => NostrUser.fromEvent(item))
             .toList();
       } catch (error) {}
     }

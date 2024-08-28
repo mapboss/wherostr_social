@@ -107,7 +107,7 @@ extension OutBoxModel on Nostr {
 
   Future<List<DataEvent>> fetchEvents(
     List<NostrFilter> filters, {
-    double eoseRatio = 1.2,
+    double eoseRatio = 1,
     DataRelayList? relays,
     Duration timeout = const Duration(seconds: 3),
     bool isAscending = false,

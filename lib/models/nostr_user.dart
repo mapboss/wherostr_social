@@ -110,7 +110,7 @@ class NostrUser {
     );
   }
 
-  factory NostrUser.fromDataEvent(DataEvent event) {
+  factory NostrUser.fromEvent(NostrEvent event) {
     final userJson = jsonDecode(event.content!);
     userJson['pubkey'] = event.pubkey;
     userJson['createdAt'] = event.createdAt;
@@ -168,8 +168,7 @@ class NostrUser {
         NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
     final events = await NostrService.fetchEvents(
       [filter],
-      eoseRatio: 1.1,
-      timeout: const Duration(seconds: 3),
+      timeout: const Duration(seconds: 10),
       relays: _relayList,
     );
     print('fetchFollowing.events: ${events.length}');
@@ -214,7 +213,7 @@ class NostrUser {
   }
 
   Future<int> _countFollower(String pub) async {
-    NostrFilter filter = NostrFilter(kinds: const [3], p: [pub]);
+    NostrFilter filter = NostrFilter(kinds: const [3], p: [pub], limit: 1);
     final total = await NostrService.countEvent(filter);
     print('countFollower.total: $total');
     return total;

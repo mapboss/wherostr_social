@@ -64,7 +64,7 @@ class NostrService {
   static Future<DataEvent?> fetchEventById(
     String id, {
     DataRelayList? relays,
-    double eoseRatio = 1.2,
+    double eoseRatio = 1,
     Nostr? instance,
     Duration timeout = const Duration(seconds: 3),
   }) async {
@@ -93,7 +93,7 @@ class NostrService {
   static Future<List<DataEvent>> fetchEventIds(
     List<String> ids, {
     DataRelayList? relays,
-    double eoseRatio = 1.2,
+    double eoseRatio = 1,
     Nostr? instance,
     Duration timeout = const Duration(seconds: 3),
   }) async {
@@ -140,7 +140,7 @@ class NostrService {
   static Future<List<DataEvent>> fetchEvents(
     List<NostrFilter> filters, {
     DataRelayList? relays,
-    double eoseRatio = 1.2,
+    double eoseRatio = 1,
     Nostr? instance,
     Duration timeout = const Duration(seconds: 3),
     bool isAscending = false,
@@ -218,7 +218,7 @@ class NostrService {
 
   static Future<List<NostrUser>> _fetchUsers(
     List<String> pubkeyList, {
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
     final readRelays = AppRelays.relays.clone().concat(relays).readRelays;
@@ -276,7 +276,7 @@ class NostrService {
 
   static Future<List<NostrUser>> fetchUsers(
     List<String> pubkeyList, {
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
     final pubkeySet = pubkeyList.toSet();
@@ -308,7 +308,7 @@ class NostrService {
 
   static Future<NostrUser> _fetchUser(
     String pubkey, {
-    Duration timeout = const Duration(seconds: 10),
+    Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
     final readRelays = AppRelays.relays.clone().concat(relays).readRelays;
@@ -335,7 +335,7 @@ class NostrService {
               .closeEventsSubscription(ease.subscriptionId);
           return completer.complete(events.values.first);
         }
-        if (eose >= readRelays!.length / 1.1) {
+        if (eose >= readRelays!.length) {
           NostrService.profileList[pubkey] = NostrUser(pubkey: pubkey);
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
@@ -347,21 +347,19 @@ class NostrService {
       if (events[event.pubkey] != null &&
           events[event.pubkey]!.createdAt != null) {
         if (events[event.pubkey]!.createdAt!.compareTo(event.createdAt!) < 0) {
-          final userJson = jsonDecode(event.content!);
-          userJson['pubkey'] = event.pubkey;
-          userJson['createdAt'] = event.createdAt;
-          events[event.pubkey] = NostrUser.fromJson(userJson);
+          events[event.pubkey] = NostrUser.fromEvent(event);
+          NostrService.profileList[event.pubkey] = events[event.pubkey]!;
         }
       } else {
-        final userJson = jsonDecode(event.content!);
-        userJson['pubkey'] = event.pubkey;
-        userJson['createdAt'] = event.createdAt;
-        events[event.pubkey] = NostrUser.fromJson(userJson);
+        events[event.pubkey] = NostrUser.fromEvent(event);
+        NostrService.profileList[event.pubkey] = events[event.pubkey]!;
       }
     });
-    return completer.future
-        .timeout(timeout, onTimeout: () => NostrUser(pubkey: pubkey))
-        .whenComplete(() {
+    return completer.future.timeout(timeout, onTimeout: () {
+      final user = NostrUser(pubkey: pubkey);
+      NostrService.profileList[pubkey] = user;
+      return user;
+    }).whenComplete(() {
       sub.cancel().whenComplete(() {
         nostrStream.close();
       });
@@ -370,7 +368,7 @@ class NostrService {
 
   static Future<NostrUser> fetchUser(
     String pubkey, {
-    Duration timeout = const Duration(seconds: 10),
+    Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
     if (NostrService.profileList.containsKey(pubkey)) {
@@ -392,7 +390,7 @@ class NostrService {
   }
 
   static Future<DataRelayList> initWithNpubOrPubkey(String npubOrPubkey,
-      [Duration timeout = const Duration(seconds: 10)]) async {
+      [Duration timeout = const Duration(seconds: 5)]) async {
     instance = Nostr();
     await Future.wait([
       searchInstance.initRelays(
