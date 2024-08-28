@@ -13,6 +13,7 @@ import 'package:wherostr_social/screens/create_account.dart';
 import 'package:wherostr_social/screens/home.dart';
 import 'package:wherostr_social/screens/login.dart';
 import 'package:wherostr_social/screens/splash.dart';
+import 'package:wherostr_social/screens/test.dart';
 import 'package:wherostr_social/screens/welcome.dart';
 
 void main() async {
@@ -46,6 +47,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/test',
+      builder: (context, state) => const TestScreen(),
     ),
   ],
 );

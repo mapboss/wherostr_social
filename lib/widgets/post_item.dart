@@ -9,6 +9,7 @@ import 'package:wherostr_social/widgets/post_article.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
 import 'package:wherostr_social/widgets/post_live_activity.dart';
 import 'package:wherostr_social/widgets/post_unsupported_type.dart';
+import 'package:wherostr_social/widgets/post_zap_goal.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 import 'package:wherostr_social/widgets/post_action_bar.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
@@ -87,6 +88,11 @@ class PostItem extends StatelessWidget {
           enablePreview: enablePreview,
           contentPadding: contentPadding,
           depth: depth,
+        );
+        break;
+      case 9041:
+        widget = PostZapGoal(
+          event: event,
         );
         break;
       case 30311:

@@ -77,6 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await _isInitialized.future;
     if (_isLoggedIn) {
       return scheduleMicrotask(() => context.go('/home'));
+      // return scheduleMicrotask(() => context.go('/test'));
     }
     return scheduleMicrotask(() => context.go('/welcome'));
   }
