@@ -93,10 +93,10 @@ extension OutBoxModel on Nostr {
   }
 
   Future<DataRelayList> fetchUserRelayList(String pubkey,
-      {Duration timeout = const Duration(seconds: 10),
+      {Duration timeout = const Duration(seconds: 5),
       DataRelayList? relays}) async {
     List<NostrFilter> request = [
-      NostrFilter(kinds: const [10002], authors: [pubkey]),
+      NostrFilter(kinds: const [10002], authors: [pubkey], limit: 1),
     ];
     final events = await fetchEvents(
       request,

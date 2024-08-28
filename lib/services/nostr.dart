@@ -35,6 +35,7 @@ class NostrService {
       return NostrFilter(
         kinds: [int.parse(kindString)],
         authors: [pubkey],
+        limit: 1,
         additionalFilters: {
           "#d": [identifier]
         },
@@ -62,7 +63,6 @@ class NostrService {
 
   static Future<DataEvent?> fetchEventById(
     String id, {
-    int kind = 1,
     DataRelayList? relays,
     double eoseRatio = 1.2,
     Nostr? instance,
@@ -92,7 +92,6 @@ class NostrService {
 
   static Future<List<DataEvent>> fetchEventIds(
     List<String> ids, {
-    int kind = 1,
     DataRelayList? relays,
     double eoseRatio = 1.2,
     Nostr? instance,
@@ -156,7 +155,7 @@ class NostrService {
     final completer = Completer<DataEvent>();
     Map<String, DataEvent> events = {};
     final request = NostrRequest(filters: [
-      NostrFilter(ids: [id], kinds: [kind])
+      NostrFilter(ids: [id], kinds: [kind], limit: 1)
     ]);
     NostrEventsStream nostrStream =
         NostrService.instance.relaysService.startEventsSubscription(

@@ -164,7 +164,8 @@ class NostrUser {
       print('fetchFollowing.cache: ${_following?.length}');
       return following;
     }
-    NostrFilter filter = NostrFilter(kinds: const [3], authors: [pubkey]);
+    NostrFilter filter =
+        NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
     final events = await NostrService.fetchEvents(
       [filter],
       eoseRatio: 1.1,
@@ -226,7 +227,7 @@ class NostrUser {
       return interestSets;
     }
     List<NostrFilter> request = [
-      NostrFilter(kinds: const [10015], authors: [pubkey]),
+      NostrFilter(kinds: const [10015], authors: [pubkey], limit: 1),
       NostrFilter(kinds: const [30015], authors: [pubkey]),
     ];
     final events = await NostrService.fetchEvents(
@@ -305,7 +306,7 @@ class NostrUser {
       return muteList;
     }
     List<NostrFilter> request = [
-      NostrFilter(kinds: const [10000], authors: [pubkey]),
+      NostrFilter(kinds: const [10000], authors: [pubkey], limit: 1),
     ];
     final events = await NostrService.fetchEvents(
       request,
@@ -329,7 +330,7 @@ class NostrUser {
       return pinList;
     }
     List<NostrFilter> request = [
-      NostrFilter(kinds: const [10001], authors: [pubkey]),
+      NostrFilter(kinds: const [10001], authors: [pubkey], limit: 1),
     ];
     final events = await NostrService.fetchEvents(
       request,
@@ -353,7 +354,7 @@ class NostrUser {
       return bookmarkList;
     }
     List<NostrFilter> request = [
-      NostrFilter(kinds: const [10003], authors: [pubkey]),
+      NostrFilter(kinds: const [10003], authors: [pubkey], limit: 1),
       NostrFilter(kinds: const [30003], authors: [pubkey]),
     ];
     final events = await NostrService.fetchEvents(
@@ -384,7 +385,7 @@ class NostrUser {
     }
     final emojiSetEvents = await NostrService.fetchEvents(
       [
-        NostrFilter(kinds: const [10030], authors: [pubkey])
+        NostrFilter(kinds: const [10030], authors: [pubkey], limit: 1)
       ],
       eoseRatio: 1,
       relays: _relayList,
