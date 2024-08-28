@@ -32,7 +32,7 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
   void initialize() async {
     setState(() {
       _relays = AppRelays.relays;
-      _relays?.items?.sort((a, b) => a.url.compareTo(b.url));
+      _relays?.sort((a, b) => a.url.compareTo(b.url));
     });
   }
 
@@ -41,7 +41,7 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
       final relays = _relays;
       final relay = DataRelay(url: relayUrl);
       await relay.getRelayInformation();
-      relays?.items?.add(relay);
+      relays?.add(relay);
       await AppRelays.setRelays(relays);
       setState(() {
         _relays = relays;
@@ -57,7 +57,7 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
   Future<void> deleteRelay(DataRelay relay) async {
     try {
       final relays = _relays;
-      relays?.items?.remove(relay);
+      relays?.remove(relay);
       await AppRelays.setRelays(relays);
       setState(() {
         _relays = relays;
@@ -72,7 +72,7 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
       await AppRelays.resetRelays();
       setState(() {
         _relays = AppRelays.relays;
-        _relays?.items?.sort((a, b) => a.url.compareTo(b.url));
+        _relays?.sort((a, b) => a.url.compareTo(b.url));
       });
     } catch (err) {
       AppUtils.handleError();
@@ -136,9 +136,8 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
                             if (value?.isEmpty != false) {
                               return 'Please enter the URL';
                             }
-                            if (_relays?.items != null &&
-                                _relays!.items!
-                                    .any((e) => e.url == 'wss://$value')) {
+                            if (_relays != null &&
+                                _relays!.any((e) => e.url == 'wss://$value')) {
                               return 'Already exists';
                             }
                             if (!wssDNSPattern.hasMatch('wss://$value') &&
@@ -209,7 +208,7 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
                   ),
                 ),
               ]
-            : _relays?.items?.map((relay) {
+            : _relays?.map((relay) {
                   return Card(
                     margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                     child: ListTile(
@@ -228,7 +227,7 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
                           padding: const EdgeInsets.all(8),
                           constraints: const BoxConstraints(),
                           color: themeExtension.errorColor,
-                          onPressed: _relays?.items?.length == 1
+                          onPressed: _relays?.length == 1
                               ? null
                               : () {
                                   deleteRelay(relay);

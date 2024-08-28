@@ -51,11 +51,12 @@ class _RelaySettingsState extends State<RelaySettings> {
       final relay = DataRelay(url: url, marker: marker);
       await relay.getRelayInformation();
       setState(() {
-        _formKey.currentState?.reset();
         _relays?.add(relay);
         _relays?.sort((a, b) => a.url.compareTo(b.url));
+        _formKey.currentState?.reset();
       });
     } catch (err) {
+      print('err: $err');
       setState(() {
         _urlError = 'Unable to connect to the URL';
       });
@@ -67,7 +68,7 @@ class _RelaySettingsState extends State<RelaySettings> {
     int? index = _relays?.indexWhere((e) => e.url == relay);
     if (index == null || index == -1) return;
     setState(() {
-      _relays?.items?[index].marker = marker;
+      _relays?[index].marker = marker;
     });
   }
 
@@ -166,9 +167,8 @@ class _RelaySettingsState extends State<RelaySettings> {
                             if (value?.isEmpty != false) {
                               return 'Please enter the URL';
                             }
-                            if (_relays?.items != null &&
-                                _relays!.items!
-                                    .any((e) => e.url == 'wss://$value')) {
+                            if (_relays != null &&
+                                _relays!.any((e) => e.url == 'wss://$value')) {
                               return 'Already exists';
                             }
                             if (!wssDNSPattern.hasMatch('wss://$value') &&
@@ -213,9 +213,8 @@ class _RelaySettingsState extends State<RelaySettings> {
               style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
               ),
-              onPressed: _relays?.items?.isEmpty != false || _isLoading
-                  ? null
-                  : () => save(),
+              onPressed:
+                  _relays?.isEmpty != false || _isLoading ? null : () => save(),
               child: const Text("Save"),
             ),
           ),
@@ -242,7 +241,7 @@ class _RelaySettingsState extends State<RelaySettings> {
                   ),
                 ),
               ]
-            : _relays?.items?.map((e) {
+            : _relays?.map((e) {
                   final name = e.url;
                   final marker = e.marker;
                   return Card(

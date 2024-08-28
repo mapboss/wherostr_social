@@ -302,12 +302,12 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
     );
 
-    if (newItems.isNotEmpty) {
-      await Future.wait([
-        _fetchUsersFromEvents(newItems),
-        _fetchRelatedEventsFromEvents(newItems)
-      ]);
-    }
+    // if (newItems.isNotEmpty) {
+    //   await Future.wait([
+    //     _fetchUsersFromEvents(newItems),
+    //     _fetchRelatedEventsFromEvents(newItems)
+    //   ]);
+    // }
 
     subscribe(DateTime.timestamp());
     if (mounted) {
@@ -358,12 +358,12 @@ class NostrFeedState extends State<NostrFeed> {
       isAscending: widget.isAscending,
       relays: widget.relays,
     );
-    if (newItems.isNotEmpty) {
-      await Future.wait([
-        _fetchUsersFromEvents(newItems),
-        _fetchRelatedEventsFromEvents(newItems)
-      ]);
-    }
+    // if (newItems.isNotEmpty) {
+    //   await Future.wait([
+    //     _fetchUsersFromEvents(newItems),
+    //     _fetchRelatedEventsFromEvents(newItems)
+    //   ]);
+    // }
     if (mounted) {
       setState(() {
         _loading = false;

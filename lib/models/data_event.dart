@@ -90,7 +90,8 @@ class DataEvent extends NostrEvent {
   factory DataEvent.fromJson(Map<String, dynamic> data) {
     final tagsToUse = ((data['tags'] ?? []) as List<dynamic>)
         .map((t) => (t as List<dynamic>)
-            .map((e) => SafeParser.parseString(e) ?? "")
+            .map((e) => SafeParser.parseString(e))
+            .whereType<String>()
             .toList())
         .toList();
     final createdAtToUse = SafeParser.parseDateTime(data['createdAt']);

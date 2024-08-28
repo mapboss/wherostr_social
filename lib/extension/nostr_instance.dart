@@ -8,15 +8,12 @@ import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
 
 extension OutBoxModel on Nostr {
-  Future<List<String?>?> initRelays(DataRelayList relayList,
+  Future<List<String?>> initRelays(DataRelayList relayList,
       {Duration timeout = const Duration(seconds: 5)}) async {
-    var futures = relayList.items?.map((relay) async {
+    final futures = relayList.map((relay) async {
       return initRelay(relay, timeout: timeout);
     });
-    if (futures != null) {
-      return Future.wait(futures);
-    }
-    return null;
+    return Future.wait(futures);
   }
 
   Future<String?> initRelay(DataRelay relay,

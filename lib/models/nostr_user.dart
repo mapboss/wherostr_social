@@ -428,7 +428,7 @@ class NostrUser {
         .fetchUserRelayList(pubkey, relays: _relayList);
     NostrService.instance.disableLogs();
     _relayList = items;
-    print('fetchRelayList: ${relayList.items?.length}');
+    print('fetchRelayList: ${relayList.length}');
     return relayList;
   }
 

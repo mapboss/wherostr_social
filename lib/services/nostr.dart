@@ -116,15 +116,20 @@ class NostrService {
     print(
         'fetchEventIds: use cache: ${events.length}, no cache: ${idList.length}');
 
-    var reuqests = idList.map((id) {
-      var request = refIdToRequest(id);
-      if (request != null) {
-        return request;
+    List<NostrFilter> filters = [];
+    List<String> idFilters = [];
+    for (final id in idList) {
+      final filter = refIdToRequest(id);
+      if (filter != null) {
+        filters.add(filter);
       }
-      return NostrFilter(ids: [id]);
-    }).toList();
+      idFilters.add(id);
+    }
+    if (idFilters.isNotEmpty) {
+      filters.add(NostrFilter(ids: idFilters, limit: idFilters.length));
+    }
     final result = await instance.fetchEvents(
-      reuqests,
+      filters,
       relays: relays,
       eoseRatio: eoseRatio,
     );
@@ -221,7 +226,8 @@ class NostrService {
     final completer = Completer<List<NostrUser>>();
     Map<String, NostrUser> events = {};
     final request = NostrRequest(filters: [
-      NostrFilter(kinds: const [0], authors: pubkeyList)
+      NostrFilter(
+          kinds: const [0], authors: pubkeyList, limit: pubkeyList.length)
     ]);
     NostrEventsStream nostrStream =
         NostrService.instance.relaysService.startEventsSubscription(
@@ -302,7 +308,7 @@ class NostrService {
 
   static Future<NostrUser> _fetchUser(
     String pubkey, {
-    Duration timeout = const Duration(seconds: 3),
+    Duration timeout = const Duration(seconds: 10),
     DataRelayList? relays,
   }) async {
     final readRelays = AppRelays.relays.clone().concat(relays).readRelays;
@@ -310,7 +316,7 @@ class NostrService {
     final completer = Completer<NostrUser>();
     Map<String, NostrUser> events = {};
     final request = NostrRequest(filters: [
-      NostrFilter(kinds: const [0], authors: [pubkey])
+      NostrFilter(kinds: const [0], authors: [pubkey], limit: 1)
     ]);
     NostrEventsStream nostrStream =
         NostrService.instance.relaysService.startEventsSubscription(
@@ -324,12 +330,16 @@ class NostrService {
         } catch (err) {}
         if (completer.isCompleted == true) return;
         if (events.isNotEmpty) {
+          NostrService.profileList[pubkey] = events.values.first;
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId);
           return completer.complete(events.values.first);
         }
         if (eose >= readRelays!.length / 1.1) {
+          NostrService.profileList[pubkey] = NostrUser(pubkey: pubkey);
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
-          completer.complete(NostrUser(pubkey: pubkey));
+          completer.complete(NostrService.profileList[pubkey]);
         }
       },
     );
@@ -350,7 +360,7 @@ class NostrService {
       }
     });
     return completer.future
-        .timeout(timeout, onTimeout: () => events.values.first)
+        .timeout(timeout, onTimeout: () => NostrUser(pubkey: pubkey))
         .whenComplete(() {
       sub.cancel().whenComplete(() {
         nostrStream.close();
@@ -360,7 +370,7 @@ class NostrService {
 
   static Future<NostrUser> fetchUser(
     String pubkey, {
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = const Duration(seconds: 10),
     DataRelayList? relays,
   }) async {
     if (NostrService.profileList.containsKey(pubkey)) {
@@ -406,7 +416,7 @@ class NostrService {
     }
     DataRelayList relays =
         await instance.fetchUserRelayList(pubkey, timeout: timeout);
-    if (relays.items?.isEmpty != false) {
+    if (relays.isEmpty != false) {
       // AppUtils.showSnackBar(
       //   text: "No relays specified. Using default relays.",
       //   status: AppStatus.warning,
