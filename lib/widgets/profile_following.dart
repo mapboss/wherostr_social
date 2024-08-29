@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/widgets/nostr_feed.dart';
+import 'package:wherostr_social/widgets/post_item_loader.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -24,6 +28,7 @@ class ProfileFollowing extends StatefulWidget {
 }
 
 class _ProfileFollowingState extends State<ProfileFollowing> {
+  Map<String, bool> events = {};
   List<String>? _following;
   List<String>? _followers;
 
@@ -62,10 +67,14 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
             user: widget.user,
             withBadge: true,
           ),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Following'),
-              Tab(text: 'Followers'),
+              Tab(
+                  text:
+                      'Followers${(_following?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_following!.length)})' : ''}'),
+              Tab(
+                  text:
+                      'Followers${(_followers?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_followers!.length)})' : ''}'),
             ],
           ),
         ),
@@ -126,20 +135,30 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                           ],
                         ),
                       )
-                    : ListView.builder(
-                        itemCount: _followers!.length,
-                        itemBuilder: (context, index) => Padding(
-                          key: Key(_followers![index]),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              ProfileListTile(
-                                pubkey: _followers![index],
-                              ),
-                              const Divider(height: 1),
-                            ],
-                          ),
-                        ),
+                    : NostrFeed(
+                        disableSubscribe: true,
+                        kinds: const [3],
+                        p: [widget.user.pubkey],
+                        limit: 20,
+                        itemFilter: (e) {
+                          if (events.containsKey(e.pubkey)) return false;
+                          events[e.pubkey] = true;
+                          return true;
+                        },
+                        itemBuilder: (context, event) {
+                          return Padding(
+                            key: Key(event.pubkey),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                ProfileListTile(
+                                  pubkey: event.pubkey,
+                                ),
+                                const Divider(height: 1),
+                              ],
+                            ),
+                          );
+                        },
                       ),
           ],
         ),

@@ -216,7 +216,7 @@ class DataEvent extends NostrEvent {
           await NostrService.instance.relaysService.sendEventToRelaysAsync(
         this,
         timeout: timeout,
-        relays: AppRelays.relays.clone().concat(relays).writeRelays,
+        relays: relays?.clone().concatLeft(AppRelays.relays).writeRelays,
       );
       print("publish: $result");
     } catch (err) {

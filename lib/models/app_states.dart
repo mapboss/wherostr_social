@@ -148,4 +148,12 @@ class AppStatesProvider with ChangeNotifier {
     await me.setRelays(relays);
     notifyListeners();
   }
+
+  Future<void> deleteAccount() async {
+    await me.unfollowAll();
+    await me.updateProfile(
+      name: 'Deleted Account',
+    );
+    notifyListeners();
+  }
 }

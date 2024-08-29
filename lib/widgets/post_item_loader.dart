@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -56,9 +58,10 @@ class _PostItemLoaderState extends State<PostItemLoader> {
   }
 
   void initialize() async {
+    final me = context.read<AppStatesProvider>().me;
     final event = await NostrService.fetchEventById(
       widget.eventId,
-      relays: widget.relays,
+      relays: me.relayList.concat(widget.relays),
     );
     if (mounted) {
       setState(() {

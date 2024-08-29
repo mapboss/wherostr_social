@@ -112,9 +112,7 @@ extension OutBoxModel on Nostr {
     Duration timeout = const Duration(seconds: 3),
     bool isAscending = false,
   }) async {
-    final readRelays = relays != null
-        ? AppRelays.relays.clone().concat(relays).readRelays
-        : null;
+    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
     int eose = 0;
     final completer = Completer<List<DataEvent>>();
     Map<String, DataEvent> events = {};
@@ -122,10 +120,15 @@ extension OutBoxModel on Nostr {
     int relayLength = readRelays?.length ?? relaysService.relaysList!.length;
     NostrEventsStream nostrStream = relaysService.startEventsSubscription(
       request: request,
-      relays: readRelays,
+      relays: readRelays ?? relaysService.relaysList,
       onEose: (relay, ease) {
         eose += 1;
         try {
+          // if (events.values.firstOrNull?.kind == 3) {
+          //   print(
+          //       'events: ${events.values.firstOrNull?.getTagValues('p')?.length}, $relay');
+          // }
+          // relaysService.closeEventsSubscription(ease.subscriptionId);
           relaysService.closeEventsSubscription(ease.subscriptionId, relay);
         } catch (err) {}
         if (completer.isCompleted) return;
@@ -142,20 +145,20 @@ extension OutBoxModel on Nostr {
       },
     );
     var sub = nostrStream.stream.listen((event) {
-      var e = DataEvent.fromEvent(event);
-      var id = e.id!;
-      if (e.kind! >= 30000) {
-        id =
-            '${e.kind}:${e.pubkey}:${e.tags!.firstWhere((e) => e.first == 'd').elementAtOrNull(1)}';
-      }
-      if (events.containsKey(id) && events[id]!.createdAt != null) {
-        if (events[id]!.createdAt!.compareTo(e.createdAt!) < 0) {
+      try {
+        final e = DataEvent.fromEvent(event);
+        String id = e.getId()!;
+        if (events.containsKey(id) && events[id]!.createdAt != null) {
+          if (events[id]!.createdAt!.compareTo(e.createdAt!) < 0) {
+            NostrService.eventList[id] = e;
+            events[id] = e;
+          }
+        } else {
           NostrService.eventList[id] = e;
           events[id] = e;
         }
-      } else {
-        NostrService.eventList[id] = e;
-        events[id] = e;
+      } catch (err) {
+        print('err: $err');
       }
     });
     return completer.future.timeout(timeout, onTimeout: () {

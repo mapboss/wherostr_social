@@ -5,6 +5,7 @@ import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -51,19 +52,22 @@ class _PostActionBarState extends State<PostActionBar> {
   }
 
   void initialize() {
+    final me = context.read<AppStatesProvider>().me;
     NostrFilter filter = NostrFilter(
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
     );
 
-    NostrService.fetchEvents([filter]).then((events) {
+    NostrService.instance
+        .fetchEvents([filter], relays: me.relayList).then((events) {
       if (mounted) {
         widget.event.relatedEvents.addAll(events);
         updateCounts(events);
         subscribe();
       }
     });
-    NostrService.fetchUser(widget.event.pubkey).then((user) {
+    NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
+        .then((user) {
       if (mounted) {
         setState(() {
           _user = user;

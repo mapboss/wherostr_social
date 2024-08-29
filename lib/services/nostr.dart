@@ -79,6 +79,7 @@ class NostrService {
         [request],
         relays: relays,
         eoseRatio: 1,
+        timeout: timeout,
       ).then((v) => v.firstOrNull);
     }
     return fetchEventIds(
@@ -132,6 +133,7 @@ class NostrService {
       filters,
       relays: relays,
       eoseRatio: eoseRatio,
+      timeout: timeout,
     );
     result.addAll(events);
     return result;
@@ -155,73 +157,12 @@ class NostrService {
     );
   }
 
-  static Future<DataEvent> _fetchEvent(String id, [int kind = 1]) async {
-    int eose = 0;
-    final completer = Completer<DataEvent>();
-    Map<String, DataEvent> events = {};
-    final request = NostrRequest(filters: [
-      NostrFilter(ids: [id], kinds: [kind], limit: 1)
-    ]);
-    NostrEventsStream nostrStream =
-        NostrService.instance.relaysService.startEventsSubscription(
-      request: request,
-      onEose: (relay, ease) {
-        eose += 1;
-        try {
-          NostrService.instance.relaysService
-              .closeEventsSubscription(ease.subscriptionId, relay);
-        } catch (err) {}
-        if (completer.isCompleted) return;
-        if (eose >= instance.relaysService.relaysList!.length / 2) {
-          final items = events.values.toList();
-          items.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
-          NostrService.instance.relaysService
-              .closeEventsSubscription(ease.subscriptionId);
-          completer.complete(items.first);
-        }
-      },
-    );
-    var sub = nostrStream.stream.listen((event) {
-      var e = DataEvent.fromEvent(event);
-      if (events.containsKey(e.id) && events[e.id]!.createdAt != null) {
-        if (events[e.id]!.createdAt!.compareTo(e.createdAt!) < 0) {
-          events[e.id!] = e;
-        }
-      } else {
-        events[event.id!] = e;
-      }
-    });
-    return completer.future.timeout(
-      const Duration(seconds: 3),
-      onTimeout: () {
-        final items = events.values.toList();
-        items.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
-        return items.first;
-      },
-    ).whenComplete(() {
-      sub.cancel().whenComplete(() {
-        nostrStream.close();
-      });
-    });
-  }
-
-  static Future<DataEvent> fetchEvent(String id, [int kind = 1]) async {
-    if (kind == 1 && eventList.containsKey(id)) {
-      return eventList[id]!;
-    }
-    var event = await _fetchEvent(id, kind);
-    if (kind == 1 && eventList.containsKey(id)) {
-      eventList[id] = event;
-    }
-    return event;
-  }
-
   static Future<List<NostrUser>> _fetchUsers(
     List<String> pubkeyList, {
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    final readRelays = AppRelays.relays.clone().concat(relays).readRelays;
+    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
     int eose = 0;
     final completer = Completer<List<NostrUser>>();
     Map<String, NostrUser> events = {};
@@ -240,7 +181,7 @@ class NostrService {
               .closeEventsSubscription(ease.subscriptionId, relay);
         } catch (err) {}
         if (completer.isCompleted == true) return;
-        if (eose >= readRelays!.length / 1.1) {
+        if (eose >= readRelays!.length) {
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
           completer.complete(events.values.toList());
@@ -265,9 +206,15 @@ class NostrService {
         NostrService.profileList[event.pubkey] = events[event.pubkey]!;
       }
     });
-    return completer.future
-        .timeout(timeout, onTimeout: () => events.values.toList())
-        .whenComplete(() {
+    return completer.future.timeout(timeout, onTimeout: () {
+      return pubkeyList.map((e) {
+        if (NostrService.profileList.containsKey(e)) {
+          return NostrService.profileList[e]!;
+        }
+        NostrService.profileList[e] = NostrUser(pubkey: e);
+        return NostrService.profileList[e]!;
+      }).toList();
+    }).whenComplete(() {
       sub.cancel().whenComplete(() {
         nostrStream.close();
       });
@@ -311,7 +258,7 @@ class NostrService {
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    final readRelays = AppRelays.relays.clone().concat(relays).readRelays;
+    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
     int eose = 0;
     final completer = Completer<NostrUser>();
     Map<String, NostrUser> events = {};
@@ -379,7 +326,7 @@ class NostrService {
 
   static NostrEventsStream subscribe(List<NostrFilter> filters,
       {DataRelayList? relays}) {
-    final readRelays = AppRelays.relays.clone().concat(relays).readRelays;
+    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
     final request = NostrRequest(filters: filters);
     NostrEventsStream nostrStream =
         NostrService.instance.relaysService.startEventsSubscription(

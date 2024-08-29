@@ -71,7 +71,20 @@ class DataRelayList extends ListBase<DataRelay> {
     final list = innerList?.toList();
     if (relayList?.innerList != null) {
       relayList?.innerList?.forEach((item) {
-        if (list?.any((e) => e.url == item.url) == true) return;
+        String host = item.toString();
+        if (list?.any((e) => e.toString() == host) == true) return;
+        list?.add(item);
+      });
+    }
+    return DataRelayList(innerList: list);
+  }
+
+  DataRelayList concatLeft(DataRelayList? relayList) {
+    final list = relayList?.toList();
+    if (innerList != null) {
+      innerList?.forEach((item) {
+        String host = item.toString();
+        if (list?.any((e) => e.toString() == host) == true) return;
         list?.add(item);
       });
     }
@@ -80,6 +93,6 @@ class DataRelayList extends ListBase<DataRelay> {
 
   @override
   String toString() {
-    return innerList?.map((e) => e.url).join(', ') ?? '';
+    return innerList?.map((e) => e.toString()).join(', ') ?? '';
   }
 }

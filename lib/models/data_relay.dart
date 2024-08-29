@@ -30,6 +30,7 @@ class DataRelay {
 
   @override
   String toString() {
-    return url;
+    final uri = Uri.parse(url);
+    return '${uri.scheme}:${uri.host}';
   }
 }

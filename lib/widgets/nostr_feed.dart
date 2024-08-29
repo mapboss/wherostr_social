@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -15,6 +16,7 @@ class NostrFeed extends StatefulWidget {
   final List<int> kinds;
   final DataRelayList? relays;
   final List<String>? authors;
+  final List<String>? ids;
   final List<String>? t;
   final List<String>? a;
   final List<String>? p;
@@ -27,6 +29,7 @@ class NostrFeed extends StatefulWidget {
   final bool autoRefresh;
   final bool includeReplies;
   final bool includeMuted;
+  final bool disableSubscribe;
   final ScrollController? scrollController;
   final Color? backgroundColor;
 
@@ -35,11 +38,12 @@ class NostrFeed extends StatefulWidget {
     required this.itemBuilder,
     required this.kinds,
     this.relays,
+    this.authors,
+    this.ids,
     this.t,
     this.a,
     this.p,
     this.e,
-    this.authors,
     this.additionalFilters,
     this.limit = 30,
     this.itemFilter,
@@ -48,6 +52,7 @@ class NostrFeed extends StatefulWidget {
     this.autoRefresh = false,
     this.includeReplies = false,
     this.includeMuted = false,
+    this.disableSubscribe = false,
     this.scrollController,
     this.backgroundColor,
   });
@@ -210,6 +215,7 @@ class NostrFeedState extends State<NostrFeed> {
         since: since,
         kinds: widget.kinds,
         authors: widget.authors,
+        ids: widget.ids,
         t: widget.t,
         a: widget.a,
         p: widget.p,
@@ -285,17 +291,18 @@ class NostrFeedState extends State<NostrFeed> {
 
     DateTime until = DateTime.timestamp().add(const Duration(days: 1));
     NostrFilter filter = NostrFilter(
-      limit: 50,
+      limit: widget.limit,
       until: until,
       kinds: widget.kinds,
       authors: widget.authors,
+      ids: widget.ids,
       t: widget.t,
       a: widget.a,
       p: widget.p,
       e: widget.e,
       additionalFilters: widget.additionalFilters,
     );
-    List<DataEvent> newItems = await NostrService.fetchEvents(
+    List<DataEvent> newItems = await NostrService.instance.fetchEvents(
       [filter],
       eoseRatio: 1,
       isAscending: widget.isAscending,
@@ -309,8 +316,9 @@ class NostrFeedState extends State<NostrFeed> {
     //     _fetchRelatedEventsFromEvents(newItems)
     //   ]);
     // }
-
-    subscribe(DateTime.timestamp());
+    if (!widget.disableSubscribe) {
+      subscribe(DateTime.timestamp());
+    }
     if (mounted) {
       setState(() {
         _initialized = true;
@@ -342,18 +350,19 @@ class NostrFeedState extends State<NostrFeed> {
     DateTime? since;
     until = e.createdAt!.subtract(const Duration(milliseconds: 10));
     NostrFilter filter = NostrFilter(
-      limit: 50,
+      limit: widget.limit,
       until: until,
       since: since,
       kinds: widget.kinds,
       authors: widget.authors,
+      ids: widget.ids,
       t: widget.t,
       a: widget.a,
       p: widget.p,
       e: widget.e,
       additionalFilters: widget.additionalFilters,
     );
-    List<DataEvent> newItems = await NostrService.fetchEvents(
+    List<DataEvent> newItems = await NostrService.instance.fetchEvents(
       [filter],
       eoseRatio: 1,
       isAscending: widget.isAscending,

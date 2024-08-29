@@ -159,11 +159,11 @@ class NostrUser {
   }
 
   Future<List<String>> fetchFollowing([bool force = false]) async {
-    print('fetchFollowing');
-    if (!force && _following != null) {
-      print('fetchFollowing.cache: ${_following?.length}');
-      return following;
-    }
+    // print('fetchFollowing');
+    // if (!force && _following != null) {
+    //   print('fetchFollowing.cache: ${_following?.length}');
+    //   return following;
+    // }
     NostrFilter filter =
         NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
     final events = await NostrService.fetchEvents(
@@ -229,7 +229,7 @@ class NostrUser {
       NostrFilter(kinds: const [10015], authors: [pubkey], limit: 1),
       NostrFilter(kinds: const [30015], authors: [pubkey]),
     ];
-    final events = await NostrService.fetchEvents(
+    final events = await NostrService.instance.fetchEvents(
       request,
       eoseRatio: 1,
       relays: _relayList,
@@ -265,7 +265,7 @@ class NostrUser {
     List<NostrFilter> request = [
       NostrFilter(kinds: const [30000], authors: [pubkey]),
     ];
-    final events = await NostrService.fetchEvents(
+    final events = await NostrService.instance.fetchEvents(
       request,
       eoseRatio: 1,
       relays: _relayList,
@@ -307,7 +307,7 @@ class NostrUser {
     List<NostrFilter> request = [
       NostrFilter(kinds: const [10000], authors: [pubkey], limit: 1),
     ];
-    final events = await NostrService.fetchEvents(
+    final events = await NostrService.instance.fetchEvents(
       request,
       eoseRatio: 1,
       relays: _relayList,
@@ -331,7 +331,7 @@ class NostrUser {
     List<NostrFilter> request = [
       NostrFilter(kinds: const [10001], authors: [pubkey], limit: 1),
     ];
-    final events = await NostrService.fetchEvents(
+    final events = await NostrService.instance.fetchEvents(
       request,
       eoseRatio: 1,
       relays: _relayList,
@@ -356,7 +356,7 @@ class NostrUser {
       NostrFilter(kinds: const [10003], authors: [pubkey], limit: 1),
       NostrFilter(kinds: const [30003], authors: [pubkey]),
     ];
-    final events = await NostrService.fetchEvents(
+    final events = await NostrService.instance.fetchEvents(
       request,
       eoseRatio: 1,
       relays: _relayList,
@@ -382,7 +382,7 @@ class NostrUser {
     if (!force && _emojiList != null) {
       return emojiList;
     }
-    final emojiSetEvents = await NostrService.fetchEvents(
+    final emojiSetEvents = await NostrService.instance.fetchEvents(
       [
         NostrFilter(kinds: const [10030], authors: [pubkey], limit: 1)
       ],
@@ -408,7 +408,7 @@ class NostrUser {
       NostrFilter(kinds: const [30030], authors: [pubkey]),
     ];
     final emojiEvents =
-        await NostrService.fetchEvents(emojiRequests, eoseRatio: 1);
+        await NostrService.instance.fetchEvents(emojiRequests, eoseRatio: 1);
     List<List<String>>? items;
     for (final event in emojiEvents) {
       items ??= [];
@@ -431,17 +431,25 @@ class NostrUser {
     return relayList;
   }
 
+  Future<void> setFollowing(List<String> users) async {
+    final event = DataEvent(
+      kind: 3,
+      tags: users.toSet().map((e) => ['p', e]).toList(),
+    );
+    await event.publish(relays: _relayList);
+  }
+
+  Future<void> unfollowAll() async {
+    await setFollowing([]);
+  }
+
   Future<void> follow(String user) async {
     await fetchFollowing();
     if (!following.contains(user)) {
       _following ??= [];
       _following?.add(user);
     }
-    final event = DataEvent(
-      kind: 3,
-      tags: following.map((e) => ['p', e]).toSet().toList(),
-    );
-    await event.publish(relays: _relayList);
+    await setFollowing(following);
   }
 
   Future<void> unfollow(String user) async {
@@ -449,11 +457,7 @@ class NostrUser {
     if (following.contains(user)) {
       _following?.remove(user);
     }
-    final event = DataEvent(
-      kind: 3,
-      tags: following.map((e) => ['p', e]).toSet().toList(),
-    );
-    await event.publish(relays: _relayList);
+    await setFollowing(following);
   }
 
   Future<void> mute(String user) async {
@@ -464,7 +468,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10000,
-      tags: muteList.map((e) => ['p', e]).toSet().toList(),
+      tags: muteList.toSet().map((e) => ['p', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }

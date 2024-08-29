@@ -35,11 +35,15 @@ class _PostDetailsState extends State<PostDetails> {
   }
 
   void initialize() async {
+    final me = context.read<AppStatesProvider>().me;
     DataEvent? event;
     if (widget.event != null) {
       event = widget.event;
     } else if (widget.eventId != null) {
-      event = await NostrService.fetchEventById(widget.eventId!);
+      event = await NostrService.fetchEventById(
+        widget.eventId!,
+        relays: me.relayList,
+      );
     }
     if (mounted && event != null) {
       setState(() {
