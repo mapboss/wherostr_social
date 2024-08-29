@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -62,10 +61,12 @@ class NostrFeed extends StatefulWidget {
 
 class NostrFeedState extends State<NostrFeed> {
   NostrEventsStream? _newEventStream;
-  StreamSubscription? _newEventListener;
+  StreamSubscription<NostrEvent>? _newEventListener;
+  NostrEventsStream? _initEventStream;
+  StreamSubscription<NostrEvent>? _initEventListener;
   bool _initialized = false;
-  bool _loading = false;
-  bool _hasMore = true;
+  bool _loading = true;
+  bool _hasMore = false;
   final List<DataEvent> _allItems = [];
   final List<DataEvent> _newItems = [];
   final Map<String, Widget> _postItems = {};
@@ -171,6 +172,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   @override
   void dispose() {
+    clearState();
     unsubscribe();
     super.dispose();
   }
@@ -234,18 +236,13 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   void clearState() {
-    if (mounted) {
-      setState(() {
-        _initialized = false;
-        _loading = true;
-        _hasMore = true;
-        _postItems.clear();
-        _muteList.clear();
-        _allItems.clear();
-        _items.clear();
-        _newItems.clear();
-      });
-    }
+    _initialized = false;
+    _hasMore = false;
+    _postItems.clear();
+    _muteList.clear();
+    _allItems.clear();
+    _items.clear();
+    _newItems.clear();
   }
 
   Future<void> unsubscribe() async {
@@ -257,6 +254,14 @@ class NostrFeedState extends State<NostrFeed> {
       if (_newEventStream != null) {
         _newEventStream!.close();
         _newEventStream = null;
+      }
+      if (_initEventListener != null) {
+        await _initEventListener!.cancel();
+        _initEventListener = null;
+      }
+      if (_initEventStream != null) {
+        _initEventStream!.close();
+        _initEventStream = null;
       }
     } catch (err) {
       print('unsubscribe: $err');
@@ -281,6 +286,70 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
+  Future<void> fetchList([DataEvent? lastEvent]) async {
+    bool isInitializeState = lastEvent == null;
+    Completer completer = Completer();
+    _loading = true;
+    DateTime? until =
+        lastEvent?.createdAt?.subtract(const Duration(milliseconds: 10));
+    NostrFilter filter = NostrFilter(
+      until: until,
+      limit: widget.limit,
+      kinds: widget.kinds,
+      authors: widget.authors,
+      ids: widget.ids,
+      t: widget.t,
+      a: widget.a,
+      p: widget.p,
+      e: widget.e,
+      additionalFilters: widget.additionalFilters,
+    );
+    int hasMore = 0;
+    _initEventStream = NostrService.subscribe(
+      [filter],
+      relays: widget.relays,
+      closeOnEnd: true,
+      onEnd: (subscriptionId) {
+        _loading = false;
+        if (isInitializeState && !widget.disableSubscribe) {
+          subscribe(DateTime.now());
+        }
+        setState(() {
+          _hasMore = hasMore >= widget.limit;
+        });
+      },
+    );
+    _initEventListener = _initEventStream!.stream.listen(
+      (event) {
+        final dataEvent = DataEvent.fromEvent(event);
+        if (!filterEvent(dataEvent)) return;
+        hasMore += 1;
+        _allItems.add(dataEvent);
+        if (!widget.isAscending) {
+          _allItems.sort(((a, b) => b.createdAt!.compareTo(a.createdAt!)));
+        } else {
+          _allItems.sort(((a, b) => a.createdAt!.compareTo(b.createdAt!)));
+        }
+        if (mounted) {
+          setState(() {
+            _items = _allItems.toList();
+          });
+        }
+
+        if (!completer.isCompleted) {
+          if (isInitializeState) {
+            setState(() {
+              _initialized = true;
+            });
+          }
+          completer.complete();
+        }
+      },
+    );
+
+    return completer.future;
+  }
+
   Future<void> initialize() async {
     final muteList = context.read<AppStatesProvider>().me.muteList.toList();
     if (mounted) {
@@ -288,106 +357,13 @@ class NostrFeedState extends State<NostrFeed> {
         _muteList.addAll(muteList);
       });
     }
-
-    DateTime until = DateTime.timestamp().add(const Duration(days: 1));
-    NostrFilter filter = NostrFilter(
-      limit: widget.limit,
-      until: until,
-      kinds: widget.kinds,
-      authors: widget.authors,
-      ids: widget.ids,
-      t: widget.t,
-      a: widget.a,
-      p: widget.p,
-      e: widget.e,
-      additionalFilters: widget.additionalFilters,
-    );
-    List<DataEvent> newItems = await NostrService.instance.fetchEvents(
-      [filter],
-      eoseRatio: 1,
-      isAscending: widget.isAscending,
-      relays: widget.relays,
-      timeout: const Duration(seconds: 10),
-    );
-
-    // if (newItems.isNotEmpty) {
-    //   await Future.wait([
-    //     _fetchUsersFromEvents(newItems),
-    //     _fetchRelatedEventsFromEvents(newItems)
-    //   ]);
-    // }
-    if (!widget.disableSubscribe) {
-      subscribe(DateTime.timestamp());
-    }
-    if (mounted) {
-      setState(() {
-        _initialized = true;
-        _loading = false;
-        if (newItems.isNotEmpty) {
-          _allItems.addAll(newItems);
-          _items = _allItems.where(filterEvent).toList();
-          if (_items.length < 30) {
-            if (widget.isAscending && !widget.reverse) {
-              _hasMore = false;
-            } else if (widget.reverse == false) {
-              _fetchMoreItems(_items.last);
-            } else if (widget.reverse) {
-              _fetchMoreItems(_items.first);
-            }
-          }
-        } else {
-          _hasMore = false;
-        }
-      });
-    }
+    await fetchList();
   }
 
   void _fetchMoreItems(DataEvent? e) async {
     if (_initialized != true || _loading == true) return;
     if (e == null) return;
-    _loading = true;
-    DateTime? until;
-    DateTime? since;
-    until = e.createdAt!.subtract(const Duration(milliseconds: 10));
-    NostrFilter filter = NostrFilter(
-      limit: widget.limit,
-      until: until,
-      since: since,
-      kinds: widget.kinds,
-      authors: widget.authors,
-      ids: widget.ids,
-      t: widget.t,
-      a: widget.a,
-      p: widget.p,
-      e: widget.e,
-      additionalFilters: widget.additionalFilters,
-    );
-    List<DataEvent> newItems = await NostrService.instance.fetchEvents(
-      [filter],
-      eoseRatio: 1,
-      isAscending: widget.isAscending,
-      relays: widget.relays,
-      timeout: const Duration(seconds: 10),
-    );
-    // if (newItems.isNotEmpty) {
-    //   await Future.wait([
-    //     _fetchUsersFromEvents(newItems),
-    //     _fetchRelatedEventsFromEvents(newItems)
-    //   ]);
-    // }
-    if (mounted) {
-      setState(() {
-        _loading = false;
-        if (newItems.isNotEmpty) {
-          _allItems.addAll(newItems);
-        }
-        newItems = newItems.where(filterEvent).toList();
-        _hasMore = newItems.isNotEmpty;
-        if (newItems.isNotEmpty) {
-          _items.addAll(newItems);
-        }
-      });
-    }
+    fetchList(e);
   }
 
   Future<void> _showNewItems() async {

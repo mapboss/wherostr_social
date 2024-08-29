@@ -69,18 +69,18 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
 
-  void _subscribe(DateTime since) {
-    final relays = context.read<AppStatesProvider>().me.relayList.clone();
-    _newEventStream = NostrService.subscribe([
-      NostrFilter(
-        kinds: const [1],
-        additionalFilters: {
-          "#g": fullExtentGeohash,
-        },
-      )
-    ], relays: relays);
-    _newEventListener = _newEventStream!.stream.listen((event) {});
-  }
+  // void _subscribe(DateTime since) {
+  //   final relays = context.read<AppStatesProvider>().me.relayList.clone();
+  //   _newEventStream = NostrService.subscribe([
+  //     NostrFilter(
+  //       kinds: const [1],
+  //       additionalFilters: {
+  //         "#g": fullExtentGeohash,
+  //       },
+  //     )
+  //   ], relays: relays);
+  //   _newEventListener = _newEventStream!.stream.listen((event) {});
+  // }
 
   Future<void> _unsubscribe() async {
     try {
@@ -104,7 +104,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
     setState(() {
       _loading = true;
     });
-    DateTime since = DateTime.timestamp().subtract(const Duration(days: 30));
+    DateTime since = DateTime.now().subtract(const Duration(days: 30));
     NostrFilter filter = NostrFilter(
       since: since,
       kinds: const [1],

@@ -12,14 +12,14 @@ The `.content` of these events is optional and could be a free-form note that ac
 The list of tags are as follows:
 * `a` (required) reference tag to kind `34235` or `34236` video event being viewed
 * `d` (required) same as `a` reference tag value
-* `viewed` (optional, repeated) timestamp of the user's start time in seconds, timestamp of the user's end time in seconds 
+* `viewed` (optional, repeated) now of the user's start time in seconds, now of the user's end time in seconds 
 
 
 ```json
 {
   "id": <32-bytes lowercase hex-encoded SHA-256 of the the serialized event data>,
   "pubkey": <32-bytes lowercase hex-encoded public key of the event creator>,
-  "created_at": <Unix timestamp in seconds>,
+  "created_at": <Unix now in seconds>,
   "kind": 34237,
   "content": "<note>",
   "tags": [

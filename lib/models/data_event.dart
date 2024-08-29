@@ -31,7 +31,7 @@ class DataEvent extends NostrEvent {
   String? id;
 
   @override
-  DateTime? createdAt = DateTime.timestamp();
+  DateTime? createdAt = DateTime.now();
 
   @override
   String? content = '';
@@ -63,7 +63,7 @@ class DataEvent extends NostrEvent {
           sig: sig ?? '',
           content: content ?? '',
           kind: kind,
-          createdAt: createdAt ?? DateTime.timestamp(),
+          createdAt: createdAt ?? DateTime.now(),
         );
 
   factory DataEvent.deserialized(String data) =>
@@ -71,7 +71,7 @@ class DataEvent extends NostrEvent {
 
   factory DataEvent.fromEvent(NostrEvent data) {
     final tagsToUse = data.tags ?? [];
-    final createdAtToUse = data.createdAt ?? DateTime.timestamp();
+    final createdAtToUse = data.createdAt ?? DateTime.now();
     final contentToUse = SafeParser.parseString(data.content);
     final kindToUse = SafeParser.parseInt(data.kind);
     final pubkeyToUse = SafeParser.parseString(data.pubkey);
@@ -166,7 +166,7 @@ class DataEvent extends NostrEvent {
     var eventId = NostrEvent.getEventId(
       kind: kind!,
       content: content ?? '',
-      createdAt: createdAt ?? DateTime.timestamp(),
+      createdAt: createdAt ?? DateTime.now(),
       tags: tags ?? [],
       pubkey: pubkey,
     );
@@ -199,7 +199,7 @@ class DataEvent extends NostrEvent {
       if (pubkey.isEmpty) {
         pubkey = keyPairs!.public;
       }
-      createdAt = DateTime.timestamp();
+      createdAt = DateTime.now();
       content ??= '';
       if (difficulty != null) {
         await minePow(this, difficulty);

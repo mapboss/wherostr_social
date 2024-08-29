@@ -13,7 +13,7 @@ Future<Completer<DataEvent>> minePow(DataEvent unsigned,
   event.tags?.add(tag);
   Completer<DataEvent> completer = Completer();
   while (true) {
-    final now = DateTime.timestamp().millisecondsSinceEpoch;
+    final now = DateTime.now().millisecondsSinceEpoch;
 
     if (now != event.createdAt?.millisecondsSinceEpoch) {
       count = 0;

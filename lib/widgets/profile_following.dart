@@ -4,11 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
-import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
-import 'package:wherostr_social/widgets/post_item_loader.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -36,6 +34,12 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
   void initState() {
     super.initState();
     initialize();
+  }
+
+  @override
+  void dispose() {
+    events.clear();
+    super.dispose();
   }
 
   void initialize() async {
@@ -71,7 +75,7 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
             tabs: [
               Tab(
                   text:
-                      'Followers${(_following?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_following!.length)})' : ''}'),
+                      'Following${(_following?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_following!.length)})' : ''}'),
               Tab(
                   text:
                       'Followers${(_followers?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_followers!.length)})' : ''}'),

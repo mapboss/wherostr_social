@@ -324,14 +324,31 @@ class NostrService {
     return _fetchUser(pubkey, timeout: timeout, relays: relays);
   }
 
-  static NostrEventsStream subscribe(List<NostrFilter> filters,
-      {DataRelayList? relays}) {
-    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
+  static NostrEventsStream subscribe(
+    List<NostrFilter> filters, {
+    DataRelayList? relays,
+    bool? closeOnEnd,
+    Function(String subscriptionId)? onEnd,
+  }) {
+    final readRelays =
+        relays?.clone().concatLeft(AppRelays.relays).readRelays ??
+            NostrService.instance.relaysService.relaysList!;
     final request = NostrRequest(filters: filters);
+    int eose = 0;
     NostrEventsStream nostrStream =
         NostrService.instance.relaysService.startEventsSubscription(
       request: request,
       relays: readRelays,
+      onEose: (relay, ease) {
+        eose += 1;
+        if (closeOnEnd ?? false) {
+          NostrService.instance.relaysService
+              .closeEventsSubscription(ease.subscriptionId, relay);
+        }
+        if (eose >= readRelays.length) {
+          onEnd?.call(ease.subscriptionId);
+        }
+      },
     );
     return nostrStream;
   }

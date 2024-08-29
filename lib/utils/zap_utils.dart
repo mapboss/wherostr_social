@@ -77,24 +77,24 @@ Completer<NostrEvent> waitZapReceipt(NostrEvent zapRequest, String invoice) {
       a: a?.isNotEmpty == true ? a! : null,
       p: p?.isNotEmpty == true ? p! : null,
       kinds: const [9735],
-      since: DateTime.timestamp(),
+      since: DateTime.now(),
     );
     var sub = NostrService.subscribe([request]);
-    var listener = sub.stream.listen((NostrEvent event) {
-      String? description = event.tags
-          ?.singleWhere((e) => e.firstOrNull == 'description')
-          .elementAtOrNull(1);
-      if (description != null) {
-        var mapdesc = jsonDecode(description);
-        if (mapdesc['sig'] == zapRequest.sig) {
-          completer.complete(event);
-        }
-      }
-    });
-    completer.future.whenComplete(() {
-      listener.cancel();
-      sub.close();
-    });
+    // var listener = sub.stream.listen((NostrEvent event) {
+    //   String? description = event.tags
+    //       ?.singleWhere((e) => e.firstOrNull == 'description')
+    //       .elementAtOrNull(1);
+    //   if (description != null) {
+    //     var mapdesc = jsonDecode(description);
+    //     if (mapdesc['sig'] == zapRequest.sig) {
+    //       completer.complete(event);
+    //     }
+    //   }
+    // });
+    // completer.future.whenComplete(() {
+    //   listener.cancel();
+    //   sub.close();
+    // });
   } catch (err) {
     completer.completeError(err);
   }

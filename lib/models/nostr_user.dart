@@ -159,11 +159,11 @@ class NostrUser {
   }
 
   Future<List<String>> fetchFollowing([bool force = false]) async {
-    // print('fetchFollowing');
-    // if (!force && _following != null) {
-    //   print('fetchFollowing.cache: ${_following?.length}');
-    //   return following;
-    // }
+    print('fetchFollowing');
+    if (!force && _following != null) {
+      print('fetchFollowing.cache: ${_following?.length}');
+      return following;
+    }
     NostrFilter filter =
         NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
     final events = await NostrService.fetchEvents(

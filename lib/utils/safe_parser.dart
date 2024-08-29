@@ -28,6 +28,6 @@ class SafeParser {
     }
     return data != null
         ? DateTime.fromMillisecondsSinceEpoch(data)
-        : DateTime.timestamp();
+        : DateTime.now();
   }
 }

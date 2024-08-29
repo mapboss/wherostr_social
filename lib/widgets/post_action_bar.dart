@@ -63,7 +63,7 @@ class _PostActionBarState extends State<PostActionBar> {
       if (mounted) {
         widget.event.relatedEvents.addAll(events);
         updateCounts(events);
-        subscribe();
+        // subscribe();
       }
     });
     NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
@@ -76,20 +76,20 @@ class _PostActionBarState extends State<PostActionBar> {
     });
   }
 
-  void subscribe() {
-    _newEventStream = NostrService.subscribe([
-      NostrFilter(
-        since: DateTime.timestamp(),
-        kinds: const [1, 6, 7, 9735],
-        e: [widget.event.id!],
-      ),
-    ]);
-    _newEventListener = _newEventStream!.stream.listen((event) {
-      final e = DataEvent.fromEvent(event);
-      widget.event.relatedEvents.add(e);
-      updateCounts([e]);
-    });
-  }
+  // void subscribe() {
+  //   _newEventStream = NostrService.subscribe([
+  //     NostrFilter(
+  //       since: DateTime.now(),
+  //       kinds: const [1, 6, 7, 9735],
+  //       e: [widget.event.id!],
+  //     ),
+  //   ]);
+  //   _newEventListener = _newEventStream!.stream.listen((event) {
+  //     final e = DataEvent.fromEvent(event);
+  //     widget.event.relatedEvents.add(e);
+  //     updateCounts([e]);
+  //   });
+  // }
 
   void unsubscribe() {
     if (_newEventListener != null) {
