@@ -289,7 +289,9 @@ class NostrFeedState extends State<NostrFeed> {
   Future<void> fetchList([DataEvent? lastEvent]) async {
     bool isInitializeState = lastEvent == null;
     Completer completer = Completer();
-    _loading = true;
+    setState(() {
+      _loading = true;
+    });
     DateTime? until =
         lastEvent?.createdAt?.subtract(const Duration(milliseconds: 10));
     NostrFilter filter = NostrFilter(
@@ -310,11 +312,11 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: true,
       onEnd: (subscriptionId) {
-        _loading = false;
         if (isInitializeState && !widget.disableSubscribe) {
           subscribe(DateTime.now());
         }
         setState(() {
+          _loading = false;
           _hasMore = hasMore >= widget.limit;
         });
       },
