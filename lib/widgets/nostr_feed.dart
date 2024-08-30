@@ -292,8 +292,9 @@ class NostrFeedState extends State<NostrFeed> {
     setState(() {
       _loading = true;
     });
-    DateTime? until =
-        lastEvent?.createdAt?.subtract(const Duration(milliseconds: 10));
+    DateTime? until = lastEvent == null
+        ? DateTime.now()
+        : lastEvent.createdAt?.subtract(const Duration(milliseconds: 10));
     NostrFilter filter = NostrFilter(
       until: until,
       limit: widget.limit,
@@ -316,8 +317,11 @@ class NostrFeedState extends State<NostrFeed> {
           subscribe(DateTime.now());
         }
         setState(() {
+          if (isInitializeState) {
+            _initialized = true;
+          }
           _loading = false;
-          _hasMore = hasMore >= widget.limit;
+          _hasMore = hasMore > 0;
         });
       },
     );
@@ -341,6 +345,7 @@ class NostrFeedState extends State<NostrFeed> {
         if (!completer.isCompleted) {
           if (isInitializeState) {
             setState(() {
+              _loading = false;
               _initialized = true;
             });
           }

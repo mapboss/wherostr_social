@@ -29,6 +29,8 @@ class PostActionBar extends StatefulWidget {
 class _PostActionBarState extends State<PostActionBar> {
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
+  NostrEventsStream? _initEventStream;
+  StreamSubscription? _initEventListener;
   NostrUser? _user;
   int _repostCount = 0;
   int _commentCount = 0;
@@ -58,14 +60,7 @@ class _PostActionBarState extends State<PostActionBar> {
       e: [widget.event.id!],
     );
 
-    NostrService.instance
-        .fetchEvents([filter], relays: me.relayList).then((events) {
-      if (mounted) {
-        widget.event.relatedEvents.addAll(events);
-        updateCounts(events);
-        // subscribe();
-      }
-    });
+    fetchList().whenComplete(() => subscribe());
     NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
         .then((user) {
       if (mounted) {
@@ -76,20 +71,49 @@ class _PostActionBarState extends State<PostActionBar> {
     });
   }
 
-  // void subscribe() {
-  //   _newEventStream = NostrService.subscribe([
-  //     NostrFilter(
-  //       since: DateTime.now(),
-  //       kinds: const [1, 6, 7, 9735],
-  //       e: [widget.event.id!],
-  //     ),
-  //   ]);
-  //   _newEventListener = _newEventStream!.stream.listen((event) {
-  //     final e = DataEvent.fromEvent(event);
-  //     widget.event.relatedEvents.add(e);
-  //     updateCounts([e]);
-  //   });
-  // }
+  Future<void> fetchList([DataEvent? lastEvent]) async {
+    final me = context.read<AppStatesProvider>().me;
+    bool isInitializeState = lastEvent == null;
+    Completer completer = Completer();
+    NostrFilter filter = NostrFilter(
+      until: DateTime.now(),
+      kinds: const [1, 6, 7, 9735],
+      e: [widget.event.id!],
+    );
+    _initEventStream = NostrService.subscribe(
+      [filter],
+      relays: me.relayList,
+      closeOnEnd: true,
+      onEnd: (subscriptionId) {
+        if (isInitializeState) {
+          completer.complete();
+        }
+      },
+    );
+    _initEventListener = _initEventStream!.stream.listen(
+      (event) {
+        final e = DataEvent.fromEvent(event);
+        widget.event.relatedEvents.add(e);
+        updateCounts([e]);
+      },
+    );
+    return completer.future;
+  }
+
+  void subscribe() {
+    _newEventStream = NostrService.subscribe([
+      NostrFilter(
+        since: DateTime.now(),
+        kinds: const [1, 6, 7, 9735],
+        e: [widget.event.id!],
+      ),
+    ]);
+    _newEventListener = _newEventStream!.stream.listen((event) {
+      final e = DataEvent.fromEvent(event);
+      widget.event.relatedEvents.add(e);
+      updateCounts([e]);
+    });
+  }
 
   void unsubscribe() {
     if (_newEventListener != null) {
@@ -99,6 +123,14 @@ class _PostActionBarState extends State<PostActionBar> {
     if (_newEventStream != null) {
       _newEventStream!.close();
       _newEventStream = null;
+    }
+    if (_initEventListener != null) {
+      _initEventListener!.cancel();
+      _initEventListener = null;
+    }
+    if (_initEventStream != null) {
+      _initEventStream!.close();
+      _initEventStream = null;
     }
   }
 
@@ -164,9 +196,9 @@ class _PostActionBarState extends State<PostActionBar> {
         }
       }
       setState(() {
-        _isReposted = isReposted;
-        _isReacted = isReacted;
-        _isZapped = isZapped;
+        _isReposted = _isReposted == true ? _isReposted : isReposted;
+        _isReacted = _isReacted == true ? _isReacted : isReacted;
+        _isZapped = _isZapped == true ? _isZapped : isZapped;
         _emojiUrl = emojiUrl;
         _repostCount = repostCount;
         _commentCount = commentCount;
