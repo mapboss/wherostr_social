@@ -42,7 +42,7 @@ String formatTime(DateTime? date) {
     return '';
   }
   final now = DateTime.now();
-  if (now.year == date.year && now.month == date.month && now.day == date.day) {
+  if (now.difference(date).inDays < 3) {
     return timeago.format(date, locale: 'en_short');
   } else {
     return DateFormat.yMMMMd('en_US').format(date);
@@ -56,7 +56,8 @@ String formatTimeAgo(DateTime? date) {
   }
   final now = DateTime.now();
   if (now.year == date.year && now.month == date.month && now.day == date.day) {
-    return '${timeago.format(date, locale: 'en_short')}${now.minute == date.minute ? '' : ' ago'}';
+    final elapsedTime = timeago.format(date, locale: 'en_short');
+    return '$elapsedTime${elapsedTime == 'now' ? '' : ' ago'}';
   } else {
     return 'on ${DateFormat.yMMMMd('en_US').format(date)}';
   }

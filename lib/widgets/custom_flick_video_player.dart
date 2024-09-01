@@ -191,12 +191,14 @@ class _CustomFlickVideoPlayerState extends State<CustomFlickVideoPlayer>
         isScrollControlled: true,
         useRootNavigator: true,
         builder: (context) {
-          return FractionallySizedBox(
-            heightFactor: 1,
-            child: FlickManagerBuilder(
-              flickManager: flickManager,
-              child: widget.flickVideoWithControlsFullscreen ??
-                  widget.flickVideoWithControls,
+          return SafeArea(
+            child: FractionallySizedBox(
+              heightFactor: 1,
+              child: FlickManagerBuilder(
+                flickManager: flickManager,
+                child: widget.flickVideoWithControlsFullscreen ??
+                    widget.flickVideoWithControls,
+              ),
             ),
           );
         },

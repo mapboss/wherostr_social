@@ -352,6 +352,7 @@ class _ActivityItemState extends State<ActivityItem> {
                                   enableLocation: false,
                                   enableProofOfWork: false,
                                   enablePreview: false,
+                                  enableMedia: false,
                                   depth: 1,
                                 ),
                               ),

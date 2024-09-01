@@ -28,8 +28,10 @@ class PostContent extends StatefulWidget {
   final List<String>? tags;
   final bool enableElementTap;
   final bool enablePreview;
+  final bool enableMedia;
   final int depth;
   final bool wantKeepAlive;
+  final Widget? contentLeading;
 
   const PostContent({
     super.key,
@@ -37,8 +39,10 @@ class PostContent extends StatefulWidget {
     this.tags,
     this.enableElementTap = true,
     this.enablePreview = true,
+    this.enableMedia = true,
     this.depth = 0,
     this.wantKeepAlive = true,
+    this.contentLeading,
   });
 
   @override
@@ -87,6 +91,12 @@ class _PostContentState extends State<PostContent>
   List<InlineSpan> getElementWidgets() {
     ThemeData themeData = Theme.of(context);
     List<InlineSpan> widgets = [];
+    if (widget.contentLeading != null) {
+      widgets.add(WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: widget.contentLeading!,
+      ));
+    }
     List<ImageProvider> imageProviders = [];
     double maxMediaHeight = (MediaQuery.sizeOf(context).width - 32) * (4 / 3);
     for (var element in _elements) {
@@ -94,7 +104,7 @@ class _PostContentState extends State<PostContent>
         case ImageUrlMatcher:
           final imageProvider = AppUtils.getImageProvider(element.text);
           imageProviders.add(imageProvider);
-          if (widget.enablePreview) {
+          if (widget.enableMedia) {
             widgets.add(
               WidgetSpan(
                 child: Column(
@@ -142,7 +152,7 @@ class _PostContentState extends State<PostContent>
           }
           continue;
         case VideoUrlMatcher:
-          if (widget.enablePreview) {
+          if (widget.enableMedia) {
             widgets.add(
               WidgetSpan(
                 child: Container(
@@ -170,7 +180,7 @@ class _PostContentState extends State<PostContent>
           }
           continue;
         case AudioUrlMatcher:
-          if (widget.enablePreview) {
+          if (widget.enableMedia) {
             widgets.add(
               WidgetSpan(
                 child: AudioPlayer(url: element.text),
@@ -447,13 +457,15 @@ class _LinkPreviewState extends State<LinkPreview> {
 
   void initialize() async {
     try {
-      final metadata = await AnyLinkPreview.getMetadata(
-        link: widget.url,
-      );
-      if (mounted) {
-        setState(() {
-          _metadata = metadata;
-        });
+      if (widget.url.startsWith('https://')) {
+        final metadata = await AnyLinkPreview.getMetadata(
+          link: widget.url.replaceFirst('https://www.', 'https://'),
+        );
+        if (mounted) {
+          setState(() {
+            _metadata = metadata;
+          });
+        }
       }
     } catch (error) {}
   }
@@ -502,6 +514,8 @@ class _LinkPreviewState extends State<LinkPreview> {
             child: Text(
               title,
               style: themeData.textTheme.titleMedium,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         if (desc != null)

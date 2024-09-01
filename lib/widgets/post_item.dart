@@ -5,6 +5,7 @@ import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/utils/pow.dart';
+import 'package:wherostr_social/widgets/message_item.dart';
 import 'package:wherostr_social/widgets/post_article.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
 import 'package:wherostr_social/widgets/post_live_activity.dart';
@@ -29,6 +30,7 @@ class PostItem extends StatelessWidget {
   final bool enableLocation;
   final bool enableProofOfWork;
   final bool enablePreview;
+  final bool enableMedia;
   final EdgeInsetsGeometry? contentPadding;
   final int depth;
   final double? maxHeight;
@@ -44,6 +46,7 @@ class PostItem extends StatelessWidget {
     this.enableLocation = true,
     this.enableProofOfWork = true,
     this.enablePreview = true,
+    this.enableMedia = true,
     this.contentPadding,
     this.depth = 0,
     this.maxHeight,
@@ -64,6 +67,7 @@ class PostItem extends StatelessWidget {
           enableLocation: enableLocation,
           enableProofOfWork: enableProofOfWork,
           enablePreview: enablePreview,
+          enableMedia: enableMedia,
           contentPadding: contentPadding,
           depth: depth,
         );
@@ -76,7 +80,6 @@ class PostItem extends StatelessWidget {
             ),
           );
         }
-        break;
       case 6:
         widget = Repost(
           event: event,
@@ -86,6 +89,7 @@ class PostItem extends StatelessWidget {
           enableLocation: enableLocation,
           enableProofOfWork: enableProofOfWork,
           enablePreview: enablePreview,
+          enableMedia: enableMedia,
           contentPadding: contentPadding,
           depth: depth,
         );
@@ -99,12 +103,24 @@ class PostItem extends StatelessWidget {
         widget = PostLiveActivity(
           event: event,
         );
-        break;
       case 30023:
         widget = PostArticle(
           event: event,
         );
-        break;
+      case 1311:
+        ThemeData themeData = Theme.of(context);
+        return Container(
+          color: themeData.colorScheme.surfaceDim,
+          child: Container(
+            color: themeData.colorScheme.primary.withOpacity(0.054),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: MessageItem(
+              event: event,
+              enableActionBar: false,
+              isCompact: true,
+            ),
+          ),
+        );
       default:
         widget = const PostUnsupportedType();
     }
@@ -205,6 +221,7 @@ class ShortTextNote extends PostItem {
     super.enableLocation = true,
     super.enableProofOfWork = true,
     super.enablePreview = true,
+    super.enableMedia = true,
     super.contentPadding,
     super.depth = 0,
   });
@@ -218,6 +235,7 @@ class ShortTextNote extends PostItem {
         content: event.content?.trim() ?? '',
         enableElementTap: enableElementTap,
         enablePreview: enablePreview,
+        enableMedia: enableMedia,
         depth: depth,
       ),
     );
@@ -284,6 +302,7 @@ class Repost extends PostItem {
     super.enableLocation = true,
     super.enableProofOfWork = true,
     super.enablePreview = true,
+    super.enableMedia = true,
     super.contentPadding,
     super.depth = 0,
   });
@@ -346,6 +365,7 @@ class Repost extends PostItem {
                   enableLocation: enableLocation,
                   enableProofOfWork: enableProofOfWork,
                   enablePreview: enablePreview,
+                  enableMedia: enableMedia,
                   depth: depth,
                 )
               else
@@ -357,6 +377,7 @@ class Repost extends PostItem {
                   enableLocation: enableLocation,
                   enableProofOfWork: enableProofOfWork,
                   enablePreview: enablePreview,
+                  enableMedia: enableMedia,
                   contentPadding: contentPadding,
                   depth: depth,
                 )

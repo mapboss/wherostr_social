@@ -1,24 +1,38 @@
 import 'package:flutter/material.dart';
 
-enum SpeechBubbleOrigin { left, right }
-
-class CSpeechBubble extends StatefulWidget {
-  final Widget? child;
-  final SpeechBubbleOrigin origin;
-  const CSpeechBubble(
-      {super.key, this.child, this.origin = SpeechBubbleOrigin.left});
-  @override
-  State createState() => _CSpeechBubbleState();
+enum SpeechBubbleOrigin {
+  left,
+  right,
 }
 
-class _CSpeechBubbleState extends State<CSpeechBubble> {
+class SpeechBubble extends StatefulWidget {
+  final Widget child;
+  final SpeechBubbleOrigin origin;
+  final EdgeInsetsGeometry? padding;
+  final Color? color;
+
+  const SpeechBubble({
+    super.key,
+    required this.child,
+    this.origin = SpeechBubbleOrigin.left,
+    this.padding,
+    this.color,
+  });
+
+  @override
+  State createState() => _SpeechBubbleState();
+}
+
+class _SpeechBubbleState extends State<SpeechBubble> {
   @override
   Widget build(BuildContext context) {
+    ThemeData themeData = Theme.of(context);
     return PhysicalShape(
       clipper: SpeechBubbleClipper(origin: widget.origin),
-      color: Theme.of(context).colorScheme.primaryContainer,
+      color: widget.color ?? themeData.colorScheme.surface,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        padding: widget.padding ??
+            const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
         child: widget.child,
       ),
     );
@@ -65,195 +79,3 @@ class SpeechBubbleClipper extends CustomClipper<Path> {
     return false;
   }
 }
-
-// Scaffold(
-//   body: Container(
-//     margin: const EdgeInsets.all(16),
-//     child: ListView(
-//       children: [
-//         const Row(
-//           mainAxisAlignment: MainAxisAlignment.end,
-//           children: [
-//             Flexible(
-//               child: CSpeechBubble(
-//                 origin: SpeechBubbleOrigin.right,
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.end,
-//                   children: [
-//                     Text('Hi!'),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//         const Row(
-//           mainAxisAlignment: MainAxisAlignment.end,
-//           children: [
-//             Flexible(
-//               child: CSpeechBubble(
-//                 origin: SpeechBubbleOrigin.right,
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.end,
-//                   children: [
-//                     Text('Hi!'),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//         const Row(
-//           mainAxisAlignment: MainAxisAlignment.start,
-//           children: [
-//             Flexible(
-//               child: CSpeechBubble(
-//                 origin: SpeechBubbleOrigin.left,
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Text('Hi!'),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//         const Row(
-//           mainAxisAlignment: MainAxisAlignment.start,
-//           children: [
-//             Flexible(
-//               child: CSpeechBubble(
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Text('Hi!'),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//         // const Row(
-//         //   mainAxisAlignment: MainAxisAlignment.start,
-//         //   children: [
-//         //     Flexible(
-//         //       child: CSpeechBubble(
-//         //         child: Column(
-//         //           crossAxisAlignment: CrossAxisAlignment.start,
-//         //           children: [
-//         //             AudioPlayer(
-//         //                 url:
-//         //                     '.mp3'),
-//         //           ],
-//         //         ),
-//         //       ),
-//         //     ),
-//         //   ],
-//         // ),
-//         // const Row(
-//         //   mainAxisAlignment: MainAxisAlignment.end,
-//         //   children: [
-//         //     Flexible(
-//         //       child: CSpeechBubble(
-//         //         origin: SpeechBubbleOrigin.right,
-//         //         child: Column(
-//         //           crossAxisAlignment: CrossAxisAlignment.end,
-//         //           children: [
-//         //             AudioPlayer(
-//         //                 url:
-//         //                     '.mp3'),
-//         //           ],
-//         //         ),
-//         //       ),
-//         //     ),
-//         //   ],
-//         // ),
-//         // Row(
-//         //   mainAxisAlignment: MainAxisAlignment.start,
-//         //   children: [
-//         //     Flexible(
-//         //       child: CSpeechBubble(
-//         //         child: Column(
-//         //           crossAxisAlignment: CrossAxisAlignment.start,
-//         //           children: [
-//         //             Container(
-//         //               constraints: const BoxConstraints(
-//         //                 maxHeight: 340,
-//         //                 minWidth: 170,
-//         //               ),
-//         //               child: const AspectRatio(
-//         //                 aspectRatio: 1,
-//         //                 child: PhotoView(
-//         //                     url:
-//         //                         '.jpg'),
-//         //               ),
-//         //             ),
-//         //           ],
-//         //         ),
-//         //       ),
-//         //     ),
-//         //   ],
-//         // ),
-//         // Row(
-//         //   mainAxisAlignment: MainAxisAlignment.start,
-//         //   children: [
-//         //     Flexible(
-//         //       child: CSpeechBubble(
-//         //         child: Column(
-//         //           crossAxisAlignment: CrossAxisAlignment.start,
-//         //           children: [
-//         //             SizedBox(
-//         //               height: 120,
-//         //               child: CImageGallery(
-//         //                   url:
-//         //                       '.jpg'),
-//         //             )
-//         //           ],
-//         //         ),
-//         //       ),
-//         //     ),
-//         //   ],
-//         // ),
-//         // Row(
-//         //   mainAxisAlignment: MainAxisAlignment.end,
-//         //   children: [
-//         //     Flexible(
-//         //       child: CSpeechBubble(
-//         //         origin: SpeechBubbleOrigin.right,
-//         //         child: Column(
-//         //           crossAxisAlignment: CrossAxisAlignment.end,
-//         //           children: [
-//         //             CImageGallery(
-//         //                 url:
-//         //                     '.jpg'),
-//         //           ],
-//         //         ),
-//         //       ),
-//         //     ),
-//         //   ],
-//         // ),
-//         // const Row(
-//         //   mainAxisAlignment: MainAxisAlignment.start,
-//         //   children: [
-//         //     Flexible(
-//         //       child: CSpeechBubble(
-//         //         child: Column(
-//         //           crossAxisAlignment: CrossAxisAlignment.start,
-//         //           children: [
-//         //             SizedBox(
-//         //               height: 120,
-//         //               child: VideoPlayer(
-//         //                   url:
-//         //                       '.mp4'),
-//         //             )
-//         //           ],
-//         //         ),
-//         //       ),
-//         //     ),
-//         //   ],
-//         // ),
-//       ],
-//     ),
-//   ),
-// );

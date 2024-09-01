@@ -450,6 +450,7 @@ class _ProfileState extends State<Profile> {
                           PostContent(
                             content: widget.user.about!,
                             enablePreview: false,
+                            enableMedia: false,
                             depth: 1,
                             wantKeepAlive: false,
                           ),

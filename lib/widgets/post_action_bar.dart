@@ -405,9 +405,7 @@ class _PostActionBarState extends State<PostActionBar> {
               ),
               icon: Icon(
                 Icons.electric_bolt,
-                color: _isZapped
-                    ? themeExtension.warningColor
-                    : themeExtension.textDimColor,
+                color: _isZapped ? Colors.orange : themeExtension.textDimColor,
               ),
               style: const ButtonStyle(
                 padding: WidgetStatePropertyAll(
