@@ -76,6 +76,7 @@ class PostItem extends StatelessWidget {
             maxHeight: maxHeight!,
             child: SingleChildScrollView(
               physics: const NeverScrollableScrollPhysics(),
+              primary: false,
               child: widget,
             ),
           );
@@ -172,6 +173,7 @@ class _PostContentWrapperState extends State<PostContentWrapper> {
                 maxHeight: maxHeight,
                 child: SingleChildScrollView(
                   physics: const NeverScrollableScrollPhysics(),
+                  primary: false,
                   child: widget.child,
                 ),
               ),

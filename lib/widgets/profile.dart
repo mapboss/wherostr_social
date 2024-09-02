@@ -91,6 +91,7 @@ class _ProfileState extends State<Profile> {
                 height: expandedHeight,
                 child: SingleChildScrollView(
                   physics: const NeverScrollableScrollPhysics(),
+                  primary: false,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

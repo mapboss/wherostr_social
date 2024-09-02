@@ -343,6 +343,7 @@ class _ActivityItemState extends State<ActivityItem> {
                               maxHeight: 108,
                               child: SingleChildScrollView(
                                 physics: const NeverScrollableScrollPhysics(),
+                                primary: false,
                                 child: PostItemLoader(
                                   eventId: _referencedEventId!,
                                   enableMenu: false,

@@ -218,6 +218,7 @@ class _ZapFormState extends State<ZapForm> {
                                   child: SingleChildScrollView(
                                     physics:
                                         const NeverScrollableScrollPhysics(),
+                                    primary: false,
                                     child: PostItem(
                                       event: widget.event!,
                                       enableTap: false,
