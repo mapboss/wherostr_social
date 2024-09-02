@@ -42,7 +42,8 @@ class _ProfileEditingState extends State<ProfileEditing> {
   final _formKey = GlobalKey<FormState>();
   final RegExp _emailPattern = RegExp(const EmailMatcher().pattern);
   final RegExp _linkPattern = RegExp(const UrlLikeMatcher().pattern);
-  final RegExp _lnurlPattern = RegExp(const LightningUrlMatcher().pattern);
+  final RegExp _lnurlPattern =
+      RegExp(const LightningUrlMatcher().pattern, caseSensitive: false);
 
   String? _picture;
   File? _pictureFile;

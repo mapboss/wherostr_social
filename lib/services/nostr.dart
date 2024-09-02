@@ -327,25 +327,40 @@ class NostrService {
     List<NostrFilter> filters, {
     DataRelayList? relays,
     bool? closeOnEnd,
-    Function(String subscriptionId)? onEnd,
+    String? subscriptionId,
+    bool useConsistentSubscriptionIdBasedOnRequestData = false,
+    Duration timeout = const Duration(seconds: 5),
+    Function()? onEnd,
   }) {
+    Completer? completer;
     final readRelays =
         relays?.clone().leftCombine(AppRelays.relays).readRelays ??
             NostrService.instance.relaysService.relaysList!;
-    final request = NostrRequest(filters: filters);
+    final request =
+        NostrRequest(filters: filters, subscriptionId: subscriptionId);
+
     int eose = 0;
     NostrEventsStream nostrStream =
         NostrService.instance.relaysService.startEventsSubscription(
+      useConsistentSubscriptionIdBasedOnRequestData:
+          useConsistentSubscriptionIdBasedOnRequestData,
       request: request,
       relays: readRelays,
       onEose: (relay, ease) {
         eose += 1;
+
         if (closeOnEnd ?? false) {
+          if (completer == null) {
+            completer = Completer();
+            completer?.future.timeout(timeout).whenComplete(() {
+              onEnd?.call();
+            });
+          }
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId, relay);
         }
         if (eose >= readRelays.length) {
-          onEnd?.call(ease.subscriptionId);
+          completer?.complete();
         }
       },
     );

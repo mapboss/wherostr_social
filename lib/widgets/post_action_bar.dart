@@ -28,8 +28,6 @@ class PostActionBar extends StatefulWidget {
 class _PostActionBarState extends State<PostActionBar> {
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
-  NostrEventsStream? _initEventStream;
-  StreamSubscription? _initEventListener;
   NostrUser? _user;
   int _repostCount = 0;
   int _commentCount = 0;
@@ -54,7 +52,7 @@ class _PostActionBarState extends State<PostActionBar> {
 
   void initialize() {
     final me = context.read<AppStatesProvider>().me;
-    fetchList().whenComplete(() => subscribe());
+    subscribe();
     NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
         .then((user) {
       if (mounted) {
@@ -65,35 +63,9 @@ class _PostActionBarState extends State<PostActionBar> {
     });
   }
 
-  Future<void> fetchList() async {
-    final me = context.read<AppStatesProvider>().me;
-    Completer completer = Completer();
-    NostrFilter filter = NostrFilter(
-      kinds: const [1, 6, 7, 9735],
-      e: [widget.event.id!],
-    );
-    _initEventStream = NostrService.subscribe(
-      [filter],
-      relays: me.relayList,
-      closeOnEnd: true,
-      onEnd: (subscriptionId) {
-        completer.complete();
-      },
-    );
-    _initEventListener = _initEventStream!.stream.listen(
-      (event) {
-        final e = DataEvent.fromEvent(event);
-        // widget.event.relatedEvents.add(e);
-        updateCounts([e]);
-      },
-    );
-    return completer.future;
-  }
-
   void subscribe() {
     final relayList = context.read<AppStatesProvider>().me.relayList;
     NostrFilter filter = NostrFilter(
-      since: DateTime.now(),
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
     );
@@ -115,14 +87,6 @@ class _PostActionBarState extends State<PostActionBar> {
     if (_newEventStream != null) {
       _newEventStream!.close();
       _newEventStream = null;
-    }
-    if (_initEventListener != null) {
-      _initEventListener!.cancel();
-      _initEventListener = null;
-    }
-    if (_initEventStream != null) {
-      _initEventStream!.close();
-      _initEventStream = null;
     }
   }
 

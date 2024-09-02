@@ -321,7 +321,7 @@ class NostrFeedState extends State<NostrFeed> {
       [filter],
       relays: widget.relays,
       closeOnEnd: true,
-      onEnd: (subscriptionId) {
+      onEnd: () {
         if (isInitializeState && !widget.disableSubscribe) {
           subscribe(DateTime.now());
         }
@@ -355,10 +355,13 @@ class NostrFeedState extends State<NostrFeed> {
         }
 
         if (!completer.isCompleted) {
-          if (isInitializeState) {
+          if (mounted) {
             setState(() {
+              if (isInitializeState) {
+                _initialized = true;
+              }
+              _hasMore = hasMore > 0;
               _loading = false;
-              _initialized = true;
             });
           }
           completer.complete();
