@@ -5,7 +5,6 @@ import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -85,7 +84,7 @@ class _PostActionBarState extends State<PostActionBar> {
     _initEventListener = _initEventStream!.stream.listen(
       (event) {
         final e = DataEvent.fromEvent(event);
-        widget.event.relatedEvents.add(e);
+        // widget.event.relatedEvents.add(e);
         updateCounts([e]);
       },
     );
@@ -94,19 +93,17 @@ class _PostActionBarState extends State<PostActionBar> {
 
   void subscribe() {
     final relayList = context.read<AppStatesProvider>().me.relayList;
+    NostrFilter filter = NostrFilter(
+      until: DateTime.now(),
+      kinds: const [1, 6, 7, 9735],
+      e: [widget.event.id!],
+    );
     _newEventStream = NostrService.subscribe(
-      [
-        NostrFilter(
-          since: DateTime.now(),
-          kinds: const [1, 6, 7, 9735],
-          e: [widget.event.id!],
-        ),
-      ],
+      [filter],
       relays: relayList,
     );
     _newEventListener = _newEventStream!.stream.listen((event) {
       final e = DataEvent.fromEvent(event);
-      widget.event.relatedEvents.add(e);
       updateCounts([e]);
     });
   }
@@ -130,7 +127,7 @@ class _PostActionBarState extends State<PostActionBar> {
     }
   }
 
-  void updateCounts(List<NostrEvent> events) {
+  void updateCounts(List<DataEvent> events) {
     if (mounted) {
       final me = context.read<AppStatesProvider>().me;
       bool isReposted = false;
@@ -171,19 +168,17 @@ class _PostActionBarState extends State<PostActionBar> {
             continue;
           case 9735:
             if (event.tags != null) {
-              List<String>? bolt11Tag =
-                  event.tags!.where((tag) => tag[0] == 'bolt11').firstOrNull;
-              List<String>? desc =
-                  event.tags?.singleWhere((tag) => tag[0] == 'description');
+              String? bolt11Tag = event.getTagValue('bolt11');
+              String? desc = event.getTagValue('description');
 
-              if (desc?.elementAtOrNull(1) != null) {
-                if (me.pubkey == jsonDecode(desc!.elementAt(1))?['pubkey']) {
+              if (desc != null) {
+                if (me.pubkey == jsonDecode(desc)?['pubkey']) {
                   isZapped = true;
                 }
               }
               if (bolt11Tag != null) {
                 double amount =
-                    Bolt11PaymentRequest(bolt11Tag[1]).amount.toDouble() *
+                    Bolt11PaymentRequest(bolt11Tag).amount.toDouble() *
                         100000000;
                 zapCount += amount;
               }

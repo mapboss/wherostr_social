@@ -42,16 +42,6 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
     super.dispose();
   }
 
-  @override
-  void didUpdateWidget(covariant ProfileFollowing oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialIndex != widget.initialIndex) {
-      setState(() {
-        events.clear();
-      });
-    }
-  }
-
   void initialize() async {
     widget.user.fetchFollowing().then((value) {
       if (mounted) {
@@ -82,6 +72,11 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
             withBadge: true,
           ),
           bottom: TabBar(
+            onTap: (value) {
+              setState(() {
+                events.clear();
+              });
+            },
             tabs: [
               Tab(
                   text:

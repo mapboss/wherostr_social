@@ -109,7 +109,9 @@ class NostrFeedState extends State<NostrFeed> {
                             ? _scrollController
                             : null,
                         reverse: widget.reverse,
-                        itemCount: _hasMore ? _items.length + 1 : _items.length,
+                        itemCount: !widget.isAscending && _hasMore
+                            ? _items.length + 1
+                            : _items.length,
                         itemBuilder: (context, index) {
                           if (_items.length == index) {
                             return const Padding(
@@ -312,6 +314,7 @@ class NostrFeedState extends State<NostrFeed> {
       e: widget.e,
       additionalFilters: widget.additionalFilters,
     );
+    int hasMore = 0;
     _initEventStream = NostrService.subscribe(
       [filter],
       relays: widget.relays,
@@ -325,12 +328,16 @@ class NostrFeedState extends State<NostrFeed> {
             _initialized = true;
           }
           _loading = false;
-          _hasMore = _allItems.isNotEmpty && _allItems.length >= widget.limit;
+          _hasMore = hasMore >= widget.limit;
         });
+        // if (!widget.isAscending && _hasMore) {
+        //   _fetchMoreItems(_allItems.last);
+        // }
       },
     );
     _initEventListener = _initEventStream!.stream.listen(
       (event) {
+        hasMore += 1;
         final dataEvent = DataEvent.fromEvent(event);
         if (!filterEvent(dataEvent)) return;
         _allItems.add(dataEvent);
@@ -401,14 +408,12 @@ class NostrFeedState extends State<NostrFeed> {
         scrollNotification.metrics.pixels > 0 &&
         scrollNotification.metrics.atEdge) {
       _fetchMoreItems(_items.last);
-      return true;
     } else if (!widget.isAscending &&
         _hasMore &&
         widget.reverse == true &&
         scrollNotification.metrics.pixels == 0 &&
         scrollNotification.metrics.atEdge) {
       _fetchMoreItems(_items.first);
-      return true;
     }
     return false;
   }
