@@ -174,7 +174,6 @@ class NostrFeedState extends State<NostrFeed> {
 
   @override
   void dispose() {
-    clearState();
     unsubscribe();
     super.dispose();
   }
