@@ -42,6 +42,16 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant ProfileFollowing oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) {
+      setState(() {
+        events.clear();
+      });
+    }
+  }
+
   void initialize() async {
     widget.user.fetchFollowing().then((value) {
       if (mounted) {
@@ -104,20 +114,25 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                           ],
                         ),
                       )
-                    : ListView.builder(
-                        itemCount: _following!.length,
-                        itemBuilder: (context, index) => Padding(
-                          key: Key(_following![index]),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              ProfileListTile(
-                                pubkey: _following![index],
-                              ),
-                              const Divider(height: 1),
-                            ],
-                          ),
-                        ),
+                    : NostrFeed(
+                        disableSubscribe: true,
+                        kinds: const [0],
+                        authors: _following,
+                        limit: 50,
+                        itemBuilder: (context, event) {
+                          return Padding(
+                            key: Key(event.pubkey),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                ProfileListTile(
+                                  user: NostrUser.fromEvent(event),
+                                ),
+                                const Divider(height: 1),
+                              ],
+                            ),
+                          );
+                        },
                       ),
             _followers == null
                 ? const Center(
@@ -143,7 +158,7 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                         disableSubscribe: true,
                         kinds: const [3],
                         p: [widget.user.pubkey],
-                        limit: 20,
+                        limit: 50,
                         itemFilter: (e) {
                           if (events.containsKey(e.pubkey)) return false;
                           events[e.pubkey] = true;

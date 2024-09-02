@@ -55,11 +55,6 @@ class _PostActionBarState extends State<PostActionBar> {
 
   void initialize() {
     final me = context.read<AppStatesProvider>().me;
-    NostrFilter filter = NostrFilter(
-      kinds: const [1, 6, 7, 9735],
-      e: [widget.event.id!],
-    );
-
     fetchList().whenComplete(() => subscribe());
     NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
         .then((user) {
@@ -71,9 +66,8 @@ class _PostActionBarState extends State<PostActionBar> {
     });
   }
 
-  Future<void> fetchList([DataEvent? lastEvent]) async {
+  Future<void> fetchList() async {
     final me = context.read<AppStatesProvider>().me;
-    bool isInitializeState = lastEvent == null;
     Completer completer = Completer();
     NostrFilter filter = NostrFilter(
       until: DateTime.now(),
@@ -85,9 +79,7 @@ class _PostActionBarState extends State<PostActionBar> {
       relays: me.relayList,
       closeOnEnd: true,
       onEnd: (subscriptionId) {
-        if (isInitializeState) {
-          completer.complete();
-        }
+        completer.complete();
       },
     );
     _initEventListener = _initEventStream!.stream.listen(
@@ -101,13 +93,17 @@ class _PostActionBarState extends State<PostActionBar> {
   }
 
   void subscribe() {
-    _newEventStream = NostrService.subscribe([
-      NostrFilter(
-        since: DateTime.now(),
-        kinds: const [1, 6, 7, 9735],
-        e: [widget.event.id!],
-      ),
-    ]);
+    final relayList = context.read<AppStatesProvider>().me.relayList;
+    _newEventStream = NostrService.subscribe(
+      [
+        NostrFilter(
+          since: DateTime.now(),
+          kinds: const [1, 6, 7, 9735],
+          e: [widget.event.id!],
+        ),
+      ],
+      relays: relayList,
+    );
     _newEventListener = _newEventStream!.stream.listen((event) {
       final e = DataEvent.fromEvent(event);
       widget.event.relatedEvents.add(e);

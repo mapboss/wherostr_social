@@ -230,7 +230,7 @@ class NostrService {
     final clonePubkeyList = pubkeySet.toList();
     final users = pubkeySet.map((pubkey) {
       var cache = NostrService.profileList[pubkey];
-      if (cache != null) {
+      if (cache != null && (cache.rawDisplayName?.isNotEmpty ?? false)) {
         clonePubkeyList.remove(pubkey);
       }
       return cache;
@@ -303,9 +303,7 @@ class NostrService {
       }
     });
     return completer.future.timeout(timeout, onTimeout: () {
-      final user = NostrUser(pubkey: pubkey);
-      NostrService.profileList[pubkey] = user;
-      return user;
+      return NostrUser(pubkey: pubkey);
     }).whenComplete(() {
       sub.cancel().whenComplete(() {
         nostrStream.close();
@@ -357,19 +355,19 @@ class NostrService {
       [Duration timeout = const Duration(seconds: 5)]) async {
     instance = Nostr();
     await Future.wait([
-      searchInstance.initRelays(
-        searchRelays,
-        timeout: timeout,
-      ),
       instance.initRelays(
         AppRelays.relays,
         timeout: timeout,
       ),
-      countInstance.initRelays(
-        countRelays,
-        timeout: timeout,
-      )
     ]);
+    searchInstance.initRelays(
+      searchRelays,
+      timeout: timeout,
+    );
+    countInstance.initRelays(
+      countRelays,
+      timeout: timeout,
+    );
     String pubkey = '';
     if (npubOrPubkey.startsWith('npub1')) {
       pubkey = instance.keysService.decodeNpubKeyToPublicKey(npubOrPubkey);

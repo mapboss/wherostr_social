@@ -237,7 +237,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   void clearState() {
     _initialized = false;
-    _hasMore = false;
+    _hasMore = widget.isAscending ? false : true;
     _postItems.clear();
     _muteList.clear();
     _allItems.clear();
@@ -292,11 +292,16 @@ class NostrFeedState extends State<NostrFeed> {
     setState(() {
       _loading = true;
     });
-    DateTime? until = lastEvent == null
-        ? DateTime.now()
-        : lastEvent.createdAt?.subtract(const Duration(milliseconds: 10));
+    DateTime? until;
+    DateTime? since;
+    if (!widget.isAscending) {
+      until = lastEvent == null
+          ? DateTime.now()
+          : lastEvent.createdAt?.subtract(const Duration(milliseconds: 10));
+    }
     NostrFilter filter = NostrFilter(
       until: until,
+      since: since,
       limit: widget.limit,
       kinds: widget.kinds,
       authors: widget.authors,
@@ -321,7 +326,7 @@ class NostrFeedState extends State<NostrFeed> {
             _initialized = true;
           }
           _loading = false;
-          _hasMore = hasMore > 0;
+          _hasMore = widget.isAscending ? false : hasMore > 0;
         });
       },
     );
@@ -392,14 +397,18 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   bool _handleNotification(ScrollNotification scrollNotification) {
-    if (_hasMore &&
+    if (!widget.isAscending &&
+        _hasMore &&
+        widget.reverse == false &&
         scrollNotification.metrics.pixels > 0 &&
         scrollNotification.metrics.atEdge) {
-      if (widget.reverse == false) {
-        _fetchMoreItems(_items.last);
-      } else {
-        _fetchMoreItems(_items.first);
-      }
+      _fetchMoreItems(_items.last);
+    } else if (!widget.isAscending &&
+        _hasMore &&
+        widget.reverse == false &&
+        scrollNotification.metrics.pixels > 0 &&
+        scrollNotification.metrics.atEdge) {
+      _fetchMoreItems(_items.first);
     }
     return false;
   }
