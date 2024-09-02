@@ -10,6 +10,7 @@ import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_activity.dart';
 import 'package:wherostr_social/widgets/post_compose.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
+import 'package:wherostr_social/widgets/resize_observer.dart';
 
 class PostDetails extends StatefulWidget {
   final DataEvent? event;
@@ -27,6 +28,7 @@ class PostDetails extends StatefulWidget {
 
 class _PostDetailsState extends State<PostDetails> {
   DataEvent? _event;
+  DataEvent? _parentEvent;
 
   @override
   void initState() {
@@ -35,21 +37,36 @@ class _PostDetailsState extends State<PostDetails> {
   }
 
   void initialize() async {
-    final me = context.read<AppStatesProvider>().me;
-    DataEvent? event;
-    if (widget.event != null) {
-      event = widget.event;
-    } else if (widget.eventId != null) {
-      event = await NostrService.fetchEventById(
-        widget.eventId!,
-        relays: me.relayList,
-      );
-    }
-    if (mounted && event != null) {
-      setState(() {
-        _event = event;
-      });
-    }
+    try {
+      final me = context.read<AppStatesProvider>().me;
+      DataEvent? event;
+      if (widget.event != null) {
+        event = widget.event;
+      } else if (widget.eventId != null) {
+        event = await NostrService.fetchEventById(
+          widget.eventId!,
+          relays: me.relayList,
+        );
+      }
+      DataEvent? parentEvent;
+      if (event != null) {
+        final parentEventId = getParentEventId(event: event);
+        if (parentEventId != null) {
+          try {
+            parentEvent = await NostrService.fetchEventById(
+              parentEventId,
+              relays: me.relayList,
+            );
+          } catch (error) {}
+        }
+      }
+      if (mounted && event != null) {
+        setState(() {
+          _event = event;
+          _parentEvent = parentEvent;
+        });
+      }
+    } catch (error) {}
   }
 
   @override
@@ -144,6 +161,66 @@ class _PostDetailsState extends State<PostDetails> {
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         children: [
+                          if (_parentEvent != null)
+                            SizedBox(
+                              width: double.infinity,
+                              child: Container(
+                                foregroundDecoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: themeData.colorScheme.primary,
+                                      width: 4,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    ResizeObserver(
+                                      onResized: (Size? oldSize, Size newSize) {
+                                        final scrollController =
+                                            PrimaryScrollController.of(context);
+                                        if (scrollController.offset <
+                                            newSize.height) {
+                                          Future.delayed(
+                                              Duration.zero,
+                                              () => scrollController.animateTo(
+                                                    newSize.height,
+                                                    duration: const Duration(
+                                                        milliseconds: 300),
+                                                    curve: Curves.easeOut,
+                                                  ));
+                                        }
+                                      },
+                                      child: PostItem(
+                                        event: _parentEvent!,
+                                        contentPadding:
+                                            const EdgeInsets.only(left: 54),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 12),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.reply,
+                                            size: 16,
+                                            color: themeExtension.textDimColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Replied to',
+                                            style: TextStyle(
+                                                color: themeExtension
+                                                    .textDimColor),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           PostItem(
                             event: _event!,
                             enableTap: false,

@@ -153,7 +153,7 @@ class NostrFeedState extends State<NostrFeed> {
                                   scrollToFirstItem();
                                 },
                                 child: Text(
-                                    '${_newItems.length} new item${_newItems.isNotEmpty ? 's' : ''}'),
+                                    '${_newItems.length} new item${_newItems.length > 1 ? 's' : ''}'),
                               ),
                             )
                           : const SizedBox.shrink(),
