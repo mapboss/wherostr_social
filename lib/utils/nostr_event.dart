@@ -51,10 +51,29 @@ bool isReply({
       }
     }
     return event.kind == 1 && isReply && (!isDirectOnly || isDirect);
-  } catch (err) {
-    print('isReply: $err');
-  }
+  } catch (error) {}
   return false;
+}
+
+String? getParentEventId({
+  required NostrEvent event,
+}) {
+  if (event.tags == null) {
+    return null;
+  }
+  try {
+    Iterable<List<String>> eTags =
+        event.tags!.where((tag) => tag.firstOrNull == 'e');
+    return eTags
+            .where((tag) => tag.elementAtOrNull(3) == 'reply')
+            .firstOrNull
+            ?.elementAtOrNull(1) ??
+        eTags
+            .where((tag) => tag.elementAtOrNull(3) == 'root')
+            .firstOrNull
+            ?.elementAtOrNull(1);
+  } catch (error) {}
+  return null;
 }
 
 String getNostrAddress(NostrEvent event) {

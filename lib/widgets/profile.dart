@@ -44,6 +44,7 @@ class _ProfileState extends State<Profile> {
 
   void initialize() async {
     final me = context.read<AppStatesProvider>().me;
+    await widget.user.fetchProfile();
     setState(() {
       _isMe = me.pubkey == widget.user.pubkey;
       _isFollowing = me.following.contains(widget.user.pubkey);
