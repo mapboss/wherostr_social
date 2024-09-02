@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="./assets/icon/1024.png" alt="Wherostr Logo" title="Wherostr logo" width="80"/>
+<img src="./assets/icon/1024.png" alt="Wherostr Logo" title="Wherostr logo" style="border-radius:16px" width="96"/>
 
 # Wherostr
 
-A flutter nostr client for iOS and Android.
+### A Decentralized Social Networks for iOS and Android.
 
 </div>
 
@@ -16,70 +16,3 @@ A flutter nostr client for iOS and Android.
 [<img src="./docs/screenshots/146421_0.jpg" width=160>](./docs/screenshots/146421_0.jpg)
 [<img src="./docs/screenshots/146423_0.jpg" width=160>](./docs/screenshots/146423_0.jpg)
 [<img src="./docs/screenshots/146428_0.jpg" width=160>](./docs/screenshots/146428_0.jpg)
-
-## Features
-
-- [x] NIP-01 (Basic protocol flow description)
-- [x] NIP-02 (Follow List)
-- [x] NIP-03 (OpenTimestamps Attestations for Events)
-- [x] NIP-04 Encrypted Direct Message --- **unrecommended**: deprecated in favor of NIP-44)
-- [x] NIP-05 (Mapping Nostr keys to DNS-based internet identifiers)
-- [ ] NIP-06 (Basic key derivation from mnemonic seed phrase)
-- [x] NIP-07 (`window.nostr` capability for web browsers)
-- [x] NIP-08 Handling Mentions --- **unrecommended**: deprecated in favor of NIP-27)
-- [x] NIP-09 (Event Deletion)
-- [x] NIP-10 (Conventions for clients' use of `e` and `p` tags in text events)
-- [x] NIP-11 (Relay Information Document)
-- [ ] NIP-13 (Proof of Work)
-- [x] NIP-14 (Subject tag in text events)
-- [ ] NIP-15 (Nostr Marketplace (for resilient marketplaces))
-- [x] NIP-18 (Reposts)
-- [x] NIP-19 (bech32-encoded entities)
-- [x] NIP-21 (`nostr:` URI scheme)
-- [x] NIP-23 (Long-form Content)
-- [ ] NIP-24 (Extra metadata fields and tags)
-- [x] NIP-25 (Reactions)
-- [ ] NIP-26 (Delegated Event Signing)
-- [x] NIP-27 (Text Note References)
-- [ ] NIP-28 (Public Chat)
-- [x] NIP-29 (Relay-based Groups)
-- [x] NIP-30 (Custom Emoji)
-- [ ] NIP-31 (Dealing with Unknown Events)
-- [ ] NIP-32 (Labeling)
-- [ ] NIP-34 (`git` stuff)
-- [x] NIP-35 (Torrents)
-- [x] NIP-36 (Sensitive Content)
-- [ ] NIP-38 (User Statuses)
-- [ ] NIP-39 (External Identities in Profiles)
-- [ ] NIP-40 (Expiration Timestamp)
-- [x] NIP-42 (Authentication of clients to relays)
-- [x] NIP-44 (Versioned Encryption)
-- [ ] NIP-45 (Counting results)
-- [x] NIP-46 (Nostr Connect)
-- [x] NIP-47 (Wallet Connect)
-- [ ] NIP-48 (Proxy Tags)
-- [ ] NIP-49 (Private Key Encryption)
-- [x] NIP-50 (Search Capability)
-- [x] NIP-51 (Lists)
-- [ ] NIP-52 (Calendar Events)
-- [ ] NIP-53 (Live Activities)
-- [x] NIP-55 (Android Signer Application)
-- [ ] NIP-56 (Reporting)
-- [x] NIP-57 (Lightning Zaps)
-- [x] NIP-58 (Badges)
-- [x] NIP-59 (Gift Wrap)
-- [x] NIP-65 (Relay List Metadata)
-- [x] NIP-69 (Zap Polls)
-- [x] NIP-71 (Video Events)
-- [x] NIP-72 (Moderated Communities)
-- [x] NIP-75 (Zap Goals)
-- [ ] NIP-78 (Application-specific data)
-- [ ] NIP-84 (Highlights)
-- [ ] NIP-89 (Recommended Application Handlers)
-- [ ] NIP-90 (Data Vending Machines)
-- [x] NIP-92 (Media Attachments)
-- [x] NIP-94 (File Metadata)
-- [x] NIP-95 (Shared File)
-- [x] NIP-96 (HTTP File Storage Integration)
-- [x] NIP-98 (HTTP Auth)
-- [ ] NIP-99 (Classified Listings)
