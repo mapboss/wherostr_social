@@ -312,7 +312,6 @@ class NostrFeedState extends State<NostrFeed> {
       e: widget.e,
       additionalFilters: widget.additionalFilters,
     );
-    int hasMore = 0;
     _initEventStream = NostrService.subscribe(
       [filter],
       relays: widget.relays,
@@ -326,7 +325,7 @@ class NostrFeedState extends State<NostrFeed> {
             _initialized = true;
           }
           _loading = false;
-          _hasMore = widget.isAscending ? false : hasMore > 0;
+          _hasMore = _allItems.isNotEmpty && _allItems.length >= widget.limit;
         });
       },
     );
@@ -334,7 +333,6 @@ class NostrFeedState extends State<NostrFeed> {
       (event) {
         final dataEvent = DataEvent.fromEvent(event);
         if (!filterEvent(dataEvent)) return;
-        hasMore += 1;
         _allItems.add(dataEvent);
         if (!widget.isAscending) {
           _allItems.sort(((a, b) => b.createdAt!.compareTo(a.createdAt!)));
@@ -403,12 +401,14 @@ class NostrFeedState extends State<NostrFeed> {
         scrollNotification.metrics.pixels > 0 &&
         scrollNotification.metrics.atEdge) {
       _fetchMoreItems(_items.last);
+      return true;
     } else if (!widget.isAscending &&
         _hasMore &&
-        widget.reverse == false &&
-        scrollNotification.metrics.pixels > 0 &&
+        widget.reverse == true &&
+        scrollNotification.metrics.pixels == 0 &&
         scrollNotification.metrics.atEdge) {
       _fetchMoreItems(_items.first);
+      return true;
     }
     return false;
   }

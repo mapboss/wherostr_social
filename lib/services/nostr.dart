@@ -313,10 +313,11 @@ class NostrService {
 
   static Future<NostrUser> fetchUser(
     String pubkey, {
+    bool force = false,
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    if (NostrService.profileList.containsKey(pubkey)) {
+    if (!force && NostrService.profileList.containsKey(pubkey)) {
       return NostrService.profileList[pubkey]!;
     }
     return _fetchUser(pubkey, timeout: timeout, relays: relays);

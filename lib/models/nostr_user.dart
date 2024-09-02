@@ -117,7 +117,7 @@ class NostrUser {
     return NostrUser.fromJson(userJson);
   }
 
-  Future<NostrUser> fetchProfile() async {
+  Future<NostrUser> fetchProfile([bool force = false]) async {
     final profile = await NostrService.fetchUser(
       pubkey,
       relays: _relayList,
