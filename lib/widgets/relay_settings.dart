@@ -56,7 +56,6 @@ class _RelaySettingsState extends State<RelaySettings> {
         _formKey.currentState?.reset();
       });
     } catch (err) {
-      print('err: $err');
       setState(() {
         _urlError = 'Unable to connect to the URL';
       });
@@ -167,13 +166,14 @@ class _RelaySettingsState extends State<RelaySettings> {
                             if (value?.isEmpty != false) {
                               return 'Please enter the URL';
                             }
-                            if (_relays != null &&
-                                _relays!.any((e) => e.url == 'wss://$value')) {
-                              return 'Already exists';
-                            }
                             if (!wssDNSPattern.hasMatch('wss://$value') &&
                                 !wssIPPattern.hasMatch('wss://$value')) {
                               return 'Invalid relay URL';
+                            }
+                            if (_relays != null &&
+                                _relays!
+                                    .contains(DataRelay(url: 'wss://$value'))) {
+                              return 'Already exists';
                             }
                             return null;
                           },

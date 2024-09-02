@@ -31,6 +31,16 @@ class DataRelay {
   @override
   String toString() {
     final uri = Uri.parse(url);
-    return '${uri.scheme}:${uri.host}';
+    return '${uri.scheme}://${uri.host}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! DataRelay) return false;
+    return other.toString() == toString();
+  }
+
+  @override
+  int get hashCode => toString().hashCode;
 }

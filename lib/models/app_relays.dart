@@ -4,11 +4,13 @@ import 'package:wherostr_social/utils/safe_parser.dart';
 
 final defaultRelays = DataRelayList.fromListString([
   'wss://nos.lol',
+  'wss://nostr.wine',
   'wss://relay.damus.io',
   'wss://relay.nostr.band',
 ]);
 
 class AppRelays {
+  static DataRelayList defaults = defaultRelays.clone();
   static DataRelayList? _relays;
   static DataRelayList get relays => _relays ?? defaultRelays.clone();
 

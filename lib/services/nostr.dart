@@ -162,7 +162,7 @@ class NostrService {
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
+    final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;
     int eose = 0;
     final completer = Completer<List<NostrUser>>();
     Map<String, NostrUser> events = {};
@@ -258,7 +258,7 @@ class NostrService {
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
+    final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;
     int eose = 0;
     final completer = Completer<NostrUser>();
     Map<String, NostrUser> events = {};
@@ -330,7 +330,7 @@ class NostrService {
     Function(String subscriptionId)? onEnd,
   }) {
     final readRelays =
-        relays?.clone().concatLeft(AppRelays.relays).readRelays ??
+        relays?.clone().leftCombine(AppRelays.relays).readRelays ??
             NostrService.instance.relaysService.relaysList!;
     final request = NostrRequest(filters: filters);
     int eose = 0;
@@ -377,7 +377,7 @@ class NostrService {
     }
     DataRelayList relays =
         await instance.fetchUserRelayList(pubkey, timeout: timeout);
-    if (relays.isEmpty != false) {
+    if (relays.isEmpty) {
       // AppUtils.showSnackBar(
       //   text: "No relays specified. Using default relays.",
       //   status: AppStatus.warning,

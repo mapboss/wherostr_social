@@ -151,7 +151,7 @@ NostrEvent makeZapRequest({
   String? eventId,
   String content = '',
 }) {
-  final writeRelays = relays.clone().concatLeft(AppRelays.relays).writeRelays;
+  final writeRelays = relays.clone().leftCombine(AppRelays.relays).writeRelays;
   return NostrEvent.fromPartialData(
     kind: 9734,
     content: content,

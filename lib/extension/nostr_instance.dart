@@ -26,7 +26,7 @@ extension OutBoxModel on Nostr {
         utils.log(
           'relay with url: ${relay.url} is already connected successfully, skipping...',
         );
-        completer.complete();
+        completer.complete(relay.url);
         return completer.future;
       }
       if (relaysService.relaysList?.contains(relay.url) != true) {
@@ -66,14 +66,15 @@ extension OutBoxModel on Nostr {
                 );
                 completer.complete(relay.url);
               })
-          .catchError((e) => completer.completeError(relay.url));
+          .catchError((e) => completer.completeError(e));
     } catch (e) {
-      completer.completeError(relay.url);
       utils.log('onRelayConnectionError: ${relay.url}, $e');
+      completer.completeError(relay.url);
     }
     return completer.future.timeout(timeout).onError((e, stack) {
+      DataRelayList.failureList.add(DataRelay(url: relay.url));
       disposeRelay(relay.url);
-      return null;
+      return relay.url;
     });
   }
 
@@ -83,10 +84,11 @@ extension OutBoxModel on Nostr {
       relaysService.nostrRegistry.relaysWebSocketsRegistry[relayUrl]?.sink
           .close();
       relaysService.nostrRegistry.unregisterRelay(relayUrl);
+      relaysService.relaysList?.remove(relayUrl);
+      utils.log('dispose relay: $relayUrl done.');
     } catch (err) {
       utils.log('dispose relay: $relayUrl', err);
     }
-    relaysService.relaysList?.remove(relayUrl);
   }
 
   Future<DataRelayList> fetchUserRelayList(String pubkey,
@@ -112,7 +114,7 @@ extension OutBoxModel on Nostr {
     Duration timeout = const Duration(seconds: 3),
     bool isAscending = false,
   }) async {
-    final readRelays = relays?.clone().concatLeft(AppRelays.relays).readRelays;
+    final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;
     int eose = 0;
     final completer = Completer<List<DataEvent>>();
     Map<String, DataEvent> events = {};

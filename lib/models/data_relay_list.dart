@@ -4,6 +4,7 @@ import 'package:dart_nostr/dart_nostr.dart';
 import 'package:wherostr_social/models/data_relay.dart';
 
 class DataRelayList extends ListBase<DataRelay> {
+  static DataRelayList failureList = DataRelayList(innerList: []);
   List<DataRelay>? innerList;
 
   DataRelayList({this.innerList});
@@ -85,6 +86,39 @@ class DataRelayList extends ListBase<DataRelay> {
       innerList?.forEach((item) {
         String host = item.toString();
         if (list?.any((e) => e.toString() == host) == true) return;
+        list?.add(item);
+      });
+    }
+    return DataRelayList(innerList: list);
+  }
+
+  DataRelayList combine(DataRelayList? relayList, [bool removeError = true]) {
+    final list = removeError
+        ? innerList?.where((e) => failureList.contains(e)).toList()
+        : innerList?.toList();
+    if (relayList != null) {
+      for (final item in relayList) {
+        if (removeError && failureList.contains(item)) {
+          continue;
+        }
+        if (list?.contains(item) == true) continue;
+        list?.add(item);
+      }
+    }
+    return DataRelayList(innerList: list);
+  }
+
+  DataRelayList leftCombine(DataRelayList? relayList,
+      [bool removeError = true]) {
+    final list = removeError
+        ? relayList?.where((e) => failureList.contains(e)).toList()
+        : relayList?.toList();
+    if (innerList != null) {
+      innerList?.forEach((item) {
+        if (removeError && failureList.contains(item)) {
+          return;
+        }
+        if (list?.contains(item) == true) return;
         list?.add(item);
       });
     }

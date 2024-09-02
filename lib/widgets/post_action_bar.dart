@@ -69,7 +69,6 @@ class _PostActionBarState extends State<PostActionBar> {
     final me = context.read<AppStatesProvider>().me;
     Completer completer = Completer();
     NostrFilter filter = NostrFilter(
-      until: DateTime.now(),
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
     );
@@ -94,7 +93,7 @@ class _PostActionBarState extends State<PostActionBar> {
   void subscribe() {
     final relayList = context.read<AppStatesProvider>().me.relayList;
     NostrFilter filter = NostrFilter(
-      until: DateTime.now(),
+      since: DateTime.now(),
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
     );
@@ -190,7 +189,7 @@ class _PostActionBarState extends State<PostActionBar> {
         _isReposted = _isReposted == true ? _isReposted : isReposted;
         _isReacted = _isReacted == true ? _isReacted : isReacted;
         _isZapped = _isZapped == true ? _isZapped : isZapped;
-        _emojiUrl = emojiUrl;
+        _emojiUrl = _emojiUrl ?? emojiUrl;
         _repostCount = repostCount;
         _commentCount = commentCount;
         _reactionCount = reactionCount;

@@ -136,13 +136,14 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
                             if (value?.isEmpty != false) {
                               return 'Please enter the URL';
                             }
-                            if (_relays != null &&
-                                _relays!.any((e) => e.url == 'wss://$value')) {
-                              return 'Already exists';
-                            }
                             if (!wssDNSPattern.hasMatch('wss://$value') &&
                                 !wssIPPattern.hasMatch('wss://$value')) {
                               return 'Invalid relay URL';
+                            }
+                            if (_relays != null &&
+                                _relays!
+                                    .contains(DataRelay(url: 'wss://$value'))) {
+                              return 'Already exists';
                             }
                             return null;
                           },
