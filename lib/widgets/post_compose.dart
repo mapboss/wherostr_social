@@ -393,6 +393,7 @@ class _PostComposeState extends State<PostCompose> {
                           maxHeight: _isProfileListOpen ? 0 : 108,
                           child: SingleChildScrollView(
                             physics: const NeverScrollableScrollPhysics(),
+                            primary: false,
                             child: PostItem(
                               event: widget.quotedEvent!,
                               enableTap: false,
