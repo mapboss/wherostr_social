@@ -238,13 +238,16 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   void clearState() {
-    _initialized = false;
-    _hasMore = widget.isAscending ? false : true;
-    _postItems.clear();
-    _muteList.clear();
-    _allItems.clear();
-    _items.clear();
-    _newItems.clear();
+    setState(() {
+      scrollToFirstItem();
+      _initialized = false;
+      _hasMore = widget.isAscending ? false : true;
+      _postItems.clear();
+      _muteList.clear();
+      _allItems.clear();
+      _items.clear();
+      _newItems.clear();
+    });
   }
 
   Future<void> unsubscribe() async {
