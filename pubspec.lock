@@ -293,7 +293,7 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
+      ref: "v8.2.1"
       resolved-ref: fa9e97cb919bf5bdda2e946b87e12b567d8e0f95
       url: "https://github.com/mapboss/dart_nostr.git"
     source: git
