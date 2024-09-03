@@ -111,13 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.all(
-                        Radius.circular(20),
+                        Radius.circular(12),
                       ),
                       child: Container(
                         color: themeData.colorScheme.primary.withOpacity(0.38),
                         child: InkWell(
                           borderRadius: const BorderRadius.all(
-                            Radius.circular(20),
+                            Radius.circular(12),
                           ),
                           child: Center(
                             child: Icon(

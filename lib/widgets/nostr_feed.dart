@@ -125,17 +125,20 @@ class NostrFeedState extends State<NostrFeed> {
                                 ));
                           }
                           final item = _items[index];
-                          return AnimatedSize(
-                            key: Key(item.id!),
-                            curve: Curves.easeIn,
-                            duration: const Duration(milliseconds: 300),
-                            child: widget.itemBuilder(context, item),
-                          );
+                          if (!_postItems.containsKey(item.id!)) {
+                            _postItems[item.id!] = AnimatedSize(
+                              key: Key(item.id!),
+                              curve: Curves.easeInOutCubic,
+                              duration: const Duration(milliseconds: 300),
+                              child: widget.itemBuilder(context, item),
+                            );
+                          }
+                          return _postItems[item.id!];
                         },
                       ),
                     ),
                     AnimatedSize(
-                      curve: Curves.easeIn,
+                      curve: Curves.easeInOutCubic,
                       duration: const Duration(milliseconds: 300),
                       child: !widget.autoRefresh && _newItems.isNotEmpty
                           ? Padding(
@@ -229,7 +232,8 @@ class NostrFeedState extends State<NostrFeed> {
 
   void scrollToFirstItem() {
     _scrollController?.animateTo(_scrollController!.position.minScrollExtent,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic);
   }
 
   void clearState() {
@@ -317,9 +321,6 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: true,
       onEose: (relay, ease) {
-        if (isInitializeState && !widget.disableSubscribe) {
-          subscribe(DateTime.now());
-        }
         if (!completer.isCompleted) {
           if (mounted) {
             setState(() {
@@ -371,7 +372,8 @@ class NostrFeedState extends State<NostrFeed> {
         _muteList.addAll(muteList);
       });
     }
-    fetchList();
+    await fetchList();
+    subscribe(DateTime.now());
   }
 
   void _fetchMoreItems(DataEvent? e) async {

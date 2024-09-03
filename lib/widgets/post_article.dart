@@ -53,7 +53,7 @@ class _PostArticleState extends State<PostArticle> {
             placeholder: MemoryImage(kTransparentImage),
             image: AppUtils.getImageProvider(image),
             fadeInDuration: const Duration(milliseconds: 300),
-            fadeInCurve: Curves.easeIn,
+            fadeInCurve: Curves.easeInOutCubic,
             fit: BoxFit.cover,
           ),
         const SizedBox(height: 8),
@@ -132,7 +132,7 @@ class _PostArticleState extends State<PostArticle> {
                         image: AppUtils.getImageProvider(
                             'https://habla.news/favicon.png'),
                         fadeInDuration: const Duration(milliseconds: 300),
-                        fadeInCurve: Curves.easeIn,
+                        fadeInCurve: Curves.easeInOutCubic,
                         fit: BoxFit.contain,
                       ),
                       child: const Text('Habla'),
@@ -147,7 +147,7 @@ class _PostArticleState extends State<PostArticle> {
                         image: AppUtils.getImageProvider(
                             'https://yakihonne.com/favicon.ico'),
                         fadeInDuration: const Duration(milliseconds: 300),
-                        fadeInCurve: Curves.easeIn,
+                        fadeInCurve: Curves.easeInOutCubic,
                         fit: BoxFit.contain,
                       ),
                       child: const Text('Yakihonne'),

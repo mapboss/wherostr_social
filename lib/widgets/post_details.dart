@@ -187,7 +187,8 @@ class _PostDetailsState extends State<PostDetails> {
                                                     newSize.height,
                                                     duration: const Duration(
                                                         milliseconds: 300),
-                                                    curve: Curves.easeOut,
+                                                    curve:
+                                                        Curves.easeInOutCubic,
                                                   ));
                                         }
                                       },

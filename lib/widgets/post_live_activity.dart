@@ -65,7 +65,7 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
             placeholder: MemoryImage(kTransparentImage),
             image: AppUtils.getImageProvider(image),
             fadeInDuration: const Duration(milliseconds: 300),
-            fadeInCurve: Curves.easeIn,
+            fadeInCurve: Curves.easeInOutCubic,
             fit: BoxFit.cover,
           ),
         const SizedBox(height: 8),
