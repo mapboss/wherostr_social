@@ -2,11 +2,12 @@ import 'package:get_storage/get_storage.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 
-final defaultRelays = DataRelayList.fromListString([
-  'wss://nos.lol',
-  'wss://nostr.wine',
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
+final defaultRelays = DataRelayList.fromTags([
+  ['r', 'wss://nos.lol', 'read'],
+  ['r', 'wss://nostr.wine', 'read'],
+  ['r', 'wss://relay.damus.io'],
+  ['r', 'wss://relay.primal.net'],
+  ['r', 'wss://relay.nostr.band'],
 ]);
 
 class AppRelays {
@@ -21,10 +22,22 @@ class AppRelays {
       if (storage.hasData('app_relays')) {
         final appRelays = storage.read<List<dynamic>>('app_relays');
         print('appRelays: $appRelays');
-        _relays = DataRelayList.fromListString(storage
-            .read<List<dynamic>>('app_relays')
-            ?.map((e) => SafeParser.parseString(e) ?? "")
-            .toList());
+        try {
+          _relays = DataRelayList.fromListString(storage
+              .read<List<dynamic>>('app_relays')
+              ?.map((e) => SafeParser.parseString(e) ?? "")
+              .toList());
+        } catch (err) {
+          final tags = storage
+              .read<List<dynamic>>('app_relays')
+              ?.map((e) => (e as List<dynamic>)
+                  .map((j) => SafeParser.parseString(j) ?? "")
+                  .toList())
+              .toList();
+          if (tags != null) {
+            _relays = DataRelayList.fromTags(tags);
+          }
+        }
       }
     } catch (err) {
       print('AppRelays.init: $err');
@@ -35,7 +48,7 @@ class AppRelays {
     try {
       print('appRelays: $appRelays');
       var storage = GetStorage('app');
-      await storage.write('app_relays', appRelays?.all);
+      await storage.write('app_relays', appRelays?.toTags());
       _relays = appRelays;
     } catch (err) {
       print('AppRelays.setRelays: $err');

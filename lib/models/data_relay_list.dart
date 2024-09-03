@@ -48,8 +48,7 @@ class DataRelayList extends ListBase<DataRelay> {
     return DataRelayList(
         innerList: tags
             ?.where((e) => e.elementAtOrNull(0) == 'r')
-            .map((e) =>
-                DataRelay(url: e.elementAt(1), marker: e.elementAtOrNull(2)))
+            .map((e) => DataRelay.fromTag(e))
             .toList());
   }
   factory DataRelayList.fromEvent(NostrEvent? event) {

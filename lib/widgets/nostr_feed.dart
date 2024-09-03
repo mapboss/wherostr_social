@@ -180,11 +180,11 @@ class NostrFeedState extends State<NostrFeed> {
 
   @override
   void didUpdateWidget(covariant NostrFeed oldWidget) {
+    super.didUpdateWidget(oldWidget);
     final oldRelay = oldWidget.relays?.readRelays?.toString();
     final newRelay = widget.relays?.readRelays?.toString();
-    super.didUpdateWidget(oldWidget);
     if (oldWidget.authors?.length != widget.authors?.length ||
-        oldWidget.t?[0] != widget.t?[0] ||
+        oldWidget.t?.elementAtOrNull(0) != widget.t?.elementAtOrNull(0) ||
         oldWidget.isAscending != widget.isAscending ||
         oldRelay != newRelay) {
       unsubscribe().whenComplete(() {
@@ -212,7 +212,6 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   void subscribe(DateTime since) async {
-    print('subscribe.authors: ${widget.authors?.length}');
     _newEventStream = NostrService.subscribe([
       NostrFilter(
         since: since,
@@ -238,7 +237,6 @@ class NostrFeedState extends State<NostrFeed> {
 
   void clearState() {
     setState(() {
-      scrollToFirstItem();
       _initialized = false;
       _hasMore = widget.isAscending ? false : true;
       _postItems.clear();
