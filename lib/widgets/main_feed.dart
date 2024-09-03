@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/feed_menu_item.dart';
 import 'package:wherostr_social/widgets/feed_menu.dart';
@@ -27,10 +28,8 @@ class MainFeedState extends State<MainFeed> {
   }
 
   void initialize() {
-    final me = context.read<AppStatesProvider>().me;
-    setState(() {
-      _authors = me.following;
-    });
+    final appFeed = context.read<AppFeedProvider>();
+    _handleChange(appFeed.selectedItem);
   }
 
   void _handleChange(FeedMenuItem item) {
