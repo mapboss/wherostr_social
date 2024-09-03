@@ -277,7 +277,6 @@ class NostrFeedState extends State<NostrFeed> {
         hasMore += 1;
       }
       if (!filterEvent(dataEvent)) return;
-      print('filterEvent: pass: $_since');
       if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
         insertItem(dataEvent);
       } else {

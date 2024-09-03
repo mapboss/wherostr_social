@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
-import 'package:wherostr_social/models/nostr_user.dart';
+import 'package:wherostr_social/models/feed_filter_menu_item.dart';
 import 'package:wherostr_social/widgets/feed_filter_menu.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
@@ -33,7 +33,7 @@ class MainFeedState extends State<MainFeed> {
     });
   }
 
-  void _handleChange(FollowSet item) {
+  void _handleChange(FeedFilterMenuItem item) {
     if (item.id == 'following') {
       final me = context.read<AppStatesProvider>().me;
       setState(() {

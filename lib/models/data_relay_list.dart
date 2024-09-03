@@ -26,7 +26,8 @@ class DataRelayList extends ListBase<DataRelay> {
   DataRelay operator [](int index) => innerList![index];
 
   @override
-  void add(DataRelay element) => innerList?.add(element);
+  void add(DataRelay element) =>
+      (innerList?.contains(element) ?? false) ? null : innerList?.add(element);
 
   @override
   void addAll(Iterable<DataRelay> iterable) => innerList?.addAll(iterable);

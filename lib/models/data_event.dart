@@ -1,12 +1,10 @@
 // ignore_for_file: must_be_immutable
 
 import 'dart:convert';
-import 'dart:typed_data';
-import 'package:convert/convert.dart';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:text_parser/text_parser.dart';
-import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_secret.dart';
+import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/pow.dart';
@@ -212,13 +210,14 @@ class DataEvent extends NostrEvent {
       if (!isVerified()) {
         throw Exception('event is not valid.');
       }
-      final result =
-          await NostrService.instance.relaysService.sendEventToRelaysAsync(
-        this,
-        timeout: timeout,
-        relays: relays?.clone().leftCombine(AppRelays.relays).writeRelays,
-      );
-      print("publish: $result");
+      // final result =
+      //     await NostrService.instance.relaysService.sendEventToRelaysAsync(
+      //   this,
+      //   timeout: timeout,
+      //   relays: relays?.clone().leftCombine(AppRelays.relays).writeRelays,
+      // );
+      // print("publish: $result");
+      print('publish: ${toMap()}');
     } catch (err) {
       print('publish: ${toMap()}, ERROR: $err');
     }
@@ -258,25 +257,27 @@ class DataEvent extends NostrEvent {
     }
   }
 
-  addTag(String tag, String value, [String? marker, String? other]) {
+  addTag(String tag, String value,
+      [String? marker, String? other, String? other2]) {
     _tagIndex ??= {};
     _tagIndex![tag] ??= [];
     final tagValue = [
       tag,
       value,
       if (marker != null) ...["", marker],
-      if (marker != null && other != null) other
+      if (marker != null && other != null) other,
+      if (marker != null && other != null && other2 != null) other2
     ];
     _tagIndex![tag]!.add(tagValue);
     addTagIfNew(tagValue);
   }
 
   addTagUser(String pubkey, [String? marker]) {
-    addTag('e', pubkey, marker);
+    addTag('p', pubkey, marker);
   }
 
-  addTagEvent(String id, [String? marker, String? other]) {
-    addTag('e', id, marker, other);
+  addTagEvent(String id, [String? marker, String? other, String? other2]) {
+    addTag('e', id, marker, other, other2);
   }
 
   addTagReference(String id, [String? marker]) {
@@ -299,42 +300,20 @@ class DataEvent extends NostrEvent {
             var data = NostrService.instance.utilsService
                 .decodeNprofileToMap(nostrUrl)['pubkey'];
             addTagUser(data, 'mention');
-          } else if (nostrUrl.startsWith('nevent')) {
-            var data =
-                NostrService.instance.utilsService.decodeNeventToMap(nostrUrl);
-            addTagEvent(data['eventId'], 'mention', pubkey);
-            if (data['pubkey'] != null) {
-              addTagIfNew(["p", data['pubkey']]);
-            }
           } else if (nostrUrl.startsWith('note')) {
             var id =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-            addTagEvent(id, 'mention', pubkey);
-            addTagUser(pubkey);
-          } else if (nostrUrl.startsWith('naddr')) {
-            var hexdata =
-                NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-            var data = Uint8List.fromList(hex.decode(hexdata));
-            var tlvList = NostrService.instance.utilsService.tlv.decode(data);
-            String? identifier;
-            List<String>? relays = [];
-            String? pubkey;
-            int? kind;
-            for (final tlv in tlvList) {
-              if (tlv.type == 0) {
-                identifier = ascii.decode(tlv.value);
-              } else if (tlv.type == 1) {
-                relays.add(ascii.decode(tlv.value));
-              } else if (tlv.type == 2) {
-                pubkey = hex.encode(tlv.value);
-              } else if (tlv.type == 3) {
-                kind = int.parse(hex.encode(tlv.value), radix: 16);
-              }
+            addTagEvent(id, 'mention');
+          } else if (nostrUrl.startsWith('naddr') ||
+              nostrUrl.startsWith('nevent')) {
+            final data = DataBech32.fromString(nostrUrl);
+            if (data.identifier != null) {
+              addTagReference(data.getId(), "mention");
+            } else if (data.eventId != null) {
+              addTagEvent(data.eventId!, "mention");
             }
-            var id = '$kind:$pubkey:$identifier';
-            addTagReference(id, "mention");
-            if (pubkey != null) {
-              addTagUser(pubkey);
+            if (data.pubkey != null) {
+              addTagUser(data.pubkey!);
             }
           }
           continue;

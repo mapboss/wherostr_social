@@ -1,8 +1,5 @@
 // ignore_for_file: type_literal_in_constant_pattern
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:any_link_preview/any_link_preview.dart';
-import 'package:convert/convert.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +8,7 @@ import 'package:text_parser/text_parser.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/services/nostr.dart';
@@ -295,38 +293,14 @@ class _PostContentState extends State<PostContent>
               ),
             );
             continue;
-          } else if (nostrUrl.startsWith('nevent')) {
-            eventId = NostrService.instance.utilsService
-                .decodeNeventToMap(nostrUrl)['eventId'];
           } else if (nostrUrl.startsWith('note')) {
             eventId =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-          } else if (nostrUrl.startsWith('naddr')) {
-            var hexdata =
-                NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-            var data = Uint8List.fromList(hex.decode(hexdata));
-            var tlvList = NostrService.instance.utilsService.tlv.decode(data);
-
-            String? identifier;
-            String? pubkey;
-            int? kind;
-            relays = [];
-            for (final tlv in tlvList) {
-              if (tlv.type == 0) {
-                try {
-                  identifier = ascii.decode(tlv.value);
-                } catch (err) {
-                  eventId = hex.encode(tlv.value);
-                }
-              } else if (tlv.type == 1) {
-                relays.add(ascii.decode(tlv.value));
-              } else if (tlv.type == 2) {
-                pubkey = hex.encode(tlv.value);
-              } else if (tlv.type == 3) {
-                kind = int.parse(hex.encode(tlv.value), radix: 16);
-              }
-            }
-            eventId = eventId ?? '$kind:$pubkey:$identifier';
+          } else if (nostrUrl.startsWith('naddr') ||
+              nostrUrl.startsWith('nevent')) {
+            final data = DataBech32.fromString(nostrUrl);
+            eventId = data.getId();
+            relays = data.relays;
           }
           if (eventId != null) {
             if (widget.depth < 2) {

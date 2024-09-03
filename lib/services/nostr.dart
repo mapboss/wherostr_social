@@ -67,7 +67,7 @@ class NostrService {
     DataRelayList? relays,
     double eoseRatio = 1,
     Nostr? instance,
-    Duration timeout = const Duration(seconds: 3),
+    Duration timeout = const Duration(seconds: 5),
   }) async {
     instance ??= NostrService.instance;
     final cache = NostrService.eventList[id];
@@ -97,7 +97,7 @@ class NostrService {
     DataRelayList? relays,
     double eoseRatio = 1,
     Nostr? instance,
-    Duration timeout = const Duration(seconds: 3),
+    Duration timeout = const Duration(seconds: 5),
   }) async {
     instance ??= NostrService.instance;
     final idSet = ids.toSet();

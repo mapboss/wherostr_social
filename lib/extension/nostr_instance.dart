@@ -111,7 +111,7 @@ extension OutBoxModel on Nostr {
     List<NostrFilter> filters, {
     double eoseRatio = 1,
     DataRelayList? relays,
-    Duration timeout = const Duration(seconds: 3),
+    Duration timeout = const Duration(seconds: 5),
     bool isAscending = false,
   }) async {
     final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;

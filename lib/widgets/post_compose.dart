@@ -217,6 +217,12 @@ class _PostComposeState extends State<PostCompose> {
         }
       }
       if (files.isNotEmpty) {
+        AppUtils.showSnackBar(
+          text:
+              'Uploading ${files.length} image${files.length > 1 ? 's' : ''}...',
+          withProgressBar: true,
+          autoHide: false,
+        );
         final fileUrls = await FileService.uploadMultiple(files);
         for (var index = 0; index < fileUrls.length; index++) {
           content =
@@ -246,9 +252,9 @@ class _PostComposeState extends State<PostCompose> {
               .firstOrNull;
           event.addTagIfNew(rootETags ?? ['e', rEvent.id!, '', 'root']);
           if (rootETags != null) {
-            event.addTagIfNew(['e', rEvent.id!, '', 'reply']);
+            event.addTagEvent(rEvent.id!, 'reply');
           }
-          event.addTagIfNew(['p', rEvent.pubkey]);
+          event.addTagUser(rEvent.pubkey);
           rEvent.tags?.where((tag) => tag.firstOrNull == 'p').forEach((tag) {
             event.addTagIfNew(tag);
           });
@@ -258,9 +264,9 @@ class _PostComposeState extends State<PostCompose> {
           text: 'Posted successfully.',
           status: AppStatus.success,
         );
-        if (mounted) {
-          context.read<AppStatesProvider>().navigatorPop();
-        }
+        // if (mounted) {
+        //   context.read<AppStatesProvider>().navigatorPop();
+        // }
       } else {
         AppUtils.hideSnackBar();
       }
