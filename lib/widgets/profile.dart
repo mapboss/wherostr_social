@@ -122,8 +122,8 @@ class _ProfileState extends State<Profile> {
                                 ? () {}
                                 : () => showImageViewer(
                                       context,
-                                      AppUtils.getImageProvider(
-                                          widget.user.picture!),
+                                      AppUtils.getCachedImageProvider(
+                                          widget.user.picture!, 320),
                                       useSafeArea: true,
                                       swipeDismissible: true,
                                       doubleTapZoomable: true,

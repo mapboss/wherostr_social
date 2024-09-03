@@ -98,7 +98,7 @@ class _ActivityItemState extends State<ActivityItem> {
             if (emoji != null) {
               return Image(
                 width: 24,
-                image: AppUtils.getImageProvider(emoji),
+                image: AppUtils.getCachedImageProvider(emoji, 24),
               );
             } else {
               return Text(

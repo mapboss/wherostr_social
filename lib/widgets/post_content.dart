@@ -49,7 +49,7 @@ class PostContent extends StatefulWidget {
 
 class _PostContentState extends State<PostContent>
     with AutomaticKeepAliveClientMixin {
-  List<TextElement> _elements = [];
+  List<InlineSpan> _elementWidgets = [];
   List<ImageProvider> _imageProviders = [];
 
   @override
@@ -62,13 +62,15 @@ class _PostContentState extends State<PostContent>
   }
 
   void initialize() async {
-    setState(() {
-      _elements = [TextElement(widget.content)];
-    });
-    var textElements = await textParser(widget.content);
-    if (mounted) {
-      setState(() {
-        _elements = textElements;
+    _elementWidgets = [TextSpan(text: widget.content)];
+    if (widget.content != '') {
+      textParser(widget.content).then((textElements) {
+        if (mounted) {
+          final elementWidgets = getElementWidgets(textElements);
+          setState(() {
+            _elementWidgets = elementWidgets;
+          });
+        }
       });
     }
   }
@@ -86,7 +88,7 @@ class _PostContentState extends State<PostContent>
     );
   }
 
-  List<InlineSpan> getElementWidgets() {
+  List<InlineSpan> getElementWidgets(List<TextElement> elements) {
     ThemeData themeData = Theme.of(context);
     List<InlineSpan> widgets = [];
     if (widget.contentLeading != null) {
@@ -97,7 +99,7 @@ class _PostContentState extends State<PostContent>
     }
     List<ImageProvider> imageProviders = [];
     double maxMediaHeight = (MediaQuery.sizeOf(context).width - 32) * (4 / 3);
-    for (var element in _elements) {
+    for (var element in elements) {
       switch (element.matcherType) {
         case ImageUrlMatcher:
           final imageProvider = AppUtils.getImageProvider(element.text);
@@ -402,7 +404,7 @@ class _PostContentState extends State<PostContent>
     super.build(context);
     return Text.rich(
       TextSpan(
-        children: getElementWidgets(),
+        children: _elementWidgets,
       ),
     );
   }
@@ -455,12 +457,14 @@ class _LinkPreviewState extends State<LinkPreview> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (image != null)
-          FadeInImage(
-            placeholder: MemoryImage(kTransparentImage),
-            image: AppUtils.getImageProvider(image),
-            fadeInDuration: const Duration(milliseconds: 300),
-            fadeInCurve: Curves.easeInOutCubic,
-            fit: BoxFit.cover,
+          Center(
+            child: FadeInImage(
+              placeholder: MemoryImage(kTransparentImage),
+              image: AppUtils.getImageProvider(image),
+              fadeInDuration: const Duration(milliseconds: 300),
+              fadeInCurve: Curves.easeInOutCubic,
+              fit: BoxFit.cover,
+            ),
           ),
         const SizedBox(height: 8),
         Padding(

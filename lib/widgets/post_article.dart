@@ -129,8 +129,8 @@ class _PostArticleState extends State<PostArticle> {
                         width: 40,
                         height: 40,
                         placeholder: MemoryImage(kTransparentImage),
-                        image: AppUtils.getImageProvider(
-                            'https://habla.news/favicon.png'),
+                        image: AppUtils.getCachedImageProvider(
+                            'https://habla.news/favicon.png', 40),
                         fadeInDuration: const Duration(milliseconds: 300),
                         fadeInCurve: Curves.easeInOutCubic,
                         fit: BoxFit.contain,
@@ -144,8 +144,8 @@ class _PostArticleState extends State<PostArticle> {
                         width: 40,
                         height: 40,
                         placeholder: MemoryImage(kTransparentImage),
-                        image: AppUtils.getImageProvider(
-                            'https://yakihonne.com/favicon.ico'),
+                        image: AppUtils.getCachedImageProvider(
+                            'https://yakihonne.com/favicon.ico', 40),
                         fadeInDuration: const Duration(milliseconds: 300),
                         fadeInCurve: Curves.easeInOutCubic,
                         fit: BoxFit.contain,

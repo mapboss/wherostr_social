@@ -89,8 +89,8 @@ class _EmojiPickerState extends State<EmojiPicker> {
                                 child: Image(
                                   width: 24,
                                   height: 24,
-                                  image: AppUtils.getImageProvider(
-                                      item.elementAt(2)),
+                                  image: AppUtils.getCachedImageProvider(
+                                      item.elementAt(2), 24),
                                 ),
                               ),
                             ),
