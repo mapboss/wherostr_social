@@ -6,8 +6,8 @@ final defaultRelays = DataRelayList.fromTags([
   ['r', 'wss://nos.lol', 'read'],
   ['r', 'wss://nostr.wine', 'read'],
   ['r', 'wss://relay.damus.io'],
-  ['r', 'wss://relay.primal.net'],
   ['r', 'wss://relay.nostr.band'],
+  ['r', 'wss://relay.primal.net'],
 ]);
 
 class AppRelays {
