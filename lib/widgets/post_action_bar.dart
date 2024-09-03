@@ -91,6 +91,11 @@ class _PostActionBarState extends State<PostActionBar> {
     }
   }
 
+  bool isMuted(NostrEvent event) {
+    final me = context.read<AppStatesProvider>().me;
+    return me.muteList.contains(event.pubkey);
+  }
+
   void updateCounts(List<DataEvent> events) {
     if (mounted) {
       final me = context.read<AppStatesProvider>().me;
@@ -103,8 +108,8 @@ class _PostActionBarState extends State<PostActionBar> {
       int reactionCount = _reactionCount;
       double zapCount = _zapCount;
 
-      for (var event in events) {
-        // if (mutedPubkeys.contains(event.pubkey)) continue;
+      for (final event in events) {
+        if (isMuted(event)) continue;
         switch (event.kind) {
           case 1:
             if (isReply(
