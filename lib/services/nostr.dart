@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
+import 'package:dart_nostr/nostr/model/ease.dart';
 import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -331,6 +332,7 @@ class NostrService {
     bool useConsistentSubscriptionIdBasedOnRequestData = false,
     Duration timeout = const Duration(seconds: 5),
     Function()? onEnd,
+    Function(String relay, NostrRequestEoseCommand ease)? onEose,
   }) {
     Completer? completer;
     final readRelays =
@@ -348,7 +350,7 @@ class NostrService {
       relays: readRelays,
       onEose: (relay, ease) {
         eose += 1;
-
+        onEose?.call(relay, ease);
         if (closeOnEnd ?? false) {
           if (completer == null) {
             completer = Completer();

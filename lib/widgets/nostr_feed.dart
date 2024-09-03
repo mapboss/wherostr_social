@@ -44,7 +44,7 @@ class NostrFeed extends StatefulWidget {
     this.p,
     this.e,
     this.additionalFilters,
-    this.limit = 30,
+    this.limit = 20,
     this.itemFilter,
     this.reverse = false,
     this.isAscending = false,
@@ -125,15 +125,12 @@ class NostrFeedState extends State<NostrFeed> {
                                 ));
                           }
                           final item = _items[index];
-                          if (!_postItems.containsKey(item.id!)) {
-                            _postItems[item.id!] = AnimatedSize(
-                              key: Key(item.id!),
-                              curve: Curves.easeIn,
-                              duration: const Duration(milliseconds: 300),
-                              child: widget.itemBuilder(context, item),
-                            );
-                          }
-                          return _postItems[item.id!];
+                          return AnimatedSize(
+                            key: Key(item.id!),
+                            curve: Curves.easeIn,
+                            duration: const Duration(milliseconds: 300),
+                            child: widget.itemBuilder(context, item),
+                          );
                         },
                       ),
                     ),
@@ -319,15 +316,25 @@ class NostrFeedState extends State<NostrFeed> {
       [filter],
       relays: widget.relays,
       closeOnEnd: true,
-      onEnd: () {
+      onEose: (relay, ease) {
         if (isInitializeState && !widget.disableSubscribe) {
           subscribe(DateTime.now());
         }
-        setState(() {
-          if (isInitializeState) {
-            _initialized = true;
+        if (!completer.isCompleted) {
+          if (mounted) {
+            setState(() {
+              if (isInitializeState) {
+                _initialized = true;
+              }
+              _loading = false;
+              _hasMore = hasMore > 0;
+            });
           }
-          _loading = false;
+          completer.complete();
+        }
+      },
+      onEnd: () {
+        setState(() {
           _hasMore = hasMore >= widget.limit;
         });
         // if (!widget.isAscending && _hasMore) {
@@ -351,19 +358,6 @@ class NostrFeedState extends State<NostrFeed> {
             _items = _allItems.toList();
           });
         }
-
-        if (!completer.isCompleted) {
-          if (mounted) {
-            setState(() {
-              if (isInitializeState) {
-                _initialized = true;
-              }
-              _hasMore = hasMore > 0;
-              _loading = false;
-            });
-          }
-          completer.complete();
-        }
       },
     );
 
@@ -377,7 +371,7 @@ class NostrFeedState extends State<NostrFeed> {
         _muteList.addAll(muteList);
       });
     }
-    await fetchList();
+    fetchList();
   }
 
   void _fetchMoreItems(DataEvent? e) async {
