@@ -126,15 +126,12 @@ class NostrFeedState extends State<NostrFeed> {
                                 ));
                           }
                           final item = _items[index];
-                          if (!_postItems.containsKey(item.id!)) {
-                            _postItems[item.id!] = AnimatedSize(
-                              key: Key(item.id!),
-                              curve: Curves.easeInOutCubic,
-                              duration: const Duration(milliseconds: 300),
-                              child: widget.itemBuilder(context, item),
-                            );
-                          }
-                          return _postItems[item.id!];
+                          return AnimatedSize(
+                            key: Key(item.id!),
+                            curve: Curves.easeInOutCubic,
+                            duration: const Duration(milliseconds: 300),
+                            child: widget.itemBuilder(context, item),
+                          );
                         },
                       ),
                     ),
@@ -199,6 +196,7 @@ class NostrFeedState extends State<NostrFeed> {
         setState(() {
           _muteList = muteList.toList();
           _items = _allItems.where(filterEvent).toList();
+          _items.sort(sorting);
         });
       }
     }
@@ -240,20 +238,19 @@ class NostrFeedState extends State<NostrFeed> {
 
   void subscribe() async {
     int hasMore = 0;
+    final filter = NostrFilter(
+      kinds: widget.kinds,
+      authors: widget.authors,
+      ids: widget.ids,
+      limit: widget.limit,
+      t: widget.t,
+      a: widget.a,
+      p: widget.p,
+      e: widget.e,
+      additionalFilters: widget.additionalFilters,
+    );
     _newEventStream = NostrService.subscribe(
-      [
-        NostrFilter(
-          kinds: widget.kinds,
-          authors: widget.authors,
-          ids: widget.ids,
-          limit: widget.limit,
-          t: widget.t,
-          a: widget.a,
-          p: widget.p,
-          e: widget.e,
-          additionalFilters: widget.additionalFilters,
-        )
-      ],
+      [filter],
       relays: widget.relays,
       closeOnEnd: widget.disableSubscribe,
       onEose: (relay, ease) {
@@ -280,6 +277,7 @@ class NostrFeedState extends State<NostrFeed> {
         hasMore += 1;
       }
       if (!filterEvent(dataEvent)) return;
+      print('filterEvent: pass: $_since');
       if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
         insertItem(dataEvent);
       } else {
@@ -341,12 +339,6 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   void insertNewItem(DataEvent event) {
-    if (widget.isAscending == false) {
-      _allItems.insert(0, event);
-    } else {
-      _allItems.add(event);
-    }
-    if (!filterEvent(event)) return;
     if (mounted) {
       setState(() {
         if (widget.isAscending == false) {
