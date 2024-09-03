@@ -44,7 +44,7 @@ class NostrFeed extends StatefulWidget {
     this.p,
     this.e,
     this.additionalFilters,
-    this.limit = 20,
+    this.limit = 50,
     this.itemFilter,
     this.reverse = false,
     this.isAscending = false,
@@ -73,6 +73,7 @@ class NostrFeedState extends State<NostrFeed> {
   List<String> _muteList = [];
   List<DataEvent> _items = [];
   ScrollController? _scrollController;
+  DateTime? _since;
 
   @override
   Widget build(BuildContext context) {
@@ -188,10 +189,8 @@ class NostrFeedState extends State<NostrFeed> {
         oldWidget.isAscending != widget.isAscending ||
         oldRelay != newRelay) {
       unsubscribe().whenComplete(() {
-        if (mounted) {
-          clearState();
-          initialize();
-        }
+        clearState();
+        initialize();
       });
     }
     final muteList = context.read<AppStatesProvider>().me.muteList;
@@ -205,28 +204,87 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
-  bool filterEvent(DataEvent event) {
-    return widget.itemFilter?.call(event) != false &&
-        (widget.includeReplies || !isReply(event: event)) &&
-        (widget.includeMuted || _muteList.contains(event.pubkey) != true);
+  Future<void> initialize() async {
+    final muteList = context.read<AppStatesProvider>().me.muteList.toList();
+    if (mounted) {
+      setState(() {
+        _muteList.addAll(muteList);
+      });
+    }
+    subscribe();
   }
 
-  void subscribe(DateTime since) async {
-    _newEventStream = NostrService.subscribe([
-      NostrFilter(
-        since: since,
-        kinds: widget.kinds,
-        authors: widget.authors,
-        ids: widget.ids,
-        t: widget.t,
-        a: widget.a,
-        p: widget.p,
-        e: widget.e,
-        additionalFilters: widget.additionalFilters,
-      )
-    ], relays: widget.relays);
+  bool replyFilter(DataEvent event) {
+    return event.kind != 1 || (widget.includeReplies || !isReply(event: event));
+  }
+
+  bool muteFilter(DataEvent event) {
+    return widget.includeMuted || !_muteList.contains(event.pubkey);
+  }
+
+  bool cutomFilter(DataEvent event) {
+    return (widget.itemFilter?.call(event) ?? true);
+  }
+
+  bool filterEvent(DataEvent event) {
+    return cutomFilter(event) && replyFilter(event) && muteFilter(event);
+  }
+
+  int sorting(DataEvent a, DataEvent b) {
+    if (!widget.isAscending) {
+      return b.createdAt!.compareTo(a.createdAt!);
+    } else {
+      return a.createdAt!.compareTo(b.createdAt!);
+    }
+  }
+
+  void subscribe() async {
+    int hasMore = 0;
+    _newEventStream = NostrService.subscribe(
+      [
+        NostrFilter(
+          kinds: widget.kinds,
+          authors: widget.authors,
+          ids: widget.ids,
+          limit: widget.limit,
+          t: widget.t,
+          a: widget.a,
+          p: widget.p,
+          e: widget.e,
+          additionalFilters: widget.additionalFilters,
+        )
+      ],
+      relays: widget.relays,
+      closeOnEnd: widget.disableSubscribe,
+      onEose: (relay, ease) {
+        if (mounted) {
+          setState(() {
+            _since = DateTime.now();
+            _initialized = true;
+            _loading = false;
+            _hasMore = hasMore >= (widget.limit / 2);
+          });
+        }
+      },
+      onEnd: () {
+        setState(() {
+          _hasMore = hasMore >= widget.limit;
+        });
+      },
+    );
     _newEventListener = _newEventStream!.stream.listen((event) {
-      insertNewItem(DataEvent.fromEvent(event));
+      if (event.createdAt == null) return;
+      final dataEvent = DataEvent.fromEvent(event);
+      _allItems.add(dataEvent);
+      if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
+        hasMore += 1;
+      }
+      if (!filterEvent(dataEvent)) return;
+      if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
+        insertItem(dataEvent);
+      } else {
+        insertNewItem(dataEvent);
+      }
     });
   }
 
@@ -238,6 +296,8 @@ class NostrFeedState extends State<NostrFeed> {
 
   void clearState() {
     setState(() {
+      _since = null;
+      _loading = true;
       _initialized = false;
       _hasMore = widget.isAscending ? false : true;
       _postItems.clear();
@@ -271,10 +331,22 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
+  void insertItem(DataEvent event) {
+    if (mounted) {
+      setState(() {
+        _items.add(event);
+        _items.sort(sorting);
+      });
+    }
+  }
+
   void insertNewItem(DataEvent event) {
-    _allItems.insert(0, event);
+    if (widget.isAscending == false) {
+      _allItems.insert(0, event);
+    } else {
+      _allItems.add(event);
+    }
     if (!filterEvent(event)) return;
-    print('insertNewItem: ${event.id}');
     if (mounted) {
       setState(() {
         if (widget.isAscending == false) {
@@ -289,9 +361,7 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
-  Future<void> fetchList([DataEvent? lastEvent]) async {
-    bool isInitializeState = lastEvent == null;
-    Completer completer = Completer();
+  void fetchList([DataEvent? lastEvent]) {
     setState(() {
       _loading = true;
     });
@@ -321,59 +391,28 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: true,
       onEose: (relay, ease) {
-        if (!completer.isCompleted) {
-          if (mounted) {
-            setState(() {
-              if (isInitializeState) {
-                _initialized = true;
-              }
-              _loading = false;
-              _hasMore = hasMore > 0;
-            });
-          }
-          completer.complete();
+        if (mounted) {
+          setState(() {
+            _loading = false;
+            _hasMore = hasMore >= (widget.limit / 2);
+          });
         }
       },
       onEnd: () {
         setState(() {
           _hasMore = hasMore >= widget.limit;
         });
-        // if (!widget.isAscending && _hasMore) {
-        //   _fetchMoreItems(_allItems.last);
-        // }
       },
     );
     _initEventListener = _initEventStream!.stream.listen(
       (event) {
         hasMore += 1;
         final dataEvent = DataEvent.fromEvent(event);
-        if (!filterEvent(dataEvent)) return;
         _allItems.add(dataEvent);
-        if (!widget.isAscending) {
-          _allItems.sort(((a, b) => b.createdAt!.compareTo(a.createdAt!)));
-        } else {
-          _allItems.sort(((a, b) => a.createdAt!.compareTo(b.createdAt!)));
-        }
-        if (mounted) {
-          setState(() {
-            _items = _allItems.toList();
-          });
-        }
+        if (!filterEvent(dataEvent)) return;
+        insertItem(dataEvent);
       },
     );
-
-    return completer.future;
-  }
-
-  Future<void> initialize() async {
-    final muteList = context.read<AppStatesProvider>().me.muteList.toList();
-    if (mounted) {
-      setState(() {
-        _muteList.addAll(muteList);
-      });
-    }
-    await fetchList();
-    subscribe(DateTime.now());
   }
 
   void _fetchMoreItems(DataEvent? e) async {
@@ -383,19 +422,17 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   Future<void> _showNewItems() async {
-    // var future = _fetchUsersFromEvents(_newItems);
-    if (widget.isAscending == false) {
-      _allItems.insertAll(0, _newItems);
-      _items.insertAll(0, _newItems);
-    } else {
-      _allItems.addAll(_newItems);
-      _items.addAll(_newItems);
-    }
-    var items = _items;
+    final newItems = _newItems.toList();
     if (mounted) {
       setState(() {
+        if (widget.isAscending == false) {
+          _since = newItems.first.createdAt!;
+          _items.insertAll(0, newItems);
+        } else {
+          _since = newItems.last.createdAt!;
+          _items.addAll(newItems);
+        }
         _newItems.clear();
-        _items = items;
       });
     }
   }
@@ -406,13 +443,14 @@ class NostrFeedState extends State<NostrFeed> {
         widget.reverse == false &&
         scrollNotification.metrics.pixels > 0 &&
         scrollNotification.metrics.atEdge) {
-      _fetchMoreItems(_items.last);
+      _allItems.sort(sorting);
+      _fetchMoreItems(_allItems.last);
     } else if (!widget.isAscending &&
         _hasMore &&
         widget.reverse == true &&
         scrollNotification.metrics.pixels == 0 &&
         scrollNotification.metrics.atEdge) {
-      _fetchMoreItems(_items.first);
+      _fetchMoreItems(_allItems.first);
     }
     return false;
   }

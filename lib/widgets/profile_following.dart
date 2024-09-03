@@ -114,6 +114,11 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                         kinds: const [0],
                         authors: _following,
                         limit: 30,
+                        itemFilter: (e) {
+                          if (events.containsKey(e.pubkey)) return false;
+                          events[e.pubkey] = true;
+                          return true;
+                        },
                         itemBuilder: (context, event) {
                           return Padding(
                             key: Key(event.pubkey),
