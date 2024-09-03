@@ -189,5 +189,5 @@ final TextParser parser = TextParser(matchers: [
 ]);
 
 Future<List<TextElement>> textParser(String content) {
-  return parser.parse(content);
+  return parser.parse(content, useIsolate: false);
 }

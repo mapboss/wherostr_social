@@ -18,8 +18,8 @@ class ProfileAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    final backgroundImage =
-        image ?? (url != null ? AppUtils.getImageProvider(url!) : null);
+    final backgroundImage = image ??
+        (url != null ? AppUtils.getCachedImageProvider(url!, 320) : null);
     return Container(
       padding: EdgeInsets.all(borderSize),
       decoration: BoxDecoration(

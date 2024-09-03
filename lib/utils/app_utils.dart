@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:wherostr_social/main.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -112,9 +113,19 @@ class AppUtils {
     MainApp.scaffoldMessengerKey.currentState?.clearSnackBars();
   }
 
+  static AppImageCacheManager appImageCacheManager = AppImageCacheManager();
+  static ImageProvider getCachedImageProvider(String url, int? maxSize) =>
+      url.endsWith('.svg')
+          ? (Svg(url, source: SvgSource.network) as ImageProvider)
+          : CachedNetworkImageProvider(
+              url,
+              cacheManager: appImageCacheManager,
+              maxHeight: maxSize,
+              maxWidth: maxSize,
+            );
   static ImageProvider getImageProvider(String url) => url.endsWith('.svg')
       ? (Svg(url, source: SvgSource.network) as ImageProvider)
-      : CachedNetworkImageProvider(url);
+      : Image.network(url).image;
 
   static void handleError() {
     AppUtils.showSnackBar(
@@ -122,6 +133,21 @@ class AppUtils {
       status: AppStatus.error,
     );
   }
+}
+
+class AppImageCacheManager extends CacheManager with ImageCacheManager {
+  static const key = 'appImageCacheKey';
+  static final AppImageCacheManager _instance = AppImageCacheManager._();
+
+  factory AppImageCacheManager() {
+    return _instance;
+  }
+
+  AppImageCacheManager._()
+      : super(Config(
+          key,
+          stalePeriod: const Duration(days: 7),
+        ));
 }
 
 const wherostrBackgroundDecoration = BoxDecoration(

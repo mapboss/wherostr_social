@@ -305,7 +305,8 @@ class _MessageItemState extends State<MessageItem> {
                         child: Image(
                           width: 16,
                           height: 16,
-                          image: AppUtils.getImageProvider(_emojiUrl!),
+                          image:
+                              AppUtils.getCachedImageProvider(_emojiUrl!, 24),
                         ),
                       ),
                 const SizedBox(width: 4),
@@ -460,7 +461,7 @@ class _MessageItemState extends State<MessageItem> {
                   //                   width: 16,
                   //                   height: 16,
                   //                   image:
-                  //                       AppUtils.getImageProvider(_emojiUrl!),
+                  //                       AppUtils.getCachedImageProvider(_emojiUrl!, 24),
                   //                 ),
                   //               ),
                   //         const SizedBox(width: 4),
@@ -526,7 +527,7 @@ class _MessageItemState extends State<MessageItem> {
                   //       //           child: Image(
                   //       //             width: 24,
                   //       //             height: 24,
-                  //       //             image: AppUtils.getImageProvider(_emojiUrl!),
+                  //       //             image: AppUtils.getCachedImageProvider(_emojiUrl!, 24),
                   //       //           ),
                   //       //         ),
                   //       //   style: const ButtonStyle(
