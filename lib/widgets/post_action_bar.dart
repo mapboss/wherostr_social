@@ -347,7 +347,7 @@ class _PostActionBarState extends State<PostActionBar> {
                       child: Image(
                         width: 24,
                         height: 24,
-                        image: AppUtils.getCachedImageProvider(_emojiUrl!, 24),
+                        image: AppUtils.getCachedImageProvider(_emojiUrl!, 80),
                       ),
                     ),
             ),
