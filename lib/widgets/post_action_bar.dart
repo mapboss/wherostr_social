@@ -37,6 +37,7 @@ class _PostActionBarState extends State<PostActionBar> {
   bool _isReacted = false;
   bool _isZapped = false;
   String? _emojiUrl;
+  double _reactionIconScale = 1;
 
   @override
   void initState() {
@@ -191,6 +192,7 @@ class _PostActionBarState extends State<PostActionBar> {
   void _handleReactPressed([List<String>? emojiTag]) {
     final customEmoji = emojiTag?.elementAtOrNull(1);
     setState(() {
+      _reactionIconScale = 2;
       _isReacted = true;
       _emojiUrl = emojiTag?.elementAtOrNull(2);
     });
@@ -316,22 +318,34 @@ class _PostActionBarState extends State<PostActionBar> {
                       },
                     );
                   },
-            icon: _emojiUrl == null
-                ? Icon(
-                    _isReacted ? Icons.thumb_up : Icons.thumb_up_outlined,
-                    color: _isReacted
-                        ? themeData.colorScheme.secondary
-                        : themeExtension.textDimColor,
-                  )
-                : SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Image(
+            icon: AnimatedScale(
+              scale: _reactionIconScale,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeInOutCubic,
+              onEnd: () {
+                if (_reactionIconScale != 1) {
+                  setState(() {
+                    _reactionIconScale = 1;
+                  });
+                }
+              },
+              child: _emojiUrl == null
+                  ? Icon(
+                      _isReacted ? Icons.thumb_up : Icons.thumb_up_outlined,
+                      color: _isReacted
+                          ? themeData.colorScheme.secondary
+                          : themeExtension.textDimColor,
+                    )
+                  : SizedBox(
                       width: 24,
                       height: 24,
-                      image: AppUtils.getImageProvider(_emojiUrl!),
+                      child: Image(
+                        width: 24,
+                        height: 24,
+                        image: AppUtils.getImageProvider(_emojiUrl!),
+                      ),
                     ),
-                  ),
+            ),
             style: const ButtonStyle(
               padding: WidgetStatePropertyAll(
                   EdgeInsets.symmetric(vertical: 4, horizontal: 8)),

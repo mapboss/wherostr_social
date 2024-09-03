@@ -158,7 +158,7 @@ class _ProfileState extends State<Profile> {
                         placeholder: MemoryImage(kTransparentImage),
                         image: AppUtils.getImageProvider(widget.user.banner!),
                         fadeInDuration: const Duration(milliseconds: 300),
-                        fadeInCurve: Curves.easeIn,
+                        fadeInCurve: Curves.easeInOutCubic,
                         fit: BoxFit.cover,
                       ),
                     ),

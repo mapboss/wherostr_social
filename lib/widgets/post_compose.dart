@@ -103,7 +103,7 @@ class _PostComposeState extends State<PostCompose> {
   }
 
   void _showProfileList() {
-    Future.delayed(const Duration(milliseconds: 250)).then((_) {
+    Future.delayed(const Duration(milliseconds: 300)).then((_) {
       if (!_isProfileListOpen) {
         setState(() {
           _keyword = null;
@@ -114,7 +114,7 @@ class _PostComposeState extends State<PostCompose> {
   }
 
   void _hideProfileList() {
-    Future.delayed(const Duration(milliseconds: 250)).then((_) {
+    Future.delayed(const Duration(milliseconds: 300)).then((_) {
       if (_isProfileListOpen) {
         setState(() {
           _atSignIndex = -1;

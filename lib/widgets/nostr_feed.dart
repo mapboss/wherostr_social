@@ -128,7 +128,7 @@ class NostrFeedState extends State<NostrFeed> {
                           if (!_postItems.containsKey(item.id!)) {
                             _postItems[item.id!] = AnimatedSize(
                               key: Key(item.id!),
-                              curve: Curves.easeIn,
+                              curve: Curves.easeInOutCubic,
                               duration: const Duration(milliseconds: 300),
                               child: widget.itemBuilder(context, item),
                             );
@@ -138,7 +138,7 @@ class NostrFeedState extends State<NostrFeed> {
                       ),
                     ),
                     AnimatedSize(
-                      curve: Curves.easeIn,
+                      curve: Curves.easeInOutCubic,
                       duration: const Duration(milliseconds: 300),
                       child: !widget.autoRefresh && _newItems.isNotEmpty
                           ? Padding(
@@ -232,7 +232,8 @@ class NostrFeedState extends State<NostrFeed> {
 
   void scrollToFirstItem() {
     _scrollController?.animateTo(_scrollController!.position.minScrollExtent,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic);
   }
 
   void clearState() {
