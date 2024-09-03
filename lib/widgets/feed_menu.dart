@@ -1,54 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_states.dart';
-import 'package:wherostr_social/models/feed_filter_menu_item.dart';
+import 'package:wherostr_social/models/feed_menu_item.dart';
 
 class FeedFilterMenu extends StatefulWidget {
-  final ValueChanged<FeedFilterMenuItem>? onChange;
+  final ValueChanged<FeedMenuItem>? onChange;
   const FeedFilterMenu({super.key, this.onChange});
 
   @override
   State createState() => _FeedFilterMenuState();
 }
 
-final followingMenuItem = FeedFilterMenuItem(
+final followingMenuItem = FeedMenuItem(
     id: 'following', name: 'Following', type: 'default', value: ['following']);
-final globalMenuItem = FeedFilterMenuItem(
+final globalMenuItem = FeedMenuItem(
     id: 'global', name: 'Global', type: 'default', value: ['global']);
 
 class _FeedFilterMenuState extends State<FeedFilterMenu> {
-  FeedFilterMenuItem _selectedItem = followingMenuItem;
+  FeedMenuItem _selectedItem = followingMenuItem;
 
   @override
   void initState() {
     super.initState();
+    final appFeedMenu = context.read<AppFeedProvider>();
+    setState(() {
+      _selectedItem = appFeedMenu.selectedItem;
+    });
   }
 
-  List<FeedFilterMenuItem> _generateDropdownMenu() {
+  List<FeedMenuItem> _generateDropdownMenu() {
     var me = context.read<AppStatesProvider>().me;
-    List<FeedFilterMenuItem> menuItems = [];
+    List<FeedMenuItem> menuItems = [];
     menuItems.add(followingMenuItem);
     menuItems.add(globalMenuItem);
     if (me.followSets.isNotEmpty) {
-      menuItems.addAll(me.followSets.map((e) => FeedFilterMenuItem(
-          type: e.type, id: e.id, name: e.name, value: e.value)));
+      menuItems.addAll(me.followSets.map((e) =>
+          FeedMenuItem(type: e.type, id: e.id, name: e.name, value: e.value)));
     }
     if (me.interestSets.isNotEmpty == true) {
       for (var t in me.interestSets) {
-        menuItems
-            .add(FeedFilterMenuItem(id: t, name: t, type: 'tag', value: [t]));
+        menuItems.add(FeedMenuItem(id: t, name: t, type: 'tag', value: [t]));
       }
     } else {
       menuItems.add(
-        FeedFilterMenuItem(
-            id: 'nostr', name: 'nostr', type: 'tag', value: ['nostr']),
+        FeedMenuItem(id: 'nostr', name: 'nostr', type: 'tag', value: ['nostr']),
       );
       menuItems.add(
-        FeedFilterMenuItem(
+        FeedMenuItem(
             id: 'siamstr', name: 'siamstr', type: 'tag', value: ['siamstr']),
       );
       menuItems.add(
-        FeedFilterMenuItem(
+        FeedMenuItem(
             id: 'wherostr', name: 'wherostr', type: 'tag', value: ['wherostr']),
       );
     }
@@ -56,6 +59,7 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
   }
 
   void _showDropdownMenu(BuildContext context) async {
+    final appFeedMenu = context.read<AppFeedProvider>();
     var menuItems = _generateDropdownMenu();
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay =
@@ -70,11 +74,11 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
       Offset.zero & overlay.size,
     );
 
-    final FeedFilterMenuItem? selected = await showMenu<FeedFilterMenuItem>(
+    final FeedMenuItem? selected = await showMenu<FeedMenuItem>(
       context: context,
       position: position,
-      items: menuItems.map((FeedFilterMenuItem item) {
-        return PopupMenuItem<FeedFilterMenuItem>(
+      items: menuItems.map((FeedMenuItem item) {
+        return PopupMenuItem<FeedMenuItem>(
           value: item,
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -105,6 +109,7 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
       setState(() {
         _selectedItem = selected;
       });
+      appFeedMenu.setSelectedItem(selected);
     }
     widget.onChange!(_selectedItem);
   }

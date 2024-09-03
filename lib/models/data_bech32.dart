@@ -30,7 +30,6 @@ class DataBech32 {
         try {
           identifier = ascii.decode(tlv.value);
         } catch (err) {
-          print('DataBech32.fromString ERROR: $err');
           eventId = hex.encode(tlv.value);
         }
       } else if (tlv.type == 1) {
