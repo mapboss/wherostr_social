@@ -45,16 +45,19 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Scaffold(
             key: homeScaffoldKey,
-            body: Navigator(
-              key: homeNavigatorKey,
-              onGenerateRoute: (routeSettings) {
-                return MaterialPageRoute(
-                  builder: (context) => LazyIndexedStack(
-                    index: _selectedIndex,
-                    children: _screens,
-                  ),
-                );
-              },
+            body: HeroControllerScope(
+              controller: MaterialApp.createMaterialHeroController(),
+              child: Navigator(
+                key: homeNavigatorKey,
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (context) => LazyIndexedStack(
+                      index: _selectedIndex,
+                      children: _screens,
+                    ),
+                  );
+                },
+              ),
             ),
             bottomNavigationBar: Container(
               decoration: BoxDecoration(

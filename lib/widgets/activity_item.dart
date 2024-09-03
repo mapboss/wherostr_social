@@ -36,6 +36,7 @@ class ActivityItem extends StatefulWidget {
 }
 
 class _ActivityItemState extends State<ActivityItem> {
+  final String _profileHeroTag = UniqueKey().toString();
   NostrUser? _user;
   bool _isMe = false;
   bool _isFollowing = false;
@@ -243,10 +244,14 @@ class _ActivityItemState extends State<ActivityItem> {
                           onTap: () =>
                               context.read<AppStatesProvider>().navigatorPush(
                                     widget: Profile(
+                                      heroTag: _profileHeroTag,
                                       user: _user!,
                                     ),
                                   ),
-                          child: ProfileAvatar(url: _user!.picture),
+                          child: Hero(
+                            tag: _profileHeroTag,
+                            child: ProfileAvatar(url: _user!.picture),
+                          ),
                         ),
                       ],
                     ),

@@ -14,6 +14,7 @@ class MainFeedContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String profileHeroTag = UniqueKey().toString();
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final appState = context.watch<AppStatesProvider>();
@@ -25,12 +26,16 @@ class MainFeedContainer extends StatelessWidget {
           child: RawMaterialButton(
             onPressed: () => appState.navigatorPush(
               widget: Profile(
+                heroTag: profileHeroTag,
                 user: me,
               ),
             ),
             shape: const CircleBorder(),
-            child: ProfileAvatar(
-              url: me.picture,
+            child: Hero(
+              tag: profileHeroTag,
+              child: ProfileAvatar(
+                url: me.picture,
+              ),
             ),
           ),
         ),

@@ -42,6 +42,7 @@ class MessageItem extends StatefulWidget {
 }
 
 class _MessageItemState extends State<MessageItem> {
+  final String _profileHeroTag = UniqueKey().toString();
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
   bool _isActionable = false;
@@ -228,12 +229,16 @@ class _MessageItemState extends State<MessageItem> {
               avatar: InkWell(
                 onTap: () => context.read<AppStatesProvider>().navigatorPush(
                       widget: Profile(
+                        heroTag: _profileHeroTag,
                         user: _user!,
                       ),
                     ),
-                child: ProfileAvatar(
-                  url: _user?.picture,
-                  borderSize: 1,
+                child: Hero(
+                  tag: _profileHeroTag,
+                  child: ProfileAvatar(
+                    url: _user?.picture,
+                    borderSize: 1,
+                  ),
                 ),
               ),
               shape: RoundedRectangleBorder(
@@ -349,12 +354,16 @@ class _MessageItemState extends State<MessageItem> {
             child: InkWell(
               onTap: () => context.read<AppStatesProvider>().navigatorPush(
                     widget: Profile(
+                      heroTag: _profileHeroTag,
                       user: _user!,
                     ),
                   ),
-              child: ProfileAvatar(
-                url: _user?.picture,
-                borderSize: 1,
+              child: Hero(
+                tag: _profileHeroTag,
+                child: ProfileAvatar(
+                  url: _user?.picture,
+                  borderSize: 1,
+                ),
               ),
             ),
           ),
@@ -388,12 +397,16 @@ class _MessageItemState extends State<MessageItem> {
             child: InkWell(
               onTap: () => context.read<AppStatesProvider>().navigatorPush(
                     widget: Profile(
+                      heroTag: _profileHeroTag,
                       user: _user!,
                     ),
                   ),
-              child: ProfileAvatar(
-                url: _user?.picture,
-                borderSize: 1,
+              child: Hero(
+                tag: _profileHeroTag,
+                child: ProfileAvatar(
+                  url: _user?.picture,
+                  borderSize: 1,
+                ),
               ),
             ),
           ),

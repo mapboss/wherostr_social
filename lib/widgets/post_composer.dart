@@ -31,6 +31,7 @@ class PostComposer extends StatefulWidget {
 }
 
 class _PostComposerState extends State<PostComposer> {
+  final String _profileHeroTag = UniqueKey().toString();
   NostrUser? _author;
 
   @override
@@ -81,11 +82,15 @@ class _PostComposerState extends State<PostComposer> {
               onTap: widget.enableShowProfileAction == true
                   ? () => context.read<AppStatesProvider>().navigatorPush(
                         widget: Profile(
+                          heroTag: _profileHeroTag,
                           user: _author!,
                         ),
                       )
                   : null,
-              child: ProfileAvatar(url: _author!.picture),
+              child: Hero(
+                tag: _profileHeroTag,
+                child: ProfileAvatar(url: _author!.picture),
+              ),
             ),
             title: ProfileDisplayName(
               user: _author!,

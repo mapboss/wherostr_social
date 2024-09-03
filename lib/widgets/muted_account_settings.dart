@@ -67,6 +67,7 @@ class ProfileListTile extends StatefulWidget {
 }
 
 class _ProfileListTileState extends State<ProfileListTile> {
+  final String _profileHeroTag = UniqueKey().toString();
   NostrUser? _user;
   bool _isMuted = false;
   bool _isLoading = false;
@@ -119,10 +120,14 @@ class _ProfileListTileState extends State<ProfileListTile> {
             leading: InkWell(
               onTap: () => appState.navigatorPush(
                 widget: Profile(
+                  heroTag: _profileHeroTag,
                   user: _user!,
                 ),
               ),
-              child: ProfileAvatar(url: _user!.picture),
+              child: Hero(
+                tag: _profileHeroTag,
+                child: ProfileAvatar(url: _user!.picture),
+              ),
             ),
             title: ProfileDisplayName(
               user: _user,

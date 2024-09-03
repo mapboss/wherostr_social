@@ -22,8 +22,13 @@ import 'package:wherostr_social/widgets/zap_form.dart';
 
 class Profile extends StatefulWidget {
   final NostrUser user;
+  final String heroTag;
 
-  const Profile({super.key, required this.user});
+  const Profile({
+    super.key,
+    required this.user,
+    this.heroTag = 'profile-avatar',
+  });
 
   @override
   State createState() => _ProfileState();
@@ -123,9 +128,12 @@ class _ProfileState extends State<Profile> {
                                       swipeDismissible: true,
                                       doubleTapZoomable: true,
                                     ),
-                            child: ProfileAvatar(
-                              url: widget.user.picture,
-                              borderSize: 4,
+                            child: Hero(
+                              tag: widget.heroTag,
+                              child: ProfileAvatar(
+                                url: widget.user.picture,
+                                borderSize: 4,
+                              ),
                             ),
                           ),
                         ),
