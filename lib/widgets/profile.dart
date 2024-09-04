@@ -462,7 +462,6 @@ class _ProfileState extends State<Profile> {
                             enablePreview: false,
                             enableMedia: false,
                             depth: 1,
-                            wantKeepAlive: false,
                           ),
                           const SizedBox(height: 4),
                         ],

@@ -9,6 +9,7 @@ import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
+import 'package:wherostr_social/widgets/resize_observer.dart';
 
 class NostrFeed extends StatefulWidget {
   final Widget Function(BuildContext context, DataEvent event) itemBuilder;
@@ -60,6 +61,7 @@ class NostrFeed extends StatefulWidget {
 }
 
 class NostrFeedState extends State<NostrFeed> {
+  Map<String, double> _heightMap = {};
   NostrEventsStream? _newEventStream;
   StreamSubscription<NostrEvent>? _newEventListener;
   NostrEventsStream? _initEventStream;
@@ -110,6 +112,7 @@ class NostrFeedState extends State<NostrFeed> {
                             ? _scrollController
                             : null,
                         reverse: widget.reverse,
+                        cacheExtent: 2000,
                         itemCount: !widget.isAscending && _hasMore
                             ? _items.length + 1
                             : _items.length,
@@ -126,11 +129,22 @@ class NostrFeedState extends State<NostrFeed> {
                                 ));
                           }
                           final item = _items[index];
-                          return AnimatedSize(
-                            key: Key(item.id!),
-                            curve: Curves.easeInOutCubic,
-                            duration: const Duration(milliseconds: 300),
-                            child: widget.itemBuilder(context, item),
+                          return Stack(
+                            children: [
+                              SizedBox(
+                                height: _heightMap[item.id!] ?? 0,
+                              ),
+                              AnimatedSize(
+                                curve: Curves.easeInOutCubic,
+                                duration: const Duration(milliseconds: 300),
+                                child: ResizeObserver(
+                                  onResized: (Size? oldSize, Size newSize) {
+                                    _heightMap[item.id!] = newSize.height;
+                                  },
+                                  child: widget.itemBuilder(context, item),
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
@@ -293,6 +307,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   void clearState() {
     setState(() {
+      _heightMap = {};
       _since = null;
       _loading = true;
       _initialized = false;

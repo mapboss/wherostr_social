@@ -99,6 +99,7 @@ class CustomFlickVideoPlayer extends StatefulWidget {
 class _CustomFlickVideoPlayerState extends State<CustomFlickVideoPlayer>
     with WidgetsBindingObserver {
   late FlickManager flickManager;
+  final _visibilityDetectorKey = UniqueKey();
   bool _isFullscreen = false;
   double? _videoWidth;
   double? _videoHeight;
@@ -271,7 +272,7 @@ class _CustomFlickVideoPlayerState extends State<CustomFlickVideoPlayer>
   @override
   Widget build(BuildContext context) {
     return VisibilityDetector(
-      key: UniqueKey(),
+      key: _visibilityDetectorKey,
       onVisibilityChanged: (visibilityInfo) {
         if (visibilityInfo.visibleFraction < 0.5) {
           flickManager.flickControlManager!.pause();

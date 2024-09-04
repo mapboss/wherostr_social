@@ -28,7 +28,6 @@ class PostContent extends StatefulWidget {
   final bool enablePreview;
   final bool enableMedia;
   final int depth;
-  final bool wantKeepAlive;
   final Widget? contentLeading;
 
   const PostContent({
@@ -39,7 +38,6 @@ class PostContent extends StatefulWidget {
     this.enablePreview = true,
     this.enableMedia = true,
     this.depth = 0,
-    this.wantKeepAlive = true,
     this.contentLeading,
   });
 
@@ -47,13 +45,9 @@ class PostContent extends StatefulWidget {
   State createState() => _PostContentState();
 }
 
-class _PostContentState extends State<PostContent>
-    with AutomaticKeepAliveClientMixin {
+class _PostContentState extends State<PostContent> {
   List<InlineSpan> _elementWidgets = [];
   List<ImageProvider> _imageProviders = [];
-
-  @override
-  bool get wantKeepAlive => widget.wantKeepAlive;
 
   @override
   void initState() {
@@ -401,7 +395,6 @@ class _PostContentState extends State<PostContent>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Text.rich(
       TextSpan(
         children: _elementWidgets,
