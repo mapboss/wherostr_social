@@ -99,7 +99,6 @@ extension OutBoxModel on Nostr {
     ];
     final events = await fetchEvents(
       request,
-      eoseRatio: 1.2,
       timeout: timeout,
       relays: relays,
     );
@@ -134,7 +133,7 @@ extension OutBoxModel on Nostr {
           relaysService.closeEventsSubscription(ease.subscriptionId, relay);
         } catch (err) {}
         if (completer.isCompleted) return;
-        if (eose >= relayLength / eoseRatio) {
+        if (events.values.isNotEmpty || eose >= relayLength) {
           final items = events.values.toList();
           if (isAscending == false) {
             items.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));

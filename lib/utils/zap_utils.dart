@@ -286,6 +286,15 @@ final List<MyAppInfo> walletApps = [
         'https://play.google.com/store/apps/details?id=app.zeusln.zeus',
   ),
   MyAppInfo(
+    packageName: "lifpay:",
+    bundleName: "flutter.android.LifePay",
+    appName: "LifPay ",
+    appStoreUrl:
+        'https://apps.apple.com/th/app/lifpay/id1645840182?platform=iphone',
+    googlePlayUrl:
+        'https://play.google.com/store/apps/details?id=flutter.android.LifePay&hl=en&gl=US',
+  ),
+  MyAppInfo(
     packageName: "phoenix:",
     bundleName: "fr.acinq.phoenix.mainnet",
     appName: "Phoenix",

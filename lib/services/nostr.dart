@@ -16,6 +16,7 @@ final searchRelays = DataRelayList.fromListString([
 ]);
 final countRelays = DataRelayList.fromListString([
   'wss://relay.nostr.band',
+  'wss://relay.nostr.band/all',
   // 'wss://relay.roli.social',
   // 'wss://relay.rushmi0.win',
 ]);
@@ -256,17 +257,16 @@ class NostrService {
               .closeEventsSubscription(ease.subscriptionId, relay);
         } catch (err) {}
         if (completer.isCompleted == true) return;
-        if (events.isNotEmpty) {
+        if (events.values.firstOrNull != null) {
           NostrService.profileList[pubkey] = events.values.first;
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
           return completer.complete(events.values.first);
         }
         if (eose >= readRelays!.length) {
-          NostrService.profileList[pubkey] = NostrUser(pubkey: pubkey);
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
-          completer.complete(NostrService.profileList[pubkey]);
+          completer.complete(NostrUser(pubkey: pubkey));
         }
       },
     );

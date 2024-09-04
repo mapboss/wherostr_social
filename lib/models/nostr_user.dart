@@ -121,6 +121,7 @@ class NostrUser {
     final profile = await NostrService.fetchUser(
       pubkey,
       relays: _relayList,
+      force: force,
     );
     name = profile.name;
     displayName = profile._displayName;

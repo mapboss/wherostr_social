@@ -60,6 +60,7 @@
       <string>bluewallet</string>
       <string>walletofsatoshi</string>
       <string>blixtwallet</string>
+      <string>lifpay</string>
     </array>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Wherostr requires access to your photos so you can share them with people.</string>
