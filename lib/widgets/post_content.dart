@@ -301,7 +301,7 @@ class _PostContentState extends State<PostContent> {
             relays = data.relays;
           }
           if (eventId != null) {
-            if (widget.depth < 2) {
+            if (widget.depth < 1) {
               double maxHeight = MediaQuery.sizeOf(context).height * 0.25;
               if (maxHeight < 108) {
                 maxHeight = 108;

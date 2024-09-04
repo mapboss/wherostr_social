@@ -138,6 +138,7 @@ class _ActivityItemState extends State<ActivityItem> {
 
   Widget? _activityContentWidget() {
     switch (widget.event.kind) {
+      case 1:
       case 9735:
         if ((widget.event.content ?? '') != '') {
           return Padding(
@@ -219,7 +220,9 @@ class _ActivityItemState extends State<ActivityItem> {
                     _referencedEventId != null
                 ? () => appState.navigatorPush(
                       widget: PostDetails(
-                        eventId: _referencedEventId,
+                        eventId: widget.event.kind == 1
+                            ? widget.event.id
+                            : _referencedEventId,
                       ),
                     )
                 : null,
