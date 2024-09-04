@@ -128,28 +128,24 @@ class NostrFeedState extends State<NostrFeed> {
                                 ));
                           }
                           final item = _items[index];
-                          return Stack(
+                          return SizedBox(
                             key: ValueKey(item.id!),
-                            children: [
-                              SizedBox(
-                                height: _heightMap[item.id!] ?? 0,
+                            height: _heightMap[item.id!],
+                            child: SingleChildScrollView(
+                              physics: const NeverScrollableScrollPhysics(),
+                              primary: false,
+                              child: ResizeObserver(
+                                onResized: (Size? oldSize, Size newSize) {
+                                  if (_heightMap[item.id!] != newSize.height) {
+                                    Future.delayed(
+                                        const Duration(milliseconds: 1000),
+                                        () => setState(() {}));
+                                  }
+                                  _heightMap[item.id!] = newSize.height;
+                                },
+                                child: widget.itemBuilder(context, item),
                               ),
-                              AnimatedSize(
-                                curve: Curves.easeInOutCubic,
-                                duration: const Duration(milliseconds: 300),
-                                child: ResizeObserver(
-                                  onResized: (Size? oldSize, Size newSize) {
-                                    if (_heightMap[item.id!] !=
-                                        newSize.height) {
-                                      Future.delayed(const Duration(seconds: 1),
-                                          () => setState(() {}));
-                                    }
-                                    _heightMap[item.id!] = newSize.height;
-                                  },
-                                  child: widget.itemBuilder(context, item),
-                                ),
-                              ),
-                            ],
+                            ),
                           );
                         },
                       ),

@@ -151,43 +151,41 @@ class CashuMatcher extends TextMatcher {
   const CashuMatcher() : super(r'(cashuA[A-Za-z0-9_-]{0,10000}={0,3})');
 }
 
-final TextParser parser = TextParser(matchers: [
-  // standard media video & live provider url
-  const ImageUrlMatcher(),
-  const VideoUrlMatcher(),
-  const AudioUrlMatcher(),
-
-  // // video & live provider url
-  // const YouTubeMatcher(),
-  // const FacebookMatcher(),
-  // const TwitchMatcher(),
-  // const SoundCloudMatcher(),
-  // const StreamableMatcher(),
-  // const VimeoMatcher(),
-  // const WistiaMatcher(),
-  // const MixcloudMatcher(),
-  // const DailyMotionMatcher(),
-  // const KalturaMatcher(),
-  // const TiktokMatcher(),
-  // const RumbleMatcher(),
-
-  // // lightning invoice
-  const LightningInvoiceMatcher(),
-  const CashuMatcher(),
-
-  // Nostr Link
-  const NostrLinkMatcher(),
-  // const NostrNAddressMatcher(),
-
-  const CustomEmojiMatcher(),
-
-  // Common Text matcher
-  // const EmailMatcher(),
-  const HashTagMatcher(),
-  const UrlMatcher(),
-  // const UrlLikeMatcher(),
-]);
-
 Future<List<TextElement>> textParser(String content) {
-  return parser.parse(content, useIsolate: false);
+  return TextParser(matchers: [
+    // standard media video & live provider url
+    const ImageUrlMatcher(),
+    const VideoUrlMatcher(),
+    const AudioUrlMatcher(),
+
+    // // video & live provider url
+    // const YouTubeMatcher(),
+    // const FacebookMatcher(),
+    // const TwitchMatcher(),
+    // const SoundCloudMatcher(),
+    // const StreamableMatcher(),
+    // const VimeoMatcher(),
+    // const WistiaMatcher(),
+    // const MixcloudMatcher(),
+    // const DailyMotionMatcher(),
+    // const KalturaMatcher(),
+    // const TiktokMatcher(),
+    // const RumbleMatcher(),
+
+    // // lightning invoice
+    const LightningInvoiceMatcher(),
+    const CashuMatcher(),
+
+    // Nostr Link
+    const NostrLinkMatcher(),
+    // const NostrNAddressMatcher(),
+
+    const CustomEmojiMatcher(),
+
+    // Common Text matcher
+    // const EmailMatcher(),
+    const HashTagMatcher(),
+    const UrlMatcher(),
+    // const UrlLikeMatcher(),
+  ]).parse(content, useIsolate: false);
 }
