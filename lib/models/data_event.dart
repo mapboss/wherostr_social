@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:text_parser/text_parser.dart';
+import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -210,14 +211,14 @@ class DataEvent extends NostrEvent {
       if (!isVerified()) {
         throw Exception('event is not valid.');
       }
-      // final result =
-      //     await NostrService.instance.relaysService.sendEventToRelaysAsync(
-      //   this,
-      //   timeout: timeout,
-      //   relays: relays?.clone().leftCombine(AppRelays.relays).writeRelays,
-      // );
-      // print("publish: $result");
-      print('publish: ${toMap()}');
+      final result =
+          await NostrService.instance.relaysService.sendEventToRelaysAsync(
+        this,
+        timeout: timeout,
+        relays: relays?.clone().leftCombine(AppRelays.relays).writeRelays,
+      );
+      print("publish: $result");
+      // print('publish: ${toMap()}');
     } catch (err) {
       print('publish: ${toMap()}, ERROR: $err');
     }
