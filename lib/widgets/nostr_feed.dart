@@ -130,6 +130,7 @@ class NostrFeedState extends State<NostrFeed> {
                           }
                           final item = _items[index];
                           return Stack(
+                            key: ValueKey(item.id!),
                             children: [
                               SizedBox(
                                 height: _heightMap[item.id!] ?? 0,
@@ -139,7 +140,17 @@ class NostrFeedState extends State<NostrFeed> {
                                 duration: const Duration(milliseconds: 300),
                                 child: ResizeObserver(
                                   onResized: (Size? oldSize, Size newSize) {
-                                    _heightMap[item.id!] = newSize.height;
+                                    if (newSize.height <
+                                        (_heightMap[item.id!] ?? 0)) {
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback(
+                                              (_) => setState(() {
+                                                    _heightMap[item.id!] =
+                                                        newSize.height;
+                                                  }));
+                                    } else {
+                                      _heightMap[item.id!] = newSize.height;
+                                    }
                                   },
                                   child: widget.itemBuilder(context, item),
                                 ),
