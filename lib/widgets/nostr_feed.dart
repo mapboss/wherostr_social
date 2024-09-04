@@ -45,7 +45,7 @@ class NostrFeed extends StatefulWidget {
     this.p,
     this.e,
     this.additionalFilters,
-    this.limit = 50,
+    this.limit = 20,
     this.itemFilter,
     this.reverse = false,
     this.isAscending = false,
@@ -112,7 +112,6 @@ class NostrFeedState extends State<NostrFeed> {
                             ? _scrollController
                             : null,
                         reverse: widget.reverse,
-                        cacheExtent: 2000,
                         itemCount: !widget.isAscending && _hasMore
                             ? _items.length + 1
                             : _items.length,
@@ -187,7 +186,10 @@ class NostrFeedState extends State<NostrFeed> {
     setState(() {
       _scrollController = widget.scrollController ?? ScrollController();
     });
-    initialize();
+    unsubscribe().whenComplete(() {
+      clearState();
+      initialize();
+    });
   }
 
   @override
@@ -256,7 +258,7 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
-  void subscribe() async {
+  void subscribe() {
     int hasMore = 0;
     final filter = NostrFilter(
       kinds: widget.kinds,
@@ -276,7 +278,6 @@ class NostrFeedState extends State<NostrFeed> {
       onEose: (relay, ease) {
         if (mounted) {
           setState(() {
-            _since = DateTime.now();
             _initialized = true;
             _loading = false;
             _hasMore = hasMore >= (widget.limit / 2);
@@ -284,25 +285,34 @@ class NostrFeedState extends State<NostrFeed> {
         }
       },
       onEnd: () {
-        setState(() {
-          _hasMore = hasMore >= widget.limit;
-        });
+        if (mounted) {
+          setState(() {
+            _hasMore = hasMore >= widget.limit;
+          });
+        }
       },
     );
-    _newEventListener = _newEventStream!.stream.listen((event) {
-      if (event.createdAt == null) return;
-      final dataEvent = DataEvent.fromEvent(event);
-      _allItems.add(dataEvent);
-      if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
-        hasMore += 1;
-      }
-      if (!filterEvent(dataEvent)) return;
-      if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
-        insertItem(dataEvent);
-      } else {
-        insertNewItem(dataEvent);
-      }
-    });
+
+    _newEventListener = _newEventStream!.stream.listen(
+      (event) {
+        if (event.createdAt == null) return;
+        final dataEvent = DataEvent.fromEvent(event);
+        _allItems.add(dataEvent);
+        if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
+          _since ??= DateTime.now();
+          hasMore += 1;
+        }
+        final isPass = filterEvent(dataEvent);
+        if (!isPass) return;
+        if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
+          insertItem(dataEvent);
+        } else {
+          insertNewItem(dataEvent);
+        }
+      },
+      onError: (e) => print('subscribe: onError: $e'),
+      onDone: () => print('subscribe: onDone'),
+    );
   }
 
   void scrollToFirstItem() {
@@ -328,22 +338,17 @@ class NostrFeedState extends State<NostrFeed> {
 
   Future<void> unsubscribe() async {
     try {
-      if (_newEventListener != null) {
-        await _newEventListener!.cancel();
-        _newEventListener = null;
-      }
-      if (_newEventStream != null) {
-        _newEventStream!.close();
-        _newEventStream = null;
-      }
-      if (_initEventListener != null) {
-        await _initEventListener!.cancel();
-        _initEventListener = null;
-      }
-      if (_initEventStream != null) {
-        _initEventStream!.close();
-        _initEventStream = null;
-      }
+      await _newEventListener?.cancel();
+      _newEventListener = null;
+
+      _newEventStream?.close();
+      _newEventStream = null;
+
+      await _initEventListener?.cancel();
+      _initEventListener = null;
+
+      _initEventStream?.close();
+      _initEventStream = null;
     } catch (err) {
       print('unsubscribe: $err');
     }
@@ -438,10 +443,10 @@ class NostrFeedState extends State<NostrFeed> {
     if (mounted) {
       setState(() {
         if (widget.isAscending == false) {
-          _since = newItems.first.createdAt!;
+          _since = newItems.first.createdAt;
           _items.insertAll(0, newItems);
         } else {
-          _since = newItems.last.createdAt!;
+          _since = newItems.last.createdAt;
           _items.addAll(newItems);
         }
         _newItems.clear();
@@ -536,7 +541,7 @@ class NostrFeedState extends State<NostrFeed> {
     if (idSet.isEmpty) return;
     await NostrService.fetchEventIds(
       idSet.toList(),
-      eoseRatio: 1,
+      eoseRatio: 1.2,
       timeout: const Duration(seconds: 3),
       relays: widget.relays,
     );

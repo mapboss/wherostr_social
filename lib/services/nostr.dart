@@ -46,26 +46,23 @@ class NostrService {
   }
 
   static Future<int> countEvent(NostrFilter filter) async {
-    try {
-      countInstance.enableLogs();
-      final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
-      Completer<NostrCountResponse> completer = Completer();
-      countInstance.relaysService.sendCountEventToRelays(
-        countEvent,
-        onCountResponse: (relay, countResponse) =>
-            completer.complete(countResponse),
-      );
-      return completer.future.then((v) => v.count);
-    } catch (err) {
-      print('countEvent: $err');
-    }
-    return 0;
+    countInstance.enableLogs();
+    final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
+    Completer<NostrCountResponse> completer = Completer();
+    countInstance.relaysService.sendCountEventToRelays(
+      countEvent,
+      onCountResponse: (relay, countResponse) =>
+          completer.complete(countResponse),
+    );
+    return completer.future
+        .timeout(const Duration(seconds: 3))
+        .then((v) => v.count);
   }
 
   static Future<DataEvent?> fetchEventById(
     String id, {
     DataRelayList? relays,
-    double eoseRatio = 1,
+    double eoseRatio = 1.2,
     Nostr? instance,
     Duration timeout = const Duration(seconds: 5),
   }) async {
@@ -79,7 +76,7 @@ class NostrService {
       return instance.fetchEvents(
         [request],
         relays: relays,
-        eoseRatio: 1,
+        eoseRatio: 1.2,
         timeout: timeout,
       ).then((v) => v.firstOrNull);
     }
@@ -138,24 +135,6 @@ class NostrService {
     );
     result.addAll(events);
     return result;
-  }
-
-  static Future<List<DataEvent>> fetchEvents(
-    List<NostrFilter> filters, {
-    DataRelayList? relays,
-    double eoseRatio = 1,
-    Nostr? instance,
-    Duration timeout = const Duration(seconds: 3),
-    bool isAscending = false,
-  }) async {
-    instance ??= NostrService.instance;
-    return instance.fetchEvents(
-      filters,
-      relays: relays,
-      eoseRatio: eoseRatio,
-      timeout: timeout,
-      isAscending: isAscending,
-    );
   }
 
   static Future<List<NostrUser>> _fetchUsers(
@@ -327,7 +306,7 @@ class NostrService {
   static NostrEventsStream subscribe(
     List<NostrFilter> filters, {
     DataRelayList? relays,
-    bool? closeOnEnd,
+    bool closeOnEnd = false,
     String? subscriptionId,
     bool useConsistentSubscriptionIdBasedOnRequestData = false,
     Duration timeout = const Duration(seconds: 5),
@@ -335,6 +314,7 @@ class NostrService {
     Function(String relay, NostrRequestEoseCommand ease)? onEose,
   }) {
     Completer? completer;
+    Future? future;
     final readRelays =
         relays?.clone().leftCombine(AppRelays.relays).readRelays ??
             NostrService.instance.relaysService.relaysList!;
@@ -351,17 +331,19 @@ class NostrService {
       onEose: (relay, ease) {
         eose += 1;
         onEose?.call(relay, ease);
-        if (closeOnEnd ?? false) {
-          if (completer == null) {
-            completer = Completer();
-            completer?.future.timeout(timeout).whenComplete(() {
-              onEnd?.call();
-            });
-          }
+        if (completer == null) {
+          completer = Completer();
+          future = completer?.future;
+          future?.whenComplete(() {
+            onEnd?.call();
+          });
+        }
+        if (closeOnEnd) {
+          future?.timeout(timeout);
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId, relay);
         }
-        if (eose >= readRelays.length) {
+        if (eose >= readRelays.length && (completer?.isCompleted ?? false)) {
           completer?.complete();
         }
       },
@@ -373,18 +355,24 @@ class NostrService {
       [Duration timeout = const Duration(seconds: 5)]) async {
     instance = Nostr();
     await Future.wait([
-      instance.initRelays(
-        AppRelays.relays,
-        timeout: timeout,
+      instance.relaysService.init(
+        relaysUrl: AppRelays.relays.toListString(),
+        connectionTimeout: timeout,
+        retryOnError: true,
+        shouldReconnectToRelayOnNotice: true,
       ),
     ]);
-    searchInstance.initRelays(
-      searchRelays,
-      timeout: timeout,
+    searchInstance.relaysService.init(
+      relaysUrl: searchRelays.toListString(),
+      connectionTimeout: timeout,
+      retryOnError: true,
+      shouldReconnectToRelayOnNotice: true,
     );
-    countInstance.initRelays(
-      countRelays,
-      timeout: timeout,
+    countInstance.relaysService.init(
+      relaysUrl: countRelays.toListString(),
+      connectionTimeout: timeout,
+      retryOnError: true,
+      shouldReconnectToRelayOnNotice: true,
     );
     String pubkey = '';
     if (npubOrPubkey.startsWith('npub1')) {
@@ -401,7 +389,12 @@ class NostrService {
       // );
       relays = AppRelays.relays;
     } else {
-      await instance.initRelays(relays, timeout: timeout);
+      await instance.relaysService.init(
+        relaysUrl: relays.toListString(),
+        connectionTimeout: timeout,
+        retryOnError: true,
+        shouldReconnectToRelayOnNotice: true,
+      );
     }
     instance.disableLogs();
     return relays;

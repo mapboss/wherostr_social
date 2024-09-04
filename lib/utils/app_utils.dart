@@ -122,6 +122,7 @@ class AppUtils {
               cacheManager: appImageCacheManager,
               maxHeight: maxSize,
               maxWidth: maxSize,
+              errorListener: (err) => print('getCachedImageProvider: $err'),
             );
   static ImageProvider getImageProvider(String url) => url.endsWith('.svg')
       ? (Svg(url, source: SvgSource.network) as ImageProvider)
