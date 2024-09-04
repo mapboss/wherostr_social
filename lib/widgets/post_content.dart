@@ -93,10 +93,12 @@ class _PostContentState extends State<PostContent> {
     }
     List<ImageProvider> imageProviders = [];
     double maxMediaHeight = (MediaQuery.sizeOf(context).width - 32) * (4 / 3);
+    int maxImageCacheSize = MediaQuery.sizeOf(context).height.toInt();
     for (var element in elements) {
       switch (element.matcherType) {
         case ImageUrlMatcher:
-          final imageProvider = AppUtils.getImageProvider(element.text);
+          final imageProvider =
+              AppUtils.getCachedImageProvider(element.text, maxImageCacheSize);
           imageProviders.add(imageProvider);
           if (widget.enableMedia) {
             widgets.add(

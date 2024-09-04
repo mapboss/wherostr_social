@@ -340,12 +340,14 @@ class Repost extends PostItem {
                       color: themeExtension.textDimColor,
                     ),
                     const SizedBox(width: 4),
-                    ProfileDisplayName(
-                      pubkey: event.pubkey,
-                      withBadge: true,
-                      enableShowProfileAction: true,
-                      textStyle: TextStyle(
-                        color: themeExtension.textDimColor,
+                    Flexible(
+                      child: ProfileDisplayName(
+                        pubkey: event.pubkey,
+                        withBadge: true,
+                        enableShowProfileAction: true,
+                        textStyle: TextStyle(
+                          color: themeExtension.textDimColor,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 4),
