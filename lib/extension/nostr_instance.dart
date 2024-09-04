@@ -99,7 +99,7 @@ extension OutBoxModel on Nostr {
     ];
     final events = await fetchEvents(
       request,
-      eoseRatio: 1,
+      eoseRatio: 1.2,
       timeout: timeout,
       relays: relays,
     );
@@ -109,7 +109,7 @@ extension OutBoxModel on Nostr {
 
   Future<List<DataEvent>> fetchEvents(
     List<NostrFilter> filters, {
-    double eoseRatio = 1,
+    double eoseRatio = 1.2,
     DataRelayList? relays,
     Duration timeout = const Duration(seconds: 5),
     bool isAscending = false,

@@ -8,6 +8,7 @@ import 'package:dart_nostr/nostr/model/request/filter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -90,7 +91,7 @@ class _MessageItemState extends State<MessageItem> {
         kinds: const [7, 9735],
         e: [widget.event.id!],
       );
-      NostrService.fetchEvents([filter]).then((events) {
+      NostrService.instance.fetchEvents([filter]).then((events) {
         if (mounted) {
           widget.event.relatedEvents.addAll(events);
           updateCounts(events);

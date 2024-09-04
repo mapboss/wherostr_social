@@ -166,7 +166,7 @@ class NostrUser {
     }
     NostrFilter filter =
         NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
-    final events = await NostrService.fetchEvents(
+    final events = await NostrService.instance.fetchEvents(
       [filter],
       timeout: const Duration(seconds: 10),
       relays: _relayList,
@@ -231,7 +231,6 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
-      eoseRatio: 1,
       relays: _relayList,
     );
     print('fetchInterestSets.events: ${events.length}');
@@ -267,7 +266,6 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
-      eoseRatio: 1,
       relays: _relayList,
     );
     print('fetchFollowSets.events: ${events.length}');
@@ -309,7 +307,6 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
-      eoseRatio: 1,
       relays: _relayList,
     );
     Set<String>? pubkeyList;
@@ -333,7 +330,6 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
-      eoseRatio: 1,
       relays: _relayList,
     );
     Set<String>? eventList;
@@ -358,7 +354,6 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
-      eoseRatio: 1,
       relays: _relayList,
     );
     if (events.isEmpty) {
@@ -386,7 +381,6 @@ class NostrUser {
       [
         NostrFilter(kinds: const [10030], authors: [pubkey], limit: 1)
       ],
-      eoseRatio: 1,
       relays: _relayList,
     );
     List<String> emojiSetIds = [];
@@ -407,8 +401,7 @@ class NostrUser {
           .whereType<NostrFilter>(),
       NostrFilter(kinds: const [30030], authors: [pubkey]),
     ];
-    final emojiEvents =
-        await NostrService.instance.fetchEvents(emojiRequests, eoseRatio: 1);
+    final emojiEvents = await NostrService.instance.fetchEvents(emojiRequests);
     List<List<String>>? items;
     for (final event in emojiEvents) {
       items ??= [];

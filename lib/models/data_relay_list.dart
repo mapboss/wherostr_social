@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:wherostr_social/models/data_relay.dart';
+import 'package:wherostr_social/services/nostr.dart';
 
 class DataRelayList extends ListBase<DataRelay> {
   static DataRelayList failureList = DataRelayList(innerList: []);
@@ -94,11 +95,16 @@ class DataRelayList extends ListBase<DataRelay> {
 
   DataRelayList combine(DataRelayList? relayList, [bool removeError = true]) {
     final list = removeError
-        ? innerList?.where((e) => failureList.contains(e)).toList()
+        ? innerList
+            ?.where((e) => NostrService.instance.relaysService.failureRelaysList
+                .contains(e.url))
+            .toList()
         : innerList?.toList();
     if (relayList != null) {
       for (final item in relayList) {
-        if (removeError && failureList.contains(item)) {
+        if (removeError &&
+            NostrService.instance.relaysService.failureRelaysList
+                .contains(item.url)) {
           continue;
         }
         if (list?.contains(item) == true) continue;
@@ -111,11 +117,16 @@ class DataRelayList extends ListBase<DataRelay> {
   DataRelayList leftCombine(DataRelayList? relayList,
       [bool removeError = true]) {
     final list = removeError
-        ? relayList?.where((e) => failureList.contains(e)).toList()
+        ? relayList
+            ?.where((e) => NostrService.instance.relaysService.failureRelaysList
+                .contains(e.url))
+            .toList()
         : relayList?.toList();
     if (innerList != null) {
       innerList?.forEach((item) {
-        if (removeError && failureList.contains(item)) {
+        if (removeError &&
+            NostrService.instance.relaysService.failureRelaysList
+                .contains(item.url)) {
           return;
         }
         if (list?.contains(item) == true) return;
@@ -128,5 +139,9 @@ class DataRelayList extends ListBase<DataRelay> {
   @override
   String toString() {
     return innerList?.map((e) => e.toString()).join(', ') ?? '';
+  }
+
+  List<String> toListString() {
+    return innerList?.map((e) => e.toString()).toList() ?? [];
   }
 }

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:dart_nostr/dart_nostr.dart';
@@ -27,7 +26,6 @@ class PostActionBar extends StatefulWidget {
 
 class _PostActionBarState extends State<PostActionBar> {
   NostrEventsStream? _newEventStream;
-  StreamSubscription? _newEventListener;
   NostrUser? _user;
   int _repostCount = 0;
   int _commentCount = 0;
@@ -74,17 +72,13 @@ class _PostActionBarState extends State<PostActionBar> {
       [filter],
       relays: relayList,
     );
-    _newEventListener = _newEventStream!.stream.listen((event) {
+    _newEventStream!.stream.listen((event) {
       final e = DataEvent.fromEvent(event);
       updateCounts([e]);
     });
   }
 
   void unsubscribe() {
-    if (_newEventListener != null) {
-      _newEventListener!.cancel();
-      _newEventListener = null;
-    }
     if (_newEventStream != null) {
       _newEventStream!.close();
       _newEventStream = null;

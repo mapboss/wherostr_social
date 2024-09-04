@@ -264,9 +264,9 @@ class _PostComposeState extends State<PostCompose> {
           text: 'Posted successfully.',
           status: AppStatus.success,
         );
-        // if (mounted) {
-        //   context.read<AppStatesProvider>().navigatorPop();
-        // }
+        if (mounted) {
+          context.read<AppStatesProvider>().navigatorPop();
+        }
       } else {
         AppUtils.hideSnackBar();
       }

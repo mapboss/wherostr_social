@@ -114,7 +114,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
     );
     NostrService.instance.fetchEvents(
       [filter],
-      eoseRatio: 1,
+      eoseRatio: 1.2,
       relays: relays,
     ).then((newItems) async {
       if (newItems.isNotEmpty) {

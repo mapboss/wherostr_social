@@ -202,7 +202,7 @@ class DataEvent extends NostrEvent {
       content ??= '';
       if (difficulty != null) {
         await minePow(this, difficulty);
-      } else if (id?.isEmpty != false) {
+      } else {
         id = generateEventId();
       }
       if (sig?.isEmpty != false) {

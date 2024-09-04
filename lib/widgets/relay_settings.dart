@@ -85,7 +85,12 @@ class _RelaySettingsState extends State<RelaySettings> {
       if (_relays != null) {
         final relaysList = instance.relaysService.relaysList?.toList() ?? [];
         instance.enableLogs();
-        await instance.initRelays(_relays!);
+        await instance.relaysService.init(
+          relaysUrl: _relays!.toListString(),
+          connectionTimeout: const Duration(seconds: 5),
+          retryOnError: true,
+          shouldReconnectToRelayOnNotice: true,
+        );
         instance.disableLogs();
         await appState.setRelays(_relays!);
         await Future.wait(relaysList.map((e) async {
