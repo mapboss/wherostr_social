@@ -8,9 +8,6 @@ import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
 
-const pubkey =
-    'd67e88b9279a53626c9f716c976718ad245c45ffe2463119424d19b34bf845ac';
-
 class PostItemLoader extends StatefulWidget {
   final String eventId;
   final DataRelayList? relays;
@@ -56,10 +53,10 @@ class _PostItemLoaderState extends State<PostItemLoader> {
   @override
   void initState() {
     super.initState();
-    initialize();
+    fetchEvent();
   }
 
-  void initialize() async {
+  void fetchEvent() async {
     final me = context.read<AppStatesProvider>().me;
     final event = await NostrService.fetchEventById(
       widget.eventId,
@@ -77,7 +74,7 @@ class _PostItemLoaderState extends State<PostItemLoader> {
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    return _loading && _event == null
+    return _loading
         ? Shimmer.fromColors(
             baseColor: themeExtension.shimmerBaseColor!,
             highlightColor: themeExtension.shimmerHighlightColor!,
@@ -123,8 +120,35 @@ class _PostItemLoaderState extends State<PostItemLoader> {
               ),
             ),
           )
-        : _event != null
-            ? PostItem(
+        : _event == null
+            ? SizedBox(
+                width: double.infinity,
+                height: 108,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Text('Sorry, unable to retrieve the post.'),
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _loading = true;
+                          });
+                          Future.delayed(const Duration(milliseconds: 300),
+                              () => fetchEvent());
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : PostItem(
                 event: _event!,
                 enableShowProfileAction: widget.enableShowProfileAction,
                 enableMenu: widget.enableMenu,
@@ -138,12 +162,6 @@ class _PostItemLoaderState extends State<PostItemLoader> {
                 contentPadding: widget.contentPadding,
                 depth: widget.depth,
                 maxHeight: widget.maxHeight,
-              )
-            : const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: Text('Event not found.'),
-                ),
               );
   }
 }
