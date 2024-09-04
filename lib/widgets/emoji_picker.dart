@@ -18,7 +18,8 @@ class EmojiPicker extends StatefulWidget {
 }
 
 class _EmojiPickerState extends State<EmojiPicker> {
-  List<List<String>>? _emojiList;
+  static List<List<String>>? emojiList;
+  List<List<String>>? _emojiList = emojiList;
 
   @override
   void initState() {
@@ -27,31 +28,35 @@ class _EmojiPickerState extends State<EmojiPicker> {
   }
 
   void initialize() async {
-    final me = context.read<AppStatesProvider>().me;
-    final [
-      wherostrEmojiEvent as DataEvent,
-      emojiList as List<List<String>>,
-    ] = await Future.wait([
-      NostrService.fetchEventById(
-          "30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr"),
-      me.fetchEmojiList(),
-    ]);
-    Set<String> seenSecondStrings = {};
-    List<List<String>> uniqueLists = [];
-    for (List<String> innerList in [
-      ...(wherostrEmojiEvent.tags
-              ?.where((item) => item.firstOrNull == 'emoji') ??
-          []),
-      ...emojiList,
-    ]) {
-      if (innerList.length >= 2 && !seenSecondStrings.contains(innerList[1])) {
-        seenSecondStrings.add(innerList[1]);
-        uniqueLists.add(innerList);
+    if (_emojiList == null) {
+      final me = context.read<AppStatesProvider>().me;
+      final [
+        wherostrEmojiEvent as DataEvent,
+        userEmojiList as List<List<String>>,
+      ] = await Future.wait([
+        NostrService.fetchEventById(
+            "30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr"),
+        me.fetchEmojiList(),
+      ]);
+      Set<String> seenSecondStrings = {};
+      List<List<String>> uniqueLists = [];
+      for (List<String> innerList in [
+        ...(wherostrEmojiEvent.tags
+                ?.where((item) => item.firstOrNull == 'emoji') ??
+            []),
+        ...userEmojiList,
+      ]) {
+        if (innerList.length >= 2 &&
+            !seenSecondStrings.contains(innerList[1])) {
+          seenSecondStrings.add(innerList[1]);
+          uniqueLists.add(innerList);
+        }
       }
+      setState(() {
+        _emojiList = uniqueLists;
+      });
+      emojiList = uniqueLists;
     }
-    setState(() {
-      _emojiList = uniqueLists;
-    });
   }
 
   @override

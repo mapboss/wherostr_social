@@ -112,7 +112,6 @@ class NostrFeedState extends State<NostrFeed> {
                             ? _scrollController
                             : null,
                         reverse: widget.reverse,
-                        cacheExtent: 2000,
                         itemCount: !widget.isAscending && _hasMore
                             ? _items.length + 1
                             : _items.length,
