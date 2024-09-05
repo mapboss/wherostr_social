@@ -377,17 +377,14 @@ class NostrService {
       instance.relaysService.init(
         relaysUrl: AppRelays.defaults.combine(AppRelays.relays).toListString(),
         connectionTimeout: timeout,
-        retryOnError: true,
       ),
       searchInstance.relaysService.init(
         relaysUrl: searchRelays.toListString(),
         connectionTimeout: timeout,
-        retryOnError: true,
       ),
       countInstance.relaysService.init(
         relaysUrl: countRelays.toListString(),
         connectionTimeout: timeout,
-        retryOnError: true,
       ),
     ]);
     String pubkey = '';
@@ -409,7 +406,6 @@ class NostrService {
       await instance.relaysService.init(
         relaysUrl: relays.toListString(),
         connectionTimeout: timeout,
-        retryOnError: true,
       );
     }
     instance.disableLogs();
@@ -421,7 +417,6 @@ class NostrService {
     await searchInstance.relaysService.init(
       relaysUrl: searchRelays.toListString(),
       connectionTimeout: const Duration(seconds: 5),
-      retryOnError: true,
     );
 
     return searchInstance.fetchEvents(

@@ -88,8 +88,6 @@ class _RelaySettingsState extends State<RelaySettings> {
         await instance.relaysService.init(
           relaysUrl: _relays!.toListString(),
           connectionTimeout: const Duration(seconds: 5),
-          retryOnError: true,
-          shouldReconnectToRelayOnNotice: true,
         );
         instance.disableLogs();
         await appState.setRelays(_relays!);

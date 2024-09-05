@@ -278,11 +278,11 @@ class NostrFeedState extends State<NostrFeed> {
       closeOnEnd: widget.disableSubscribe,
       onEose: (relay, ease) {
         if (mounted) {
-          setState(() {
-            _initialized = true;
-            _loading = false;
-            _hasMore = hasMore >= (widget.limit / 2);
-          });
+          Future.delayed(
+              const Duration(milliseconds: 300), () => setState(() {}));
+          _initialized = true;
+          _loading = false;
+          _hasMore = hasMore >= (widget.limit / 2);
         }
       },
       onEnd: () {
@@ -410,10 +410,11 @@ class NostrFeedState extends State<NostrFeed> {
       closeOnEnd: true,
       onEose: (relay, ease) {
         if (mounted) {
-          setState(() {
-            _loading = false;
-            _hasMore = hasMore >= (widget.limit / 2);
-          });
+          Future.delayed(
+              const Duration(milliseconds: 300), () => setState(() {}));
+
+          _loading = false;
+          _hasMore = hasMore >= (widget.limit / 2);
         }
       },
       onEnd: () {
