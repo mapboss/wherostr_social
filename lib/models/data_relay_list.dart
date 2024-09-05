@@ -40,7 +40,7 @@ class DataRelayList extends ListBase<DataRelay> {
       innerList?.where((e) => e.marker != 'write').map((e) => e.url).toList();
 
   factory DataRelayList.fromList(List<DataRelay>? relays) {
-    return DataRelayList(innerList: relays!);
+    return DataRelayList(innerList: relays);
   }
   factory DataRelayList.fromListString(List<String>? relays) {
     return DataRelayList(
