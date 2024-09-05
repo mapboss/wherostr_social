@@ -275,12 +275,17 @@ class NostrService {
           NostrService.profileList[pubkey] = events.values.first;
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
-          return completer.complete(events.values.first);
+          if (!completer.isCompleted) {
+            completer.complete(events.values.first);
+          }
+          return;
         }
         if (eose >= readRelays!.length) {
           NostrService.instance.relaysService
               .closeEventsSubscription(ease.subscriptionId);
-          completer.complete(NostrUser(pubkey: pubkey));
+          if (!completer.isCompleted) {
+            completer.complete(NostrUser(pubkey: pubkey));
+          }
         }
       },
     );
@@ -369,7 +374,7 @@ class NostrService {
   }
 
   static Future<DataRelayList> initWithNpubOrPubkey(String npubOrPubkey,
-      [Duration timeout = const Duration(seconds: 5)]) async {
+      [Duration timeout = const Duration(seconds: 3)]) async {
     instance = Nostr();
     await Future.wait([
       instance.relaysService.init(
@@ -401,6 +406,7 @@ class NostrService {
         await instance.fetchUserRelayList(pubkey, timeout: timeout);
 
     if (relays.isEmpty) {
+      print('relays: relays.isEmpty');
       // AppUtils.showSnackBar(
       //   text: "No relays specified. Using default relays.",
       //   status: AppStatus.warning,

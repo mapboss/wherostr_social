@@ -169,7 +169,7 @@ class NostrUser {
         NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
     final events = await NostrService.instance.fetchEvents(
       [filter],
-      timeout: const Duration(seconds: 10),
+      timeout: const Duration(seconds: 3),
       relays: _relayList,
     );
     print('fetchFollowing.events: ${events.length}');
@@ -232,6 +232,7 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
+      timeout: const Duration(seconds: 3),
       relays: _relayList,
     );
     print('fetchInterestSets.events: ${events.length}');
@@ -267,6 +268,7 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
+      timeout: const Duration(seconds: 3),
       relays: _relayList,
     );
     print('fetchFollowSets.events: ${events.length}');
@@ -308,6 +310,7 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
+      timeout: const Duration(seconds: 3),
       relays: _relayList,
     );
     Set<String>? pubkeyList;
@@ -434,7 +437,8 @@ class NostrUser {
   }
 
   Future<void> unfollowAll() async {
-    await setFollowing([]);
+    _following = [];
+    await setFollowing(following);
   }
 
   Future<void> follow(String user) async {
@@ -460,11 +464,7 @@ class NostrUser {
       _muteList ??= [];
       _muteList?.add(user);
     }
-    final event = DataEvent(
-      kind: 10000,
-      tags: muteList.toSet().map((e) => ['p', e]).toList(),
-    );
-    await event.publish(relays: _relayList);
+    await setMuteList(muteList);
   }
 
   Future<void> unmute(String user) async {
@@ -472,11 +472,20 @@ class NostrUser {
     if (muteList.contains(user)) {
       _muteList?.remove(user);
     }
+    await setMuteList(muteList);
+  }
+
+  Future<void> setMuteList(List<String> users) async {
     final event = DataEvent(
       kind: 10000,
-      tags: muteList.map((e) => ['p', e]).toSet().toList(),
+      tags: users.toSet().map((e) => ['p', e]).toList(),
     );
     await event.publish(relays: _relayList);
+  }
+
+  Future<void> unmuteAll() async {
+    _muteList = [];
+    await setMuteList(muteList);
   }
 
   Future<void> pin(String eventId) async {
@@ -487,7 +496,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10001,
-      tags: pinList.map((e) => ['e', e]).toSet().toList(),
+      tags: pinList.toSet().map((e) => ['e', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }
@@ -499,7 +508,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10001,
-      tags: pinList.map((e) => ['e', e]).toSet().toList(),
+      tags: pinList.toSet().map((e) => ['e', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }
@@ -512,7 +521,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10003,
-      tags: bookmarkList.map((e) => ['e', e]).toSet().toList(),
+      tags: bookmarkList.toSet().map((e) => ['e', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }
@@ -524,7 +533,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10003,
-      tags: bookmarkList.map((e) => ['e', e]).toSet().toList(),
+      tags: bookmarkList.toSet().map((e) => ['e', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }
@@ -537,7 +546,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10015,
-      tags: interestSets.map((e) => ['t', e]).toSet().toList(),
+      tags: interestSets.toSet().map((e) => ['t', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }
@@ -549,7 +558,7 @@ class NostrUser {
     }
     final event = DataEvent(
       kind: 10015,
-      tags: interestSets.map((e) => ['t', e]).toSet().toList(),
+      tags: interestSets.toSet().map((e) => ['t', e]).toList(),
     );
     await event.publish(relays: _relayList);
   }
@@ -634,7 +643,8 @@ class NostrUser {
     content['lud16'] = lud16;
     content['nip05'] = nip05;
     var event = DataEvent(kind: 0, content: jsonEncode(content));
-    await event.publish(relays: relays);
+    await event.publish(
+        relays: relays != null ? _relayList?.combine(relays) : _relayList);
     this.picture = content['picture'];
     this.banner = content['banner'];
     this.name = content['name'];

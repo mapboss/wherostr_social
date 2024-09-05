@@ -92,7 +92,7 @@ extension OutBoxModel on Nostr {
   }
 
   Future<DataRelayList> fetchUserRelayList(String pubkey,
-      {Duration timeout = const Duration(seconds: 5),
+      {Duration timeout = const Duration(seconds: 3),
       DataRelayList? relays}) async {
     List<NostrFilter> request = [
       NostrFilter(kinds: const [10002], authors: [pubkey], limit: 1),
@@ -103,12 +103,12 @@ extension OutBoxModel on Nostr {
       relays: relays,
     );
     events.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
-    return DataRelayList.fromTags(events.elementAtOrNull(0)?.tags);
+    return DataRelayList.fromEvent(events.elementAtOrNull(0));
   }
 
   Future<List<DataEvent>> fetchEvents(
     List<NostrFilter> filters, {
-    double eoseRatio = 1.2,
+    double eoseRatio = 1.5,
     DataRelayList? relays,
     Duration timeout = const Duration(seconds: 5),
     bool isAscending = false,
@@ -145,7 +145,9 @@ extension OutBoxModel on Nostr {
             items.sort((a, b) => a.createdAt!.compareTo(b.createdAt!));
           }
           relaysService.closeEventsSubscription(ease.subscriptionId);
-          completer.complete(items);
+          if (!completer.isCompleted) {
+            completer.complete(items);
+          }
         }
       },
     );
