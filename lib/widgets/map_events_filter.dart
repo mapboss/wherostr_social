@@ -5,13 +5,12 @@ import 'package:dart_geohash/dart_geohash.dart';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
-import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/nostr.dart';
-import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/map_ui.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
 
@@ -62,25 +61,106 @@ class MapEventsFilter extends StatefulWidget {
   State createState() => _MapEventsFilterState();
 }
 
+class GeoJson {
+  final String type = 'FeatureCollection';
+  final List<Feature> features = [];
+
+  Map<String, dynamic> toMap() {
+    return {"type": type, "features": features.map((e) => e.toMap()).toList()};
+  }
+}
+
+class Feature {
+  final String type = "Feature";
+  Map<String, dynamic>? properties = {};
+  Map<String, dynamic>? geometry = {};
+
+  Feature({this.properties, this.geometry});
+  factory Feature.fromMap(Map<String, dynamic> data) {
+    return Feature(properties: data['properties'], geometry: data['geometry']);
+  }
+
+  Map<String, dynamic> toMap() {
+    return {"type": type, "properties": properties, "geometry": geometry};
+  }
+}
+
+class GeometryPoint {
+  final List<double>? cooridnates;
+  final String type = 'Point';
+  const GeometryPoint([this.cooridnates]);
+
+  factory GeometryPoint.fromMap(Map<String, dynamic> data) {
+    return GeometryPoint(data['cooridnates'].map((e) => e));
+  }
+  Map<String, dynamic> toMap() {
+    return {"type": type, "cooridnates": cooridnates};
+  }
+}
+
 class _MapEventsFilterState extends State<MapEventsFilter> {
   MapLibreMapController? _mapController;
   bool _loading = true;
-  Completer<Map<String, dynamic>>? _sourceLoaded;
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
+  final GeoJson geojson = GeoJson();
 
-  // void _subscribe(DateTime since) {
-  //   final relays = context.read<AppStatesProvider>().me.relayList.clone();
-  //   _newEventStream = NostrService.subscribe([
-  //     NostrFilter(
-  //       kinds: const [1],
-  //       additionalFilters: {
-  //         "#g": fullExtentGeohash,
-  //       },
-  //     )
-  //   ], relays: relays);
-  //   _newEventListener = _newEventStream!.stream.listen((event) {});
-  // }
+  void _subscribe() {
+    const duration = Duration(milliseconds: 300);
+    final Debouncer debouncer = Debouncer();
+    final relays = context.read<AppStatesProvider>().me.relayList.clone();
+    final filter = NostrFilter(
+      limit: 1000,
+      kinds: const [1],
+      additionalFilters: {
+        "#g": fullExtentGeohash,
+      },
+    );
+    _newEventStream = NostrService.subscribe(
+      [filter],
+      relays: relays,
+      onEose: (relay, ease) async {
+        if (_loading && mounted) {
+          setState(() {
+            _loading = false;
+          });
+        }
+        debouncer.debounce(
+          duration: duration,
+          onDebounce: () {
+            if (mounted) {
+              geojson.features.sort((a, b) =>
+                  b.properties?['createdAt'] - a.properties?['createdAt']);
+              _updateSource();
+            }
+          },
+        );
+      },
+    );
+    _newEventListener = _newEventStream!.stream.listen((event) {
+      final geohash =
+          GeoHash(event.tags!.where((e) => e.first == 'g').first.elementAt(1));
+      final feature = Feature.fromMap({
+        'properties': {
+          "id": event.id,
+          "pubkey": event.pubkey,
+          "content": event.content,
+          "kind": event.kind,
+          "sig": event.sig,
+          "tags": event.tags,
+          "createdAt": event.createdAt?.millisecondsSinceEpoch,
+        },
+        'geometry': {
+          "type": "Point",
+          "coordinates": [
+            geohash.longitude(decimalAccuracy: 6),
+            geohash.latitude(decimalAccuracy: 6)
+          ]
+        },
+      });
+      geojson.features.add(feature);
+    });
+  }
 
   Future<void> _unsubscribe() async {
     try {
@@ -97,83 +177,26 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
     }
   }
 
-  Future<Map<String, dynamic>> _fetchSource() {
-    final relays = context.read<AppStatesProvider>().me.relayList.clone();
-    _sourceLoaded = Completer<Map<String, dynamic>>();
-    print('MapEventsFilter._fetchSource');
-    setState(() {
-      _loading = true;
-    });
-    DateTime since = DateTime.now().subtract(const Duration(days: 30));
-    NostrFilter filter = NostrFilter(
-      since: since,
-      kinds: const [1],
-      additionalFilters: {
-        "#g": fullExtentGeohash,
-      },
-    );
-    NostrService.instance.fetchEvents(
-      [filter],
-      eoseRatio: 1.2,
-      relays: relays,
-    ).then((newItems) async {
-      if (newItems.isNotEmpty) {
-        newItems = newItems.where((e) => (!isReply(event: e))).toList();
-        // await Future.wait([
-        //   _fetchUsersFromEvents(newItems),
-        // ]);
-      }
-      Map<String, dynamic> geojson = {
-        'type': 'FeatureCollection',
-        'features': newItems.map(
-          (item) {
-            var geohash = GeoHash(
-                item.tags!.where((e) => e.first == 'g').first.elementAt(1));
-            return {
-              'type': 'Feature',
-              'properties': {
-                "id": item.id,
-                "pubkey": item.pubkey,
-                "content": item.content,
-                "kind": item.kind,
-                "sig": item.sig,
-                "tags": item.tags,
-                "createdAt": item.createdAt?.millisecondsSinceEpoch,
-              },
-              'geometry': {
-                "type": "Point",
-                "coordinates": [
-                  geohash.longitude(decimalAccuracy: 6),
-                  geohash.latitude(decimalAccuracy: 6)
-                ]
-              },
-            };
-          },
-        ).toList()
-      };
-      _sourceLoaded!.complete(geojson);
-    });
-    return _sourceLoaded!.future;
-  }
-
   _onMapCreated(MapLibreMapController mapController) {
     _mapController = mapController;
     _mapController?.onFeatureTapped.add(_queryRenderedFeatures);
-    if (_sourceLoaded == null) {
-      _fetchSource();
+  }
+
+  Future<void> _updateSource() async {
+    try {
+      var isHasSource =
+          (await _mapController?.getSourceIds())?.contains(layerId);
+      if (isHasSource != true) {
+        await _mapController?.addGeoJsonSource(layerId, geojson.toMap());
+      } else {
+        await _mapController?.setGeoJsonSource(layerId, geojson.toMap());
+      }
+    } catch (err) {
+      print('err: $err');
     }
   }
 
-  _updateSource(Map<String, dynamic>? geojson) async {
-    var isHasSource = (await _mapController?.getSourceIds())?.contains(layerId);
-    if (isHasSource != true) {
-      await _mapController?.addGeoJsonSource(layerId, geojson ?? {});
-    } else {
-      await _mapController?.setGeoJsonFeature(layerId, geojson ?? {});
-    }
-  }
-
-  _updateLayer() async {
+  Future<void> _updateLayer() async {
     var isHasLayer = (await _mapController?.getLayerIds())?.contains(layerId);
     if (isHasLayer != true) {
       await _mapController?.addLayer(
@@ -190,18 +213,9 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
   }
 
   _initSource() async {
-    try {
-      var geojson = await _sourceLoaded?.future;
-      await _updateSource(geojson);
-      await _updateLayer();
-      setState(() {
-        _loading = false;
-      });
-    } catch (err) {
-      print('MapEventsFilter._initSource: ERROR: $err');
-      await Future.delayed(const Duration(seconds: 3));
-      await _initSource();
-    }
+    await _updateSource();
+    await _updateLayer();
+    _subscribe();
   }
 
   void _queryRenderedFeatures(
@@ -224,37 +238,10 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
     }
   }
 
-  Future<void> _fetchUsersFromEvents(List<NostrEvent> events) async {
-    Set<String> pubkeySet = <String>{};
-    for (var e in events) {
-      pubkeySet.add(e.pubkey);
-      e.tags?.where((t) => t.firstOrNull == 'p').forEach((t) {
-        pubkeySet.add(t[1]);
-      });
-    }
-    print(
-        '_fetchUsersFromEvents: events: ${events.length}, pubkey: ${pubkeySet.length}');
-    if (pubkeySet.isEmpty) return;
-    await NostrService.fetchUsers(pubkeySet.toList());
-    // await Future.wait(users.map((u) async {
-    //   try {
-    //     if (u.picture != null) {
-    //       print('_fetchUsersFromEvents.SvgPicture');
-    //       var picture = SvgPicture.string(
-    //         pinSvg.replaceAll('{URL}', u.picture!),
-    //         width: 24,
-    //         height: 24,
-    //       );
-    //       print('_fetchUsersFromEvents.loadBytes');
-    //       var bytes = await picture.bytesLoader.loadBytes(null);
-    //       print('_fetchUsersFromEvents.bytes: ${bytes.buffer.lengthInBytes}');
-    //       await _mapController?.addImage(u.pubkey, bytes.buffer.asUint8List());
-    //       print('_fetchUsersFromEvents.addImage: DONE');
-    //     }
-    //   } catch (err) {
-    //     print('_fetchUsersFromEvents.addImage: $err');
-    //   }
-    // }));
+  @override
+  void dispose() {
+    _unsubscribe();
+    super.dispose();
   }
 
   @override
@@ -263,7 +250,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
       children: [
         MapUI(
           // searchEnabled: false,
-          key: const Key('map_event_filter_'),
+          key: const Key('map_event_filter'),
           onMapCreated: _onMapCreated,
           onStyleLoaded: _initSource,
         ),

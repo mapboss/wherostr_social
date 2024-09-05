@@ -11,11 +11,10 @@ final defaultRelays = DataRelayList.fromTags([
 final initialRelays = DataRelayList.fromTags([
   ['r', 'wss://nos.lol', 'read'],
   ['r', 'wss://nostr.wine', 'read'],
-  ['r', 'wss://nostr.bitcoinist.org'],
-  ['r', 'wss://relay.nostr.bg'],
   ['r', 'wss://relay.damus.io'],
   ['r', 'wss://relay.nostr.band'],
   ['r', 'wss://relay.primal.net'],
+  ['r', 'wss://relay.snort.social'],
 ]);
 
 class AppRelays {

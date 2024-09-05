@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -45,7 +46,7 @@ class NostrFeed extends StatefulWidget {
     this.p,
     this.e,
     this.additionalFilters,
-    this.limit = 20,
+    this.limit = 30,
     this.itemFilter,
     this.reverse = false,
     this.isAscending = false,
@@ -76,6 +77,7 @@ class NostrFeedState extends State<NostrFeed> {
   List<DataEvent> _items = [];
   ScrollController? _scrollController;
   DateTime? _since;
+  final _debouncer = Debouncer();
 
   @override
   Widget build(BuildContext context) {
@@ -141,9 +143,11 @@ class NostrFeedState extends State<NostrFeed> {
                                   onResized: (Size? oldSize, Size newSize) {
                                     if (_heightMap[item.id!] !=
                                         newSize.height) {
-                                      Future.delayed(
-                                          const Duration(milliseconds: 1000),
-                                          () => setState(() {}));
+                                      _debouncer.debounce(
+                                        duration:
+                                            const Duration(milliseconds: 1000),
+                                        onDebounce: () => setState(() {}),
+                                      );
                                     }
                                     _heightMap[item.id!] = newSize.height;
                                   },
@@ -215,11 +219,12 @@ class NostrFeedState extends State<NostrFeed> {
     }
     final muteList = context.read<AppStatesProvider>().me.muteList;
     if (_muteList.length != muteList.length) {
+      _muteList = muteList.toList();
+      final items = _allItems.where(filterEvent).toList();
+      items.sort(sorting);
       if (mounted) {
         setState(() {
-          _muteList = muteList.toList();
-          _items = _allItems.where(filterEvent).toList();
-          _items.sort(sorting);
+          _items = items;
         });
       }
     }
@@ -227,11 +232,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   Future<void> initialize() async {
     final muteList = context.read<AppStatesProvider>().me.muteList.toList();
-    if (mounted) {
-      setState(() {
-        _muteList.addAll(muteList);
-      });
-    }
+    _muteList.addAll(muteList);
     subscribe();
   }
 
@@ -261,6 +262,8 @@ class NostrFeedState extends State<NostrFeed> {
 
   void subscribe() {
     int hasMore = 0;
+    const duration = Duration(milliseconds: 300);
+    final Debouncer debouncer = Debouncer();
     final filter = NostrFilter(
       kinds: widget.kinds,
       authors: widget.authors,
@@ -277,13 +280,24 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: widget.disableSubscribe,
       onEose: (relay, ease) {
-        if (mounted) {
-          Future.delayed(
-              const Duration(milliseconds: 300), () => setState(() {}));
-          _initialized = true;
-          _loading = false;
-          _hasMore = hasMore >= (widget.limit / 2);
+        if (!_initialized) {
+          if (mounted) {
+            setState(() {
+              _initialized = true;
+            });
+          }
         }
+        debouncer.debounce(
+          duration: duration,
+          onDebounce: () {
+            _items.sort(sorting);
+            if (mounted) {
+              setState(() {});
+            }
+          },
+        );
+        _loading = false;
+        _hasMore = hasMore >= (widget.limit / 2);
       },
       onEnd: () {
         if (mounted) {
@@ -311,8 +325,6 @@ class NostrFeedState extends State<NostrFeed> {
           insertNewItem(dataEvent);
         }
       },
-      onError: (e) => print('subscribe: onError: $e'),
-      onDone: () => print('subscribe: onDone'),
     );
   }
 
@@ -356,12 +368,7 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   void insertItem(DataEvent event) {
-    if (mounted) {
-      setState(() {
-        _items.add(event);
-        _items.sort(sorting);
-      });
-    }
+    _items.add(event);
   }
 
   void insertNewItem(DataEvent event) {
@@ -373,16 +380,16 @@ class NostrFeedState extends State<NostrFeed> {
           _newItems.add(event);
         }
       });
-      if (widget.autoRefresh) {
-        _showNewItems();
-      }
+    }
+    if (widget.autoRefresh) {
+      _showNewItems();
     }
   }
 
   void fetchList([DataEvent? lastEvent]) {
-    setState(() {
-      _loading = true;
-    });
+    _loading = true;
+    const duration = Duration(milliseconds: 500);
+    final Debouncer debouncer = Debouncer();
     DateTime? until;
     DateTime? since;
     if (!widget.isAscending) {
@@ -409,13 +416,16 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: true,
       onEose: (relay, ease) {
-        if (mounted) {
-          Future.delayed(
-              const Duration(milliseconds: 300), () => setState(() {}));
-
-          _loading = false;
-          _hasMore = hasMore >= (widget.limit / 2);
-        }
+        debouncer.debounce(
+          duration: duration,
+          onDebounce: () {
+            if (mounted) {
+              setState(() {});
+            }
+          },
+        );
+        _loading = false;
+        _hasMore = hasMore >= (widget.limit / 2);
       },
       onEnd: () {
         setState(() {
@@ -442,13 +452,14 @@ class NostrFeedState extends State<NostrFeed> {
 
   Future<void> _showNewItems() async {
     final newItems = _newItems.toList();
+    newItems.sort(sorting);
     if (mounted) {
       setState(() {
         if (widget.isAscending == false) {
-          _since = newItems.first.createdAt;
+          _since = DateTime.now();
           _items.insertAll(0, newItems);
         } else {
-          _since = newItems.last.createdAt;
+          _since = DateTime.now();
           _items.addAll(newItems);
         }
         _newItems.clear();

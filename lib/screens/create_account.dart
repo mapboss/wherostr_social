@@ -72,6 +72,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     nip05: nip05,
                   );
                   await appState.me.initializeAll();
+                  appState.me.initRelays(AppRelays.relays);
                   AppUtils.showSnackBar(
                     text: 'Created successfully.',
                     status: AppStatus.success,

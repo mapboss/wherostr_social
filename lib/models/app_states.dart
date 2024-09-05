@@ -95,25 +95,30 @@ class AppStatesProvider with ChangeNotifier {
   }
 
   Future<bool?> init() async {
-    NostrKeyPairs? keypairs = await AppSecret.read();
-    if (keypairs == null) return null;
-    print('init.pubkey: ${keypairs.public}');
-    await setMe(keypairs);
-    final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
-    await me.fetchProfile();
-    if (me.displayName == 'Deleted Account') {
-      return false;
-    } else {
-      me.initRelays(relays);
-      await Future.wait([
-        me.fetchFollowing(),
-        me.fetchMuteList(),
-        me.fetchFollowSets(),
-        me.fetchInterestSets()
-      ]);
-      notifyListeners();
-      return true;
+    try {
+      NostrKeyPairs? keypairs = await AppSecret.read();
+      if (keypairs == null) return null;
+      print('init.pubkey: ${keypairs.public}');
+      await setMe(keypairs);
+      final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
+      await me.fetchProfile();
+      if (me.displayName == 'Deleted Account') {
+        return false;
+      } else {
+        me.initRelays(relays);
+        await Future.wait([
+          me.fetchFollowing(),
+          me.fetchMuteList(),
+          me.fetchFollowSets(),
+          me.fetchInterestSets()
+        ]);
+        notifyListeners();
+        return true;
+      }
+    } catch (err) {
+      print('init: $err');
     }
+    return false;
   }
 
   Future<void> updateProfile({

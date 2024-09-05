@@ -447,10 +447,8 @@ class NostrUser {
     if (!force && _relayList != null) {
       return relayList;
     }
-    NostrService.instance.enableLogs();
     final items = await NostrService.instance
         .fetchUserRelayList(pubkey, relays: _relayList);
-    NostrService.instance.disableLogs();
     _relayList = items;
     print('fetchRelayList: ${relayList.length}');
     return relayList;

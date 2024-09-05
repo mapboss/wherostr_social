@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -26,6 +28,7 @@ class PostActionBar extends StatefulWidget {
 
 class _PostActionBarState extends State<PostActionBar> {
   NostrEventsStream? _newEventStream;
+  StreamSubscription<NostrEvent>? _newEventListener;
   NostrUser? _user;
   int _repostCount = 0;
   int _commentCount = 0;
@@ -63,6 +66,8 @@ class _PostActionBarState extends State<PostActionBar> {
   }
 
   void subscribe() {
+    const duration = Duration(milliseconds: 300);
+    final Debouncer debouncer = Debouncer();
     final relayList = context.read<AppStatesProvider>().me.relayList;
     NostrFilter filter = NostrFilter(
       kinds: const [1, 6, 7, 9735],
@@ -71,14 +76,28 @@ class _PostActionBarState extends State<PostActionBar> {
     _newEventStream = NostrService.subscribe(
       [filter],
       relays: relayList,
+      onEose: (relay, ease) {
+        debouncer.debounce(
+          duration: duration,
+          onDebounce: () {
+            if (mounted) {
+              setState(() {});
+            }
+          },
+        );
+      },
     );
-    _newEventStream!.stream.listen((event) {
+    _newEventListener = _newEventStream!.stream.listen((event) {
       final e = DataEvent.fromEvent(event);
       updateCounts([e]);
     });
   }
 
   void unsubscribe() {
+    if (_newEventListener != null) {
+      _newEventListener!.cancel();
+      _newEventListener = null;
+    }
     if (_newEventStream != null) {
       _newEventStream!.close();
       _newEventStream = null;
@@ -91,75 +110,71 @@ class _PostActionBarState extends State<PostActionBar> {
   }
 
   void updateCounts(List<DataEvent> events) {
-    if (mounted) {
-      final me = context.read<AppStatesProvider>().me;
-      bool isReposted = false;
-      bool isReacted = false;
-      bool isZapped = false;
-      String? emojiUrl;
-      int repostCount = _repostCount;
-      int commentCount = _commentCount;
-      int reactionCount = _reactionCount;
-      double zapCount = _zapCount;
+    final me = context.read<AppStatesProvider>().me;
+    bool isReposted = false;
+    bool isReacted = false;
+    bool isZapped = false;
+    String? emojiUrl;
+    int repostCount = _repostCount;
+    int commentCount = _commentCount;
+    int reactionCount = _reactionCount;
+    double zapCount = _zapCount;
 
-      for (final event in events) {
-        if (isMuted(event)) continue;
-        switch (event.kind) {
-          case 1:
-            if (isReply(
-                event: event,
-                referenceEventId: widget.event.id,
-                isDirectOnly: true)) {
-              commentCount += 1;
-            }
-            continue;
-          case 6:
-            if (!isReposted && event.pubkey == me.pubkey) {
-              isReposted = true;
-            }
-            repostCount += 1;
-            continue;
-          case 7:
-            if (!isReacted && event.pubkey == me.pubkey) {
-              isReacted = true;
-              emojiUrl = getEmojiUrl(
-                event: event,
-                emoji: event.content!,
-              );
-            }
-            reactionCount += 1;
-            continue;
-          case 9735:
-            if (event.tags != null) {
-              String? bolt11Tag = event.getTagValue('bolt11');
-              String? desc = event.getTagValue('description');
+    for (final event in events) {
+      if (isMuted(event)) continue;
+      switch (event.kind) {
+        case 1:
+          if (isReply(
+              event: event,
+              referenceEventId: widget.event.id,
+              isDirectOnly: true)) {
+            commentCount += 1;
+          }
+          continue;
+        case 6:
+          if (!isReposted && event.pubkey == me.pubkey) {
+            isReposted = true;
+          }
+          repostCount += 1;
+          continue;
+        case 7:
+          if (!isReacted && event.pubkey == me.pubkey) {
+            isReacted = true;
+            emojiUrl = getEmojiUrl(
+              event: event,
+              emoji: event.content!,
+            );
+          }
+          reactionCount += 1;
+          continue;
+        case 9735:
+          if (event.tags != null) {
+            String? bolt11Tag = event.getTagValue('bolt11');
+            String? desc = event.getTagValue('description');
 
-              if (desc != null) {
-                if (me.pubkey == jsonDecode(desc)?['pubkey']) {
-                  isZapped = true;
-                }
-              }
-              if (bolt11Tag != null) {
-                double amount =
-                    Bolt11PaymentRequest(bolt11Tag).amount.toDouble() *
-                        100000000;
-                zapCount += amount;
+            if (desc != null) {
+              if (me.pubkey == jsonDecode(desc)?['pubkey']) {
+                isZapped = true;
               }
             }
-            continue;
-        }
+            if (bolt11Tag != null) {
+              double amount =
+                  Bolt11PaymentRequest(bolt11Tag).amount.toDouble() * 100000000;
+              zapCount += amount;
+            }
+          }
+          continue;
       }
-      setState(() {
-        _isReposted = _isReposted == true ? _isReposted : isReposted;
-        _isReacted = _isReacted == true ? _isReacted : isReacted;
-        _isZapped = _isZapped == true ? _isZapped : isZapped;
-        _emojiUrl = _emojiUrl ?? emojiUrl;
-        _repostCount = repostCount;
-        _commentCount = commentCount;
-        _reactionCount = reactionCount;
-        _zapCount = zapCount;
-      });
     }
+
+    _isReposted = _isReposted == true ? _isReposted : isReposted;
+    _isReacted = _isReacted == true ? _isReacted : isReacted;
+    _isZapped = _isZapped == true ? _isZapped : isZapped;
+    _emojiUrl = _emojiUrl ?? emojiUrl;
+    _repostCount = repostCount;
+    _commentCount = commentCount;
+    _reactionCount = reactionCount;
+    _zapCount = zapCount;
   }
 
   void _handleRepostPressed() async {
