@@ -3,14 +3,14 @@ import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 
 final defaultRelays = DataRelayList.fromTags([
-  ['r', 'wss://nos.lol', 'read'],
-  ['r', 'wss://nostr.wine', 'read'],
+  ['r', 'wss://nos.lol'],
+  ['r', 'wss://nostr.wine'],
   ['r', 'wss://relay.nostr.band'],
 ]);
 
 final initialRelays = DataRelayList.fromTags([
-  ['r', 'wss://nos.lol', 'read'],
-  ['r', 'wss://nostr.wine', 'read'],
+  ['r', 'wss://nos.lol'],
+  ['r', 'wss://nostr.wine'],
   ['r', 'wss://relay.damus.io'],
   ['r', 'wss://relay.nostr.band'],
   ['r', 'wss://relay.primal.net'],

@@ -60,6 +60,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       relaysUrl: AppRelays.defaults
                           .leftCombine(AppRelays.relays)
                           .toListString());
+                  NostrService.instance.disableLogs();
                   await appState.updateProfile(
                     picture: picture,
                     banner: banner,
