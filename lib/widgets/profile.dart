@@ -165,106 +165,112 @@ class _ProfileState extends State<Profile> {
             ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(kToolbarHeight),
-              child: Material(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      innerBoxIsScrolled ? 4 : 16, 4, 16, 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (innerBoxIsScrolled)
-                        BackButton(
-                          onPressed: () => appState.navigatorPop(
-                              tryRootNavigatorFirst: false),
-                        ),
-                      Flexible(
-                        fit: FlexFit.tight,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ProfileDisplayName(
-                              user: widget.user,
-                              textStyle: themeData.textTheme.titleLarge,
-                              withBadge: true,
-                            ),
-                            if ((widget.user.nip05 ?? '') != '') ...[
-                              Text(
-                                widget.user.nip05!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: themeData.textTheme.bodyMedium!.copyWith(
-                                    color: themeExtension.textDimColor),
+              child: GestureDetector(
+                onTap: () => AppUtils.scrollToTop(context),
+                child: Material(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                        innerBoxIsScrolled ? 4 : 16, 4, 16, 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (innerBoxIsScrolled)
+                          BackButton(
+                            onPressed: () => appState.navigatorPop(
+                                tryRootNavigatorFirst: false),
+                          ),
+                        Flexible(
+                          fit: FlexFit.tight,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ProfileDisplayName(
+                                user: widget.user,
+                                textStyle: themeData.textTheme.titleLarge,
+                                withBadge: true,
                               ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Transform.translate(
-                        offset: const Offset(4, 0),
-                        child: Row(
-                          children: [
-                            if (_isMe) ...[
-                              OutlinedButton(
-                                onPressed: () => appState.navigatorPush(
-                                  widget: const ProfileEditingContainer(),
-                                  rootNavigator: true,
+                              if ((widget.user.nip05 ?? '') != '') ...[
+                                Text(
+                                  widget.user.nip05!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: themeData.textTheme.bodyMedium!
+                                      .copyWith(
+                                          color: themeExtension.textDimColor),
                                 ),
-                                child: const Text('Edit profile'),
-                              ),
-                            ] else if (_isFollowing) ...[
-                              MenuAnchor(
-                                builder: (BuildContext context,
-                                    MenuController controller, Widget? child) {
-                                  return OutlinedButton(
-                                    onPressed: () {
-                                      if (controller.isOpen) {
-                                        controller.close();
-                                      } else {
-                                        controller.open();
-                                      }
-                                    },
-                                    child: const Text('Following'),
-                                  );
-                                },
-                                menuChildren: [
-                                  MenuItemButton(
-                                    onPressed: () async {
-                                      await appState.me
-                                          .unfollow(widget.user.pubkey);
-                                      setState(() {
-                                        _isFollowing = false;
-                                      });
-                                    },
-                                    leadingIcon: Icon(
-                                      Icons.person_remove,
-                                      color: themeData.colorScheme.error,
-                                    ),
-                                    child: Text(
-                                      'Unfollow',
-                                      style: TextStyle(
-                                          color: themeData.colorScheme.error),
-                                    ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Transform.translate(
+                          offset: const Offset(4, 0),
+                          child: Row(
+                            children: [
+                              if (_isMe) ...[
+                                OutlinedButton(
+                                  onPressed: () => appState.navigatorPush(
+                                    widget: const ProfileEditingContainer(),
+                                    rootNavigator: true,
                                   ),
-                                ],
-                              ),
-                            ] else ...[
-                              FilledButton(
-                                onPressed: () async {
-                                  await appState.me.follow(widget.user.pubkey);
-                                  setState(() {
-                                    _isFollowing = true;
-                                  });
-                                },
-                                child: const Text('Follow'),
+                                  child: const Text('Edit profile'),
+                                ),
+                              ] else if (_isFollowing) ...[
+                                MenuAnchor(
+                                  builder: (BuildContext context,
+                                      MenuController controller,
+                                      Widget? child) {
+                                    return OutlinedButton(
+                                      onPressed: () {
+                                        if (controller.isOpen) {
+                                          controller.close();
+                                        } else {
+                                          controller.open();
+                                        }
+                                      },
+                                      child: const Text('Following'),
+                                    );
+                                  },
+                                  menuChildren: [
+                                    MenuItemButton(
+                                      onPressed: () async {
+                                        await appState.me
+                                            .unfollow(widget.user.pubkey);
+                                        setState(() {
+                                          _isFollowing = false;
+                                        });
+                                      },
+                                      leadingIcon: Icon(
+                                        Icons.person_remove,
+                                        color: themeData.colorScheme.error,
+                                      ),
+                                      child: Text(
+                                        'Unfollow',
+                                        style: TextStyle(
+                                            color: themeData.colorScheme.error),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ] else ...[
+                                FilledButton(
+                                  onPressed: () async {
+                                    await appState.me
+                                        .follow(widget.user.pubkey);
+                                    setState(() {
+                                      _isFollowing = true;
+                                    });
+                                  },
+                                  child: const Text('Follow'),
+                                ),
+                              ],
+                              ProfileMenu(
+                                user: widget.user,
                               ),
                             ],
-                            ProfileMenu(
-                              user: widget.user,
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

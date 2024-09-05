@@ -5,6 +5,7 @@ import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_activity.dart';
@@ -76,7 +77,13 @@ class _PostDetailsState extends State<PostDetails> {
     final appState = context.watch<AppStatesProvider>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Post'),
+        flexibleSpace: GestureDetector(
+          onTap: () => AppUtils.scrollToTop(context),
+        ),
+        title: GestureDetector(
+          onTap: () => AppUtils.scrollToTop(context),
+          child: const Text('Post'),
+        ),
       ),
       bottomNavigationBar: _event == null
           ? null

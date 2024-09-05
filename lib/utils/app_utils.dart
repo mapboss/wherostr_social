@@ -134,6 +134,20 @@ class AppUtils {
       status: AppStatus.error,
     );
   }
+
+  static void scrollToTop(
+    BuildContext? context,
+  ) {
+    if (context == null) {
+      return;
+    }
+    final scrollController = PrimaryScrollController.of(context);
+    if (scrollController.hasClients) {
+      scrollController.animateTo(scrollController.position.minScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOutCubic);
+    }
+  }
 }
 
 class AppImageCacheManager extends CacheManager with ImageCacheManager {

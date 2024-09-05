@@ -10,11 +10,19 @@ class NotificationCenterContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppStatesProvider>();
+    final feedKey = GlobalKey<NostrFeedState>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notification center'),
+        flexibleSpace: GestureDetector(
+          onTap: () => feedKey.currentState?.scrollToFirstItem(),
+        ),
+        title: GestureDetector(
+          onTap: () => feedKey.currentState?.scrollToFirstItem(),
+          child: const Text('Notification center'),
+        ),
       ),
       body: NostrFeed(
+        key: feedKey,
         relays: appState.me.relayList.clone(),
         includeReplies: true,
         kinds: const [1, 6, 7, 9735],
