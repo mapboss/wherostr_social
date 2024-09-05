@@ -49,11 +49,8 @@ class NostrService {
   static Future<int> countEvent(NostrFilter filter) async {
     await countInstance.relaysService.init(
       relaysUrl: countRelays.toListString(),
-      connectionTimeout: const Duration(seconds: 3),
-      retryOnError: true,
-      shouldReconnectToRelayOnNotice: true,
+      connectionTimeout: const Duration(seconds: 2),
     );
-    countInstance.enableLogs();
     final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
     Completer<NostrCountResponse> completer = Completer();
     countInstance.relaysService.sendCountEventToRelays(
@@ -62,7 +59,7 @@ class NostrService {
           completer.complete(countResponse),
     );
     return completer.future
-        .timeout(const Duration(seconds: 3))
+        .timeout(const Duration(seconds: 2))
         .then((v) => v.count);
   }
 
@@ -381,21 +378,18 @@ class NostrService {
         relaysUrl: AppRelays.defaults.combine(AppRelays.relays).toListString(),
         connectionTimeout: timeout,
         retryOnError: true,
-        shouldReconnectToRelayOnNotice: true,
+      ),
+      searchInstance.relaysService.init(
+        relaysUrl: searchRelays.toListString(),
+        connectionTimeout: timeout,
+        retryOnError: true,
+      ),
+      countInstance.relaysService.init(
+        relaysUrl: countRelays.toListString(),
+        connectionTimeout: timeout,
+        retryOnError: true,
       ),
     ]);
-    searchInstance.relaysService.init(
-      relaysUrl: searchRelays.toListString(),
-      connectionTimeout: timeout,
-      retryOnError: true,
-      shouldReconnectToRelayOnNotice: true,
-    );
-    countInstance.relaysService.init(
-      relaysUrl: countRelays.toListString(),
-      connectionTimeout: timeout,
-      retryOnError: true,
-      shouldReconnectToRelayOnNotice: true,
-    );
     String pubkey = '';
     if (npubOrPubkey.startsWith('npub1')) {
       pubkey = instance.keysService.decodeNpubKeyToPublicKey(npubOrPubkey);
@@ -404,7 +398,6 @@ class NostrService {
     }
     DataRelayList relays =
         await instance.fetchUserRelayList(pubkey, timeout: timeout);
-
     if (relays.isEmpty) {
       print('relays: relays.isEmpty');
       // AppUtils.showSnackBar(
@@ -417,7 +410,6 @@ class NostrService {
         relaysUrl: relays.toListString(),
         connectionTimeout: timeout,
         retryOnError: true,
-        shouldReconnectToRelayOnNotice: true,
       );
     }
     instance.disableLogs();
@@ -430,7 +422,6 @@ class NostrService {
       relaysUrl: searchRelays.toListString(),
       connectionTimeout: const Duration(seconds: 5),
       retryOnError: true,
-      shouldReconnectToRelayOnNotice: true,
     );
 
     return searchInstance.fetchEvents(

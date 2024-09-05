@@ -50,16 +50,17 @@ class AppStatesProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _me = null;
     await Future.wait([
       AppSecret.delete(),
       NostrService.instance.dispose(),
       NostrService.searchInstance.dispose(),
       NostrService.countInstance.dispose(),
     ]);
-    _me = null;
     NostrService.instance = Nostr();
     NostrService.searchInstance = Nostr();
     NostrService.countInstance = Nostr();
+    notifyListeners();
   }
 
   bool verifyNsec(String nsec) {
@@ -89,6 +90,7 @@ class AppStatesProvider with ChangeNotifier {
   Future<NostrUser?> setMe(NostrKeyPairs keypairs) async {
     await AppSecret.write(keypairs.private);
     _me = NostrUser(pubkey: keypairs.public);
+    notifyListeners();
     return _me;
   }
 
@@ -163,8 +165,7 @@ class AppStatesProvider with ChangeNotifier {
       me.updateProfile(
         name: 'Deleted Account',
       )
-    ]).whenComplete(() {
-      notifyListeners();
-    });
+    ]);
+    notifyListeners();
   }
 }

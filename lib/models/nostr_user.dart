@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
+import 'package:uuid/uuid.dart';
 import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -75,7 +76,52 @@ class NostrUser {
   String? get rawDisplayName => _displayName;
 
   String get displayName {
-    return _displayName ?? name ?? npub.substring(0, 12);
+    if (_displayName?.isNotEmpty ?? false) {
+      return _displayName!;
+    }
+    if (name?.isNotEmpty ?? false) {
+      return name!;
+    }
+    return npub.substring(0, 12);
+  }
+
+  Future<void> initializeAll() async {
+    _followers = [];
+    _pinList = [];
+    _bookmarkList = [];
+    await Future.wait([
+      unfollowAll(),
+      unmuteAll(),
+      initInterestSets(),
+      initFollowSets(),
+      initEmojiList(),
+      setRelays(DataRelayList())
+    ]);
+  }
+
+  Future<void> initInterestSets() async {
+    _interestSets = [];
+    await setInterestSets(interestSets);
+  }
+
+  Future<void> initFollowSets() async {
+    _followSets = [];
+    final event = DataEvent(kind: 30000, tags: [
+      ['d', const Uuid().v4()],
+      const ['title', 'Wherostr Map'],
+    ]);
+    await event.publish(relays: _relayList);
+  }
+
+  Future<void> initEmojiList() async {
+    _emojiList = [];
+    final event = DataEvent(kind: 10030, tags: const [
+      [
+        'a',
+        '30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr'
+      ]
+    ]);
+    await event.publish(relays: _relayList);
   }
 
   factory NostrUser.fromJson(Map<String, dynamic> data) {
@@ -169,7 +215,7 @@ class NostrUser {
         NostrFilter(kinds: const [3], authors: [pubkey], limit: 1);
     final events = await NostrService.instance.fetchEvents(
       [filter],
-      timeout: const Duration(seconds: 3),
+      timeout: const Duration(seconds: 10),
       relays: _relayList,
     );
     print('fetchFollowing.events: ${events.length}');
@@ -276,23 +322,14 @@ class NostrUser {
     for (final event in events) {
       try {
         items ??= [];
-        String? id = event.tags
-            ?.where((t) => t.firstOrNull == 'd')
-            .firstOrNull
-            ?.lastOrNull;
+        String? id = event.getTagValue('d');
         if (id == null || id == 'mute') continue;
-        final value = event.tags?.where((t) => t.firstOrNull == 'p');
+        final value = event.getTagValues('p');
         if (value == null || value.isEmpty) continue;
-        String? name = event.tags
-            ?.where((t) => t.firstOrNull == 'title')
-            .firstOrNull
-            ?.lastOrNull;
+        String? name = event.getTagValue('title');
         if (name == null) continue;
         items.add(FollowSet(
-            type: 'list',
-            id: id,
-            name: name,
-            value: value.map((t) => t[1]).toSet().toList()));
+            type: 'list', id: id, name: name, value: value.toSet().toList()));
       } catch (err) {
         print('fetchFollowSets: ${event.serialized()} ERROR: $err');
       }
@@ -387,31 +424,22 @@ class NostrUser {
       ],
       relays: _relayList,
     );
-    List<String> emojiSetIds = [];
-    for (final event in emojiSetEvents) {
-      for (final tag in event.tags!) {
-        if (tag.firstOrNull == 'a' &&
-            tag.elementAtOrNull(1)?.startsWith('30030:') == true) {
-          String? emojiSetId = tag.elementAtOrNull(1);
-          if (emojiSetId != null) {
-            emojiSetIds.add(emojiSetId);
-          }
-        }
-      }
-    }
-    List<NostrFilter> emojiRequests = [
-      ...emojiSetIds
+    List<String> emojiSetIds =
+        emojiSetEvents.firstOrNull?.getTagValues('a') ?? [];
+    if (emojiSetIds.isNotEmpty) {
+      List<NostrFilter> emojiRequests = emojiSetIds
           .map((e) => NostrService.refIdToRequest(e))
-          .whereType<NostrFilter>(),
-      NostrFilter(kinds: const [30030], authors: [pubkey]),
-    ];
-    final emojiEvents = await NostrService.instance.fetchEvents(emojiRequests);
-    List<List<String>>? items;
-    for (final event in emojiEvents) {
-      items ??= [];
-      items.addAll(event.tags!.where((e) => e.firstOrNull == 'emoji'));
+          .whereType<NostrFilter>()
+          .toList();
+      final emojiEvents =
+          await NostrService.instance.fetchEvents(emojiRequests);
+      List<List<String>>? items;
+      for (final event in emojiEvents) {
+        items ??= [];
+        items.addAll(event.getMatchedTags('emoji')?.toList() ?? []);
+      }
+      _emojiList = items;
     }
-    _emojiList = items;
     return emojiList;
   }
 
@@ -544,11 +572,7 @@ class NostrUser {
       _interestSets ??= [];
       _interestSets?.add(hashtag);
     }
-    final event = DataEvent(
-      kind: 10015,
-      tags: interestSets.toSet().map((e) => ['t', e]).toList(),
-    );
-    await event.publish(relays: _relayList);
+    await setInterestSets(interestSets);
   }
 
   Future<void> unFollowHashtag(String hashtag) async {
@@ -556,6 +580,15 @@ class NostrUser {
     if (interestSets.contains(hashtag)) {
       _interestSets?.remove(hashtag);
     }
+    await setInterestSets(interestSets);
+  }
+
+  Future<void> unFollowHashtagAll() async {
+    _interestSets = [];
+    await setInterestSets(interestSets);
+  }
+
+  Future<void> setInterestSets(List<String> items) async {
     final event = DataEvent(
       kind: 10015,
       tags: interestSets.toSet().map((e) => ['t', e]).toList(),
@@ -643,8 +676,7 @@ class NostrUser {
     content['lud16'] = lud16;
     content['nip05'] = nip05;
     var event = DataEvent(kind: 0, content: jsonEncode(content));
-    await event.publish(
-        relays: relays != null ? _relayList?.combine(relays) : _relayList);
+    await event.publish(relays: relays);
     this.picture = content['picture'];
     this.banner = content['banner'];
     this.name = content['name'];

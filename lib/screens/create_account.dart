@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_states.dart';
+import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/widgets/gradient_decorated_box.dart';
 import 'package:wherostr_social/widgets/profile_editing.dart';
@@ -54,6 +55,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 final keypairs = NostrKeyPairs.generate();
                 try {
                   await appState.setMe(keypairs);
+                  await NostrService.instance.relaysService.init(
+                      connectionTimeout: const Duration(seconds: 5),
+                      relaysUrl: AppRelays.defaults
+                          .leftCombine(AppRelays.relays)
+                          .toListString());
                   await appState.updateProfile(
                     picture: picture,
                     banner: banner,
@@ -64,13 +70,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     lud16: lud16,
                     lud06: lud06,
                     nip05: nip05,
-                    relays: AppRelays.relays,
                   );
+                  await appState.me.initializeAll();
                   AppUtils.showSnackBar(
                     text: 'Created successfully.',
                     status: AppStatus.success,
                   );
-                  context.go('/');
+                  context.go('/home');
                 } catch (error) {
                   AppUtils.hideSnackBar();
                 } finally {

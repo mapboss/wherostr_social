@@ -35,8 +35,10 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
     menuItems.add(followingMenuItem);
     menuItems.add(globalMenuItem);
     if (me.followSets.isNotEmpty) {
-      menuItems.addAll(me.followSets.map((e) =>
-          FeedMenuItem(type: e.type, id: e.id, name: e.name, value: e.value)));
+      menuItems.addAll(me.followSets.map((e) {
+        return FeedMenuItem(
+            type: e.type, id: e.id, name: e.name, value: e.value);
+      }));
     }
     if (me.interestSets.isNotEmpty == true) {
       for (var t in me.interestSets) {
