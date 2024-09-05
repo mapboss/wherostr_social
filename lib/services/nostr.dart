@@ -47,6 +47,12 @@ class NostrService {
   }
 
   static Future<int> countEvent(NostrFilter filter) async {
+    await countInstance.relaysService.init(
+      relaysUrl: countRelays.toListString(),
+      connectionTimeout: const Duration(seconds: 3),
+      retryOnError: true,
+      shouldReconnectToRelayOnNotice: true,
+    );
     countInstance.enableLogs();
     final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
     Completer<NostrCountResponse> completer = Completer();
@@ -143,7 +149,11 @@ class NostrService {
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;
+    final readRelays = relays
+        ?.clone()
+        .leftCombine(AppRelays.relays)
+        .leftCombine(AppRelays.defaults)
+        .readRelays;
     int eose = 0;
     final completer = Completer<List<NostrUser>>();
     Map<String, NostrUser> events = {};
@@ -239,7 +249,11 @@ class NostrService {
     Duration timeout = const Duration(seconds: 3),
     DataRelayList? relays,
   }) async {
-    final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;
+    final readRelays = relays
+        ?.clone()
+        .leftCombine(AppRelays.relays)
+        .leftCombine(AppRelays.defaults)
+        .readRelays;
     int eose = 0;
     final completer = Completer<NostrUser>();
     Map<String, NostrUser> events = {};
@@ -315,9 +329,12 @@ class NostrService {
   }) {
     Completer? completer;
     Future? future;
-    final readRelays =
-        relays?.clone().leftCombine(AppRelays.relays).readRelays ??
-            NostrService.instance.relaysService.relaysList!;
+    final readRelays = relays
+            ?.clone()
+            .leftCombine(AppRelays.relays)
+            .leftCombine(AppRelays.defaults)
+            .readRelays ??
+        NostrService.instance.relaysService.relaysList!;
     final request =
         NostrRequest(filters: filters, subscriptionId: subscriptionId);
 
@@ -356,7 +373,7 @@ class NostrService {
     instance = Nostr();
     await Future.wait([
       instance.relaysService.init(
-        relaysUrl: AppRelays.relays.toListString(),
+        relaysUrl: AppRelays.defaults.combine(AppRelays.relays).toListString(),
         connectionTimeout: timeout,
         retryOnError: true,
         shouldReconnectToRelayOnNotice: true,
@@ -382,6 +399,7 @@ class NostrService {
     }
     DataRelayList relays =
         await instance.fetchUserRelayList(pubkey, timeout: timeout);
+
     if (relays.isEmpty) {
       // AppUtils.showSnackBar(
       //   text: "No relays specified. Using default relays.",
@@ -402,13 +420,13 @@ class NostrService {
 
   static Future<List<DataEvent>> search(String keyword,
       {List<int> kinds = const [0], int limit = 20}) async {
-    // if (searchInstance
-    //         .relaysService.nostrRegistry.relaysWebSocketsRegistry.isEmpty !=
-    //     false) {
-    //   searchInstance.enableLogs();
-    //   await searchInstance.initRelays(searchRelays);
-    //   // searchInstance.disableLogs();
-    // }
+    await searchInstance.relaysService.init(
+      relaysUrl: searchRelays.toListString(),
+      connectionTimeout: const Duration(seconds: 5),
+      retryOnError: true,
+      shouldReconnectToRelayOnNotice: true,
+    );
+
     return searchInstance.fetchEvents(
       [NostrFilter(search: keyword, kinds: kinds, limit: limit)],
       timeout: const Duration(seconds: 10),

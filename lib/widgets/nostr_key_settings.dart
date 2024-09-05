@@ -241,11 +241,9 @@ class _NostrKeySettingsState extends State<NostrKeySettings> {
                               onPressed: () async {
                                 try {
                                   AppUtils.showLoading();
-                                  final me =
-                                      context.read<AppStatesProvider>().me;
-                                  await me.updateProfile(
-                                    name: 'Deleted Account',
-                                  );
+                                  final appState =
+                                      context.read<AppStatesProvider>();
+                                  await appState.deleteAccount();
                                   await context
                                       .read<AppStatesProvider>()
                                       .logout();

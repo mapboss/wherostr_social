@@ -215,7 +215,11 @@ class DataEvent extends NostrEvent {
           await NostrService.instance.relaysService.sendEventToRelaysAsync(
         this,
         timeout: timeout,
-        relays: relays?.clone().leftCombine(AppRelays.relays).writeRelays,
+        relays: relays
+            ?.clone()
+            .leftCombine(AppRelays.relays)
+            .leftCombine(AppRelays.defaults)
+            .writeRelays,
       );
       print("publish: $result");
       // print('publish: ${toMap()}');

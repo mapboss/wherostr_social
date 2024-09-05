@@ -93,46 +93,46 @@ class DataRelayList extends ListBase<DataRelay> {
     return DataRelayList(innerList: list);
   }
 
-  DataRelayList combine(DataRelayList? relayList, [bool removeError = true]) {
+  DataRelayList combine(DataRelayList relayList, [bool removeError = true]) {
+    innerList ??= [];
     final list = removeError
         ? innerList
-            ?.where((e) => NostrService.instance.relaysService.failureRelaysList
+            ?.where((e) => !NostrService
+                .instance.relaysService.failureRelaysList
                 .contains(e.url))
             .toList()
         : innerList?.toList();
-    if (relayList != null) {
-      for (final item in relayList) {
-        if (removeError &&
-            NostrService.instance.relaysService.failureRelaysList
-                .contains(item.url)) {
-          continue;
-        }
-        if (list?.contains(item) == true) continue;
-        list?.add(item);
+
+    for (final item in relayList) {
+      if (removeError &&
+          NostrService.instance.relaysService.failureRelaysList
+              .contains(item.url)) {
+        continue;
       }
+      if (list?.contains(item) == true) continue;
+      list?.add(item);
     }
     return DataRelayList(innerList: list);
   }
 
-  DataRelayList leftCombine(DataRelayList? relayList,
+  DataRelayList leftCombine(DataRelayList relayList,
       [bool removeError = true]) {
     final list = removeError
         ? relayList
-            ?.where((e) => NostrService.instance.relaysService.failureRelaysList
+            .where((e) => !NostrService.instance.relaysService.failureRelaysList
                 .contains(e.url))
             .toList()
-        : relayList?.toList();
-    if (innerList != null) {
-      innerList?.forEach((item) {
-        if (removeError &&
-            NostrService.instance.relaysService.failureRelaysList
-                .contains(item.url)) {
-          return;
-        }
-        if (list?.contains(item) == true) return;
-        list?.add(item);
-      });
-    }
+        : relayList.toList();
+    innerList ??= [];
+    innerList?.forEach((item) {
+      if (removeError &&
+          NostrService.instance.relaysService.failureRelaysList
+              .contains(item.url)) {
+        return;
+      }
+      if (list.contains(item) == true) return;
+      list.add(item);
+    });
     return DataRelayList(innerList: list);
   }
 

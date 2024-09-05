@@ -5,15 +5,25 @@ import 'package:wherostr_social/utils/safe_parser.dart';
 final defaultRelays = DataRelayList.fromTags([
   ['r', 'wss://nos.lol', 'read'],
   ['r', 'wss://nostr.wine', 'read'],
+  ['r', 'wss://relay.nostr.band'],
+]);
+
+final initialRelays = DataRelayList.fromTags([
+  ['r', 'wss://nos.lol', 'read'],
+  ['r', 'wss://nostr.wine', 'read'],
+  ['r', 'wss://nostr.mom'],
+  ['r', 'wss://nostr.bitcoinist.org'],
+  ['r', 'wss://relay.nostr.bg'],
   ['r', 'wss://relay.damus.io'],
   ['r', 'wss://relay.nostr.band'],
   ['r', 'wss://relay.primal.net'],
 ]);
 
 class AppRelays {
-  static DataRelayList defaults = defaultRelays.clone();
+  static final DataRelayList _defaults = defaultRelays;
+  static DataRelayList get defaults => _defaults.clone();
   static DataRelayList? _relays;
-  static DataRelayList get relays => _relays ?? defaultRelays.clone();
+  static DataRelayList get relays => _relays ?? initialRelays.clone();
 
   static Future<void> init() async {
     try {

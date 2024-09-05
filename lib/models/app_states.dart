@@ -50,9 +50,16 @@ class AppStatesProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await Future.wait([AppSecret.delete(), NostrService.instance.dispose()]);
+    await Future.wait([
+      AppSecret.delete(),
+      NostrService.instance.dispose(),
+      NostrService.searchInstance.dispose(),
+      NostrService.countInstance.dispose(),
+    ]);
     _me = null;
     NostrService.instance = Nostr();
+    NostrService.searchInstance = Nostr();
+    NostrService.countInstance = Nostr();
   }
 
   bool verifyNsec(String nsec) {
@@ -150,10 +157,14 @@ class AppStatesProvider with ChangeNotifier {
   }
 
   Future<void> deleteAccount() async {
-    await me.unfollowAll();
-    await me.updateProfile(
-      name: 'Deleted Account',
-    );
-    notifyListeners();
+    await Future.wait([
+      me.unfollowAll(),
+      me.unmuteAll(),
+      me.updateProfile(
+        name: 'Deleted Account',
+      )
+    ]).whenComplete(() {
+      notifyListeners();
+    });
   }
 }

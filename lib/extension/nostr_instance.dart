@@ -113,7 +113,11 @@ extension OutBoxModel on Nostr {
     Duration timeout = const Duration(seconds: 5),
     bool isAscending = false,
   }) async {
-    final readRelays = relays?.clone().leftCombine(AppRelays.relays).readRelays;
+    final readRelays = relays
+        ?.clone()
+        .leftCombine(AppRelays.relays)
+        .leftCombine(AppRelays.defaults)
+        .readRelays;
     int eose = 0;
     final completer = Completer<List<DataEvent>>();
     Map<String, DataEvent> events = {};
@@ -133,7 +137,7 @@ extension OutBoxModel on Nostr {
           relaysService.closeEventsSubscription(ease.subscriptionId, relay);
         } catch (err) {}
         if (completer.isCompleted) return;
-        if (events.values.isNotEmpty || eose >= relayLength) {
+        if (events.values.isNotEmpty || eose >= relayLength * eoseRatio) {
           final items = events.values.toList();
           if (isAscending == false) {
             items.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
