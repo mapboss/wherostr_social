@@ -6,6 +6,7 @@ import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/services/nostr_band.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 
 class NostrUser {
@@ -253,18 +254,22 @@ class NostrUser {
     // _followers = pubkeyList.toSet().toList();
     // print('fetchFollower: ${_followers!.length}');
 
-    var total = await _countFollower(pubkey);
-    _followers = List.generate(total, (counter) => "Item $counter");
-    print('fetchFollower: ${_followers!.length}');
+    // var total = await _countFollower(pubkey);
+    // _followers = List.generate(total, (counter) => "Item $counter");
+    // print('fetchFollower: ${_followers!.length}');
+
+    final stats = await NostrBandService.profileStats(pubkey);
+    _followers = List.generate(
+        stats['followers_pubkey_count'], (counter) => "Item $counter");
     return followers;
   }
 
-  Future<int> _countFollower(String pub) async {
-    NostrFilter filter = NostrFilter(kinds: const [3], p: [pub], limit: 1);
-    final total = await NostrService.countEvent(filter);
-    print('countFollower.total: $total');
-    return total;
-  }
+  // Future<int> _countFollower(String pub) async {
+  //   NostrFilter filter = NostrFilter(kinds: const [3], p: [pub], limit: 1);
+  //   final total = await NostrService.countEvent(filter);
+  //   print('countFollower.total: $total');
+  //   return total;
+  // }
 
   Future<List<String>> fetchInterestSets([bool force = false]) async {
     print('fetchInterestSets');

@@ -10,16 +10,17 @@ import 'package:wherostr_social/models/nostr_user.dart';
 
 final searchRelays = DataRelayList.fromListString([
   'wss://relay.nostr.band/all',
+  'wss://relay.nostr.band',
   'wss://nostr.wine',
   // 'wss://relay.roli.social',
   // 'wss://relay.rushmi0.win',
 ]);
-final countRelays = DataRelayList.fromListString([
-  'wss://relay.nostr.band',
-  'wss://relay.nostr.band/all',
-  // 'wss://relay.roli.social',
-  // 'wss://relay.rushmi0.win',
-]);
+// final countRelays = DataRelayList.fromListString([
+//   'wss://relay.nostr.band',
+//   'wss://relay.nostr.band/all',
+//   // 'wss://relay.roli.social',
+//   // 'wss://relay.rushmi0.win',
+// ]);
 
 class NostrService {
   static Nostr instance = Nostr();
@@ -46,22 +47,22 @@ class NostrService {
     return null;
   }
 
-  static Future<int> countEvent(NostrFilter filter) async {
-    await countInstance.relaysService.init(
-      relaysUrl: countRelays.toListString(),
-      connectionTimeout: const Duration(seconds: 2),
-    );
-    final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
-    Completer<NostrCountResponse> completer = Completer();
-    countInstance.relaysService.sendCountEventToRelays(
-      countEvent,
-      onCountResponse: (relay, countResponse) =>
-          completer.complete(countResponse),
-    );
-    return completer.future
-        .timeout(const Duration(seconds: 2))
-        .then((v) => v.count);
-  }
+  // static Future<int> countEvent(NostrFilter filter) async {
+  //   await countInstance.relaysService.init(
+  //     relaysUrl: countRelays.toListString(),
+  //     connectionTimeout: const Duration(seconds: 2),
+  //   );
+  //   final countEvent = NostrCountEvent.fromPartialData(eventsFilter: filter);
+  //   Completer<NostrCountResponse> completer = Completer();
+  //   countInstance.relaysService.sendCountEventToRelays(
+  //     countEvent,
+  //     onCountResponse: (relay, countResponse) =>
+  //         completer.complete(countResponse),
+  //   );
+  //   return completer.future
+  //       .timeout(const Duration(seconds: 2))
+  //       .then((v) => v.count);
+  // }
 
   static Future<DataEvent?> fetchEventById(
     String id, {
@@ -385,12 +386,12 @@ class NostrService {
         ensureToClearRegistriesBeforeStarting: true,
         retryOnError: true,
       ),
-      NostrService.countInstance.relaysService.init(
-        relaysUrl: countRelays.toListString(),
-        connectionTimeout: timeout,
-        ensureToClearRegistriesBeforeStarting: true,
-        retryOnError: true,
-      ),
+      // NostrService.countInstance.relaysService.init(
+      //   relaysUrl: countRelays.toListString(),
+      //   connectionTimeout: timeout,
+      //   ensureToClearRegistriesBeforeStarting: true,
+      //   retryOnError: true,
+      // ),
     ]);
     String pubkey = '';
     if (npubOrPubkey.startsWith('npub1')) {
