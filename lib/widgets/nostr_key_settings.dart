@@ -222,7 +222,7 @@ class _NostrKeySettingsState extends State<NostrKeySettings> {
                                 color: themeData.colorScheme.error,
                               ),
                               const SizedBox(width: 8),
-                              const Text('Confirm Account Deletion'),
+                              const Text('Confirm Deletion'),
                             ],
                           ),
                           content: const Text(
