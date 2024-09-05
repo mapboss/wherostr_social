@@ -39,6 +39,8 @@ class _PostActionBarState extends State<PostActionBar> {
   bool _isZapped = false;
   String? _emojiUrl;
   double _reactionIconScale = 1;
+  List<String> _muteList = [];
+  final List<DataEvent> _allItems = [];
 
   @override
   void initState() {
@@ -52,8 +54,21 @@ class _PostActionBarState extends State<PostActionBar> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant PostActionBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final me = context.read<AppStatesProvider>().me;
+    if (_muteList.length != me.muteList.length) {
+      _muteList = me.muteList.toList();
+      resetCounts();
+      updateCounts(_allItems);
+      setState(() {});
+    }
+  }
+
   void initialize() {
     final me = context.read<AppStatesProvider>().me;
+    _muteList.addAll(me.muteList.toList());
     subscribe();
     NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
         .then((user) {
@@ -69,6 +84,7 @@ class _PostActionBarState extends State<PostActionBar> {
     const duration = Duration(milliseconds: 300);
     final Debouncer debouncer = Debouncer();
     final relayList = context.read<AppStatesProvider>().me.relayList;
+    List<DataEvent> events = [];
     NostrFilter filter = NostrFilter(
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
@@ -80,6 +96,8 @@ class _PostActionBarState extends State<PostActionBar> {
         debouncer.debounce(
           duration: duration,
           onDebounce: () {
+            _allItems.addAll(events);
+            events.clear();
             if (mounted) {
               setState(() {});
             }
@@ -89,6 +107,7 @@ class _PostActionBarState extends State<PostActionBar> {
     );
     _newEventListener = _newEventStream!.stream.listen((event) {
       final e = DataEvent.fromEvent(event);
+      events.add(e);
       updateCounts([e]);
     });
   }
@@ -107,6 +126,13 @@ class _PostActionBarState extends State<PostActionBar> {
   bool isMuted(NostrEvent event) {
     final me = context.read<AppStatesProvider>().me;
     return me.muteList.contains(event.pubkey);
+  }
+
+  void resetCounts() {
+    _repostCount = 0;
+    _commentCount = 0;
+    _reactionCount = 0;
+    _zapCount = 0;
   }
 
   void updateCounts(List<DataEvent> events) {
