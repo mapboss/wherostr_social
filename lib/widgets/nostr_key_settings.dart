@@ -244,9 +244,7 @@ class _NostrKeySettingsState extends State<NostrKeySettings> {
                                   final appState =
                                       context.read<AppStatesProvider>();
                                   await appState.deleteAccount();
-                                  await context
-                                      .read<AppStatesProvider>()
-                                      .logout();
+                                  await appState.logout();
                                   AppUtils.hideLoading();
                                   context.go('/welcome');
                                 } catch (error) {

@@ -372,40 +372,47 @@ class NostrService {
 
   static Future<DataRelayList> initWithNpubOrPubkey(String npubOrPubkey,
       [Duration timeout = const Duration(seconds: 3)]) async {
-    instance = Nostr();
     await Future.wait([
-      instance.relaysService.init(
+      NostrService.instance.relaysService.init(
         relaysUrl: AppRelays.defaults.combine(AppRelays.relays).toListString(),
         connectionTimeout: timeout,
+        ensureToClearRegistriesBeforeStarting: true,
+        retryOnError: true,
       ),
-      searchInstance.relaysService.init(
+      NostrService.searchInstance.relaysService.init(
         relaysUrl: searchRelays.toListString(),
         connectionTimeout: timeout,
+        ensureToClearRegistriesBeforeStarting: true,
+        retryOnError: true,
       ),
-      countInstance.relaysService.init(
+      NostrService.countInstance.relaysService.init(
         relaysUrl: countRelays.toListString(),
         connectionTimeout: timeout,
+        ensureToClearRegistriesBeforeStarting: true,
+        retryOnError: true,
       ),
     ]);
     String pubkey = '';
     if (npubOrPubkey.startsWith('npub1')) {
-      pubkey = instance.keysService.decodeNpubKeyToPublicKey(npubOrPubkey);
+      pubkey = NostrService.instance.keysService
+          .decodeNpubKeyToPublicKey(npubOrPubkey);
     } else {
       pubkey = npubOrPubkey;
     }
-    DataRelayList relays =
-        await instance.fetchUserRelayList(pubkey, timeout: timeout);
+    DataRelayList relays = await NostrService.instance
+        .fetchUserRelayList(pubkey, timeout: timeout);
     if (relays.isEmpty) {
-      print('relays: relays.isEmpty');
       // AppUtils.showSnackBar(
       //   text: "No relays specified. Using default relays.",
       //   status: AppStatus.warning,
       // );
       relays = AppRelays.relays;
     } else {
-      await instance.relaysService.init(
+      await NostrService.instance.relaysService.init(
         relaysUrl: relays.toListString(),
         connectionTimeout: timeout,
+        ensureToClearRegistriesBeforeStarting: true,
+        retryOnError: true,
       );
     }
     instance.disableLogs();

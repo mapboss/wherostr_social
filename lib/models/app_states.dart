@@ -60,7 +60,6 @@ class AppStatesProvider with ChangeNotifier {
     NostrService.instance = Nostr();
     NostrService.searchInstance = Nostr();
     NostrService.countInstance = Nostr();
-    notifyListeners();
   }
 
   bool verifyNsec(String nsec) {
@@ -112,7 +111,6 @@ class AppStatesProvider with ChangeNotifier {
           me.fetchFollowSets(),
           me.fetchInterestSets()
         ]);
-        notifyListeners();
         return true;
       }
     } catch (err) {
@@ -171,6 +169,5 @@ class AppStatesProvider with ChangeNotifier {
         name: 'Deleted Account',
       )
     ]);
-    notifyListeners();
   }
 }
