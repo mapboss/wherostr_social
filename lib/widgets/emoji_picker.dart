@@ -31,12 +31,12 @@ class _EmojiPickerState extends State<EmojiPicker> {
     if (_emojiList == null) {
       final me = context.read<AppStatesProvider>().me;
       final [
-        wherostrEmojiEvent as DataEvent,
         userEmojiList as List<List<String>>,
+        wherostrEmojiEvent as DataEvent,
       ] = await Future.wait([
+        me.fetchEmojiList(),
         NostrService.fetchEventById(
             "30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr"),
-        me.fetchEmojiList(),
       ]);
       Set<String> seenSecondStrings = {};
       List<List<String>> uniqueLists = [];
