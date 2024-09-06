@@ -73,9 +73,14 @@ class _ZapFormState extends State<ZapForm> {
         amount: _zapAmount!,
         targetUser: widget.user,
         targetEvent: widget.event,
-      ).timeout(
-        const Duration(seconds: 10),
-      );
+      )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => (null, null),
+          )
+          .catchError(
+            (e) => (null, null),
+          );
       if (zapRequest == null || invoice?.isNotEmpty != true) {
         AppUtils.showSnackBar(
           text: 'Unable to generate invoice.',
