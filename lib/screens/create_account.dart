@@ -60,7 +60,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       relaysUrl: AppRelays.defaults
                           .leftCombine(AppRelays.relays)
                           .toListString());
-                  NostrService.instance.disableLogs();
                   await appState.updateProfile(
                     picture: picture,
                     banner: banner,
@@ -78,6 +77,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     text: 'Created successfully.',
                     status: AppStatus.success,
                   );
+                  NostrService.instance.disableLogs();
                   context.go('/home');
                 } catch (error) {
                   AppUtils.hideSnackBar();
