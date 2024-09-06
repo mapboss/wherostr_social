@@ -39,3 +39,25 @@ int getDifficulty(NostrEvent event) {
   int difficulty = Nostr.instance.utilsService.countDifficultyOfHex(event.id!);
   return nonce?.elementAtOrNull(1) != null && difficulty > 0 ? difficulty : 0;
 }
+
+String difficultyToHex(int difficulty, [bool? onlyZero = false]) {
+  // Calculate how many full hex digits are required for the given difficulty
+  int fullHexDigits = difficulty ~/ 4;
+  int remainingBits = difficulty % 4;
+
+  // Start with the required number of full hex digits
+  String hexString = '0' * fullHexDigits;
+
+  // If there are remaining bits, calculate the next hex digit
+  if (remainingBits > 0) {
+    // This will be the highest possible value under the remaining bits
+    int remainingValue = (1 << (4 - remainingBits)) - 1;
+    hexString += remainingValue.toRadixString(16);
+  }
+
+  final hexResult = onlyZero == true
+      ? hexString.replaceAll(r'[1-9][a-f][A-F]', '')
+      : hexString;
+
+  return hexResult;
+}

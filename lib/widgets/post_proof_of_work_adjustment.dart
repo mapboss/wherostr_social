@@ -6,7 +6,17 @@ import 'package:wherostr_social/models/app_theme.dart';
 class ProofOfWorkAdjustment extends StatefulWidget {
   final Function(int? value)? onChange;
   final int? value;
-  const ProofOfWorkAdjustment({super.key, this.value, this.onChange});
+  final int? min;
+  final int? max;
+  final int? step;
+  const ProofOfWorkAdjustment({
+    super.key,
+    this.value,
+    this.onChange,
+    this.min = 0,
+    this.max = 12,
+    this.step = 1,
+  });
 
   @override
   State<StatefulWidget> createState() => _ProofOfWorkAdjustmentState();
@@ -76,10 +86,11 @@ class _ProofOfWorkAdjustmentState extends State<ProofOfWorkAdjustment> {
                 ),
                 const SizedBox(height: 16),
                 Slider(
+                  divisions: widget.max! ~/ widget.step!,
                   value: _pow.toDouble(),
                   label: _pow.round().toString(),
-                  min: 0,
-                  max: 20,
+                  min: widget.min!.toDouble(),
+                  max: widget.max!.toDouble(),
                   inactiveColor: themeData.colorScheme.surfaceDim,
                   onChanged: _handleChange,
                 ),
