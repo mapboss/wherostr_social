@@ -23,7 +23,6 @@ class NotificationCenterContainer extends StatelessWidget {
       ),
       body: NostrFeed(
         key: feedKey,
-        limit: 100,
         relays: appState.me.relayList.clone(),
         includeReplies: true,
         kinds: const [1, 6, 7, 9735],

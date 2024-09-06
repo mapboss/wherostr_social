@@ -333,4 +333,14 @@ class DataEvent extends NostrEvent {
       }
     }
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! DataEvent) return false;
+    return other.getId() == getId();
+  }
+
+  @override
+  int get hashCode => toString().hashCode;
 }

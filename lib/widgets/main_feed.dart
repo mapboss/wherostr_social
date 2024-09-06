@@ -85,7 +85,6 @@ class MainFeedState extends State<MainFeed> {
           final scrollController = PrimaryScrollController.of(context);
           return NostrFeed(
             key: nostrFeedKey,
-            limit: 100,
             scrollController: scrollController,
             kinds: const [1, 6],
             authors: _authors,

@@ -113,7 +113,6 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                         disableSubscribe: true,
                         kinds: const [0],
                         authors: _following,
-                        limit: 30,
                         itemFilter: (e) {
                           if (events.containsKey(e.pubkey)) return false;
                           events[e.pubkey] = true;
@@ -158,7 +157,6 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                         disableSubscribe: true,
                         kinds: const [3],
                         p: [widget.user.pubkey],
-                        limit: 30,
                         itemFilter: (e) {
                           if (events.containsKey(e.pubkey)) return false;
                           events[e.pubkey] = true;

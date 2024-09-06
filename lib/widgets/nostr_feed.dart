@@ -70,6 +70,8 @@ class NostrFeedState extends State<NostrFeed> {
   bool _initialized = false;
   bool _loading = true;
   bool _hasMore = false;
+  final int _limitRequest = 100;
+  final int _limitDisplay = 30;
   final List<DataEvent> _allItems = [];
   final List<DataEvent> _newItems = [];
   final Map<String, Widget> _postItems = {};
@@ -265,13 +267,14 @@ class NostrFeedState extends State<NostrFeed> {
 
   void subscribe() {
     int hasMore = 0;
-    const duration = Duration(milliseconds: 300);
+    const duration = Duration(milliseconds: 200);
     final Debouncer debouncer = Debouncer();
     final filter = NostrFilter(
       kinds: widget.kinds,
       authors: widget.authors,
       ids: widget.ids,
-      limit: widget.limit,
+      limit: _limitRequest,
+      since: DateTime.now().subtract(const Duration(days: 30)),
       t: widget.t,
       a: widget.a,
       p: widget.p,
@@ -284,6 +287,7 @@ class NostrFeedState extends State<NostrFeed> {
       closeOnEnd: widget.disableSubscribe,
       onEose: (relay, ease) {
         if (!_initialized) {
+          _since ??= DateTime.now();
           if (mounted) {
             setState(() {
               _initialized = true;
@@ -293,19 +297,20 @@ class NostrFeedState extends State<NostrFeed> {
         debouncer.debounce(
           duration: duration,
           onDebounce: () {
-            _items.sort(sorting);
             if (mounted) {
-              setState(() {});
+              setState(() {
+                _items.sort(sorting);
+              });
             }
           },
         );
         _loading = false;
-        _hasMore = hasMore >= (widget.limit / 2);
+        _hasMore = hasMore >= (_limitRequest / 2);
       },
       onEnd: () {
         if (mounted) {
           setState(() {
-            _hasMore = hasMore >= widget.limit;
+            _hasMore = hasMore >= _limitRequest;
           });
         }
       },
@@ -315,15 +320,19 @@ class NostrFeedState extends State<NostrFeed> {
       (event) {
         if (event.createdAt == null) return;
         final dataEvent = DataEvent.fromEvent(event);
+        if (_allItems.contains(dataEvent)) return;
         _allItems.add(dataEvent);
         if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
-          _since ??= DateTime.now();
           hasMore += 1;
         }
         final isPass = filterEvent(dataEvent);
         if (!isPass) return;
         if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
-          insertItem(dataEvent);
+          if (widget.isAscending == false) {
+            _items.add(dataEvent);
+          } else {
+            _items.insert(0, dataEvent);
+          }
         } else {
           insertNewItem(dataEvent);
         }
@@ -343,7 +352,7 @@ class NostrFeedState extends State<NostrFeed> {
       _since = null;
       _loading = true;
       _initialized = false;
-      _hasMore = widget.isAscending ? false : true;
+      _hasMore = false;
       _postItems.clear();
       _muteList.clear();
       _allItems.clear();
@@ -391,7 +400,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   void fetchList([DataEvent? lastEvent]) {
     _loading = true;
-    const duration = Duration(milliseconds: 500);
+    const duration = Duration(milliseconds: 200);
     final Debouncer debouncer = Debouncer();
     DateTime? until;
     DateTime? since;
@@ -399,11 +408,12 @@ class NostrFeedState extends State<NostrFeed> {
       until = lastEvent == null
           ? DateTime.now()
           : lastEvent.createdAt?.subtract(const Duration(milliseconds: 10));
+      since = until?.subtract(const Duration(days: 30));
     }
     NostrFilter filter = NostrFilter(
       until: until,
       since: since,
-      limit: widget.limit,
+      limit: _limitRequest,
       kinds: widget.kinds,
       authors: widget.authors,
       ids: widget.ids,
@@ -422,17 +432,18 @@ class NostrFeedState extends State<NostrFeed> {
         debouncer.debounce(
           duration: duration,
           onDebounce: () {
+            _items.sort(sorting);
             if (mounted) {
               setState(() {});
             }
           },
         );
         _loading = false;
-        _hasMore = hasMore >= (widget.limit / 2);
+        _hasMore = hasMore >= (_limitRequest / 2);
       },
       onEnd: () {
         setState(() {
-          _hasMore = hasMore >= widget.limit;
+          _hasMore = hasMore >= _limitRequest;
         });
       },
     );
@@ -440,9 +451,14 @@ class NostrFeedState extends State<NostrFeed> {
       (event) {
         hasMore += 1;
         final dataEvent = DataEvent.fromEvent(event);
+        if (_allItems.contains(dataEvent)) return;
         _allItems.add(dataEvent);
         if (!filterEvent(dataEvent)) return;
-        insertItem(dataEvent);
+        if (!widget.isAscending) {
+          _items.add(dataEvent);
+        } else {
+          _items.insert(0, dataEvent);
+        }
       },
     );
   }
@@ -482,8 +498,7 @@ class NostrFeedState extends State<NostrFeed> {
       _throttler.throttle(
           duration: const Duration(milliseconds: 1000),
           onThrottle: () {
-            _allItems.sort(sorting);
-            _fetchMoreItems(_allItems.last);
+            _fetchMoreItems(_items.last);
           });
       return true;
     }
