@@ -267,8 +267,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   void subscribe() {
     int hasMore = 0;
-    const duration = Duration(milliseconds: 200);
-    final Debouncer debouncer = Debouncer();
+    const duration = Duration(milliseconds: 300);
     final filter = NostrFilter(
       kinds: widget.kinds,
       authors: widget.authors,
@@ -294,7 +293,7 @@ class NostrFeedState extends State<NostrFeed> {
             });
           }
         }
-        debouncer.debounce(
+        _debouncer.debounce(
           duration: duration,
           onDebounce: () {
             if (mounted) {
@@ -400,8 +399,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   void fetchList([DataEvent? lastEvent]) {
     _loading = true;
-    const duration = Duration(milliseconds: 200);
-    final Debouncer debouncer = Debouncer();
+    const duration = Duration(milliseconds: 300);
     DateTime? until;
     DateTime? since;
     if (!widget.isAscending) {
@@ -429,12 +427,13 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: true,
       onEose: (relay, ease) {
-        debouncer.debounce(
+        _debouncer.debounce(
           duration: duration,
           onDebounce: () {
-            _items.sort(sorting);
             if (mounted) {
-              setState(() {});
+              setState(() {
+                _items.sort(sorting);
+              });
             }
           },
         );

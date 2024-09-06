@@ -77,6 +77,7 @@ class _PostDetailsState extends State<PostDetails> {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final appState = context.watch<AppStatesProvider>();
+    final scrollController = PrimaryScrollController.of(context);
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: GestureDetector(
@@ -164,138 +165,135 @@ class _PostDetailsState extends State<PostDetails> {
               headerSliverBuilder:
                   (BuildContext context, bool innerBoxIsScrolled) {
                 return [
-                  SliverOverlapAbsorber(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                        context),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        children: [
-                          if (_parentEvent != null)
-                            SizedBox(
-                              width: double.infinity,
-                              child: Container(
-                                foregroundDecoration: BoxDecoration(
-                                  border: Border(
-                                    left: BorderSide(
-                                      color: themeData.colorScheme.primary,
-                                      width: 4,
-                                    ),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        if (_parentEvent != null)
+                          SizedBox(
+                            width: double.infinity,
+                            child: Container(
+                              foregroundDecoration: BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    color: themeData.colorScheme.primary,
+                                    width: 4,
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    ResizeObserver(
-                                      onResized: (Size? oldSize, Size newSize) {
-                                        final scrollController =
-                                            PrimaryScrollController.of(context);
-                                        if (scrollController.offset <
-                                            newSize.height) {
-                                          _debouncer.debounce(
-                                            duration: const Duration(
-                                              milliseconds: 100,
-                                            ),
-                                            onDebounce: () {
-                                              scrollController.animateTo(
-                                                newSize.height,
-                                                duration: const Duration(
-                                                    milliseconds: 300),
-                                                curve: Curves.easeInOutCubic,
-                                              );
-                                            },
-                                          );
-                                        }
-                                      },
-                                      child: PostItem(
-                                        event: _parentEvent!,
-                                        contentPadding:
-                                            const EdgeInsets.only(left: 54),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4, horizontal: 12),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.reply,
-                                            size: 16,
-                                            color: themeExtension.textDimColor,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Replied to',
-                                            style: TextStyle(
-                                                color: themeExtension
-                                                    .textDimColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
-                            ),
-                          PostItem(
-                            event: _event!,
-                            enableTap: false,
-                          ),
-                          const Divider(height: 1),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Replies',
-                                  style: themeData.textTheme.titleMedium,
-                                ),
-                                TextButton.icon(
-                                  onPressed: () => appState.navigatorPush(
-                                    widget: PostActivity(
-                                      event: _event!,
+                              child: Column(
+                                children: [
+                                  ResizeObserver(
+                                    onResized: (Size? oldSize, Size newSize) {
+                                      if (scrollController.offset <
+                                          newSize.height) {
+                                        _debouncer.debounce(
+                                          duration: const Duration(
+                                            milliseconds: 100,
+                                          ),
+                                          onDebounce: () {
+                                            scrollController.animateTo(
+                                              newSize.height,
+                                              duration: const Duration(
+                                                  milliseconds: 300),
+                                              curve: Curves.easeInOutCubic,
+                                            );
+                                          },
+                                        );
+                                      }
+                                    },
+                                    child: PostItem(
+                                      event: _parentEvent!,
+                                      contentPadding:
+                                          const EdgeInsets.only(left: 54),
                                     ),
                                   ),
-                                  label: const Text('View activity'),
-                                  icon: const Icon(Icons.navigate_next),
-                                  iconAlignment: IconAlignment.end,
-                                ),
-                              ],
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 12),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.reply,
+                                          size: 16,
+                                          color: themeExtension.textDimColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Replied to',
+                                          style: TextStyle(
+                                              color:
+                                                  themeExtension.textDimColor),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const Divider(height: 1),
-                        ],
-                      ),
+                        PostItem(
+                          event: _event!,
+                          enableTap: false,
+                        ),
+                      ],
                     ),
                   ),
                 ];
               },
-              body: Builder(builder: (context) {
-                final scrollController = PrimaryScrollController.of(context);
-                return NostrFeed(
-                  relays: appState.me.relayList.clone(),
-                  scrollController: scrollController,
-                  kinds: const [1],
-                  e: [_event!.id!],
-                  includeReplies: true,
-                  autoRefresh: true,
-                  isAscending: true,
-                  itemFilter: (itemEvent) {
-                    return isReply(
-                      event: itemEvent,
-                      referenceEventId: _event!.id,
-                      isDirectOnly: true,
-                    );
-                  },
-                  itemBuilder: (context, event) => Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    child: PostItem(
-                      event: event,
-                      contentPadding: const EdgeInsets.only(left: 54),
+              body: Column(
+                children: [
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Replies',
+                          style: themeData.textTheme.titleMedium,
+                        ),
+                        TextButton.icon(
+                          onPressed: () => appState.navigatorPush(
+                            widget: PostActivity(
+                              event: _event!,
+                            ),
+                          ),
+                          label: const Text('View activity'),
+                          icon: const Icon(Icons.navigate_next),
+                          iconAlignment: IconAlignment.end,
+                        ),
+                      ],
                     ),
                   ),
-                );
-              }),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: NostrFeed(
+                      relays: appState.me.relayList.clone(),
+                      scrollController: scrollController,
+                      kinds: const [1],
+                      e: [_event!.id!],
+                      includeReplies: true,
+                      autoRefresh: true,
+                      isAscending: true,
+                      itemFilter: (itemEvent) {
+                        return isReply(
+                          event: itemEvent,
+                          referenceEventId: _event!.id,
+                          isDirectOnly: true,
+                        );
+                      },
+                      itemBuilder: (context, event) => Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        child: PostItem(
+                          event: event,
+                          contentPadding: const EdgeInsets.only(left: 54),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
