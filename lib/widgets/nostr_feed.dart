@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
@@ -9,7 +8,6 @@ import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
-import 'package:wherostr_social/utils/safe_parser.dart';
 import 'package:wherostr_social/widgets/resize_observer.dart';
 
 class NostrFeed extends StatefulWidget {
@@ -70,7 +68,7 @@ class NostrFeedState extends State<NostrFeed> {
   bool _initialized = false;
   bool _loading = true;
   bool _hasMore = false;
-  final int _limitRequest = 100;
+  final int _limitRequest = 60;
   final int _limitDisplay = 30;
   final List<DataEvent> _allItems = [];
   final List<DataEvent> _newItems = [];
@@ -81,6 +79,7 @@ class NostrFeedState extends State<NostrFeed> {
   DateTime? _since;
   final _debouncer = Debouncer();
   final _throttler = Throttler();
+  final _duration = const Duration(milliseconds: 300);
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +135,7 @@ class NostrFeedState extends State<NostrFeed> {
                           return AnimatedSize(
                             key: ValueKey(item.id!),
                             curve: Curves.easeInOutCubic,
-                            duration: const Duration(milliseconds: 300),
+                            duration: _duration,
                             child: SizedBox(
                               height: _heightMap[item.id!],
                               child: SingleChildScrollView(
@@ -147,8 +146,7 @@ class NostrFeedState extends State<NostrFeed> {
                                     if (_heightMap[item.id!] !=
                                         newSize.height) {
                                       _debouncer.debounce(
-                                        duration:
-                                            const Duration(milliseconds: 300),
+                                        duration: _duration,
                                         onDebounce: () {
                                           setState(() {});
                                         },
@@ -166,7 +164,7 @@ class NostrFeedState extends State<NostrFeed> {
                     ),
                     AnimatedSize(
                       curve: Curves.easeInOutCubic,
-                      duration: const Duration(milliseconds: 300),
+                      duration: _duration,
                       child: !widget.autoRefresh && _newItems.isNotEmpty
                           ? Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -267,13 +265,11 @@ class NostrFeedState extends State<NostrFeed> {
 
   void subscribe() {
     int hasMore = 0;
-    const duration = Duration(milliseconds: 300);
     final filter = NostrFilter(
       kinds: widget.kinds,
       authors: widget.authors,
       ids: widget.ids,
       limit: _limitRequest,
-      since: DateTime.now().subtract(const Duration(days: 30)),
       t: widget.t,
       a: widget.a,
       p: widget.p,
@@ -286,19 +282,22 @@ class NostrFeedState extends State<NostrFeed> {
       closeOnEnd: widget.disableSubscribe,
       onEose: (relay, ease) {
         if (!_initialized) {
-          _since ??= DateTime.now();
           if (mounted) {
             setState(() {
+              _since ??= DateTime.now();
               _initialized = true;
             });
           }
         }
         _debouncer.debounce(
-          duration: duration,
+          duration: _duration,
           onDebounce: () {
             if (mounted) {
               setState(() {
+                _loading = false;
+                _hasMore = hasMore >= (_limitRequest / 2);
                 _items.sort(sorting);
+                _items = _items.take(_limitDisplay).toList();
               });
             }
           },
@@ -327,11 +326,7 @@ class NostrFeedState extends State<NostrFeed> {
         final isPass = filterEvent(dataEvent);
         if (!isPass) return;
         if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
-          if (widget.isAscending == false) {
-            _items.add(dataEvent);
-          } else {
-            _items.insert(0, dataEvent);
-          }
+          insertItem(dataEvent);
         } else {
           insertNewItem(dataEvent);
         }
@@ -341,8 +336,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   void scrollToFirstItem() {
     _scrollController?.animateTo(_scrollController!.position.minScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOutCubic);
+        duration: _duration, curve: Curves.easeInOutCubic);
   }
 
   void clearState() {
@@ -380,6 +374,15 @@ class NostrFeedState extends State<NostrFeed> {
 
   void insertItem(DataEvent event) {
     _items.add(event);
+    if (!_initialized) {
+      if (mounted) {
+        setState(() {
+          _items.sort(sorting);
+          _since ??= DateTime.now();
+          _initialized = true;
+        });
+      }
+    }
   }
 
   void insertNewItem(DataEvent event) {
@@ -397,17 +400,16 @@ class NostrFeedState extends State<NostrFeed> {
     }
   }
 
-  void fetchList([DataEvent? lastEvent]) {
+  void fetchFromLastEvent() {
     _loading = true;
-    const duration = Duration(milliseconds: 300);
+    bool triggered = false;
     DateTime? until;
     DateTime? since;
     if (!widget.isAscending) {
-      until = lastEvent == null
-          ? DateTime.now()
-          : lastEvent.createdAt?.subtract(const Duration(milliseconds: 10));
-      since = until?.subtract(const Duration(days: 30));
+      until = _items.last.createdAt;
     }
+    int itemIndex = _items.indexOf(_items.last);
+    List<DataEvent> tempItems = [];
     NostrFilter filter = NostrFilter(
       until: until,
       since: since,
@@ -427,18 +429,15 @@ class NostrFeedState extends State<NostrFeed> {
       relays: widget.relays,
       closeOnEnd: true,
       onEose: (relay, ease) {
-        _debouncer.debounce(
-          duration: duration,
-          onDebounce: () {
-            if (mounted) {
-              setState(() {
-                _items.sort(sorting);
-              });
-            }
-          },
-        );
-        _loading = false;
-        _hasMore = hasMore >= (_limitRequest / 2);
+        if (!triggered) {
+          triggered = true;
+          _loading = false;
+        }
+        if (mounted) {
+          setState(() {
+            _hasMore = hasMore >= (_limitRequest / 2);
+          });
+        }
       },
       onEnd: () {
         setState(() {
@@ -450,22 +449,39 @@ class NostrFeedState extends State<NostrFeed> {
       (event) {
         hasMore += 1;
         final dataEvent = DataEvent.fromEvent(event);
-        if (_allItems.contains(dataEvent)) return;
-        _allItems.add(dataEvent);
-        if (!filterEvent(dataEvent)) return;
-        if (!widget.isAscending) {
-          _items.add(dataEvent);
-        } else {
-          _items.insert(0, dataEvent);
+        if (!_allItems.contains(dataEvent)) {
+          _allItems.add(dataEvent);
         }
+        if (!filterEvent(dataEvent)) return;
+        if (!triggered) {
+          triggered = true;
+          setState(() {
+            _hasMore = hasMore >= (_limitRequest / 2);
+            _loading = false;
+          });
+        }
+        if (!_items.contains(dataEvent)) {
+          tempItems.add(dataEvent);
+        }
+        _debouncer.debounce(
+          duration: _duration,
+          onDebounce: () {
+            tempItems.sort(sorting);
+            _items = _items.take(itemIndex + 1).toList();
+            if (mounted) {
+              setState(() {
+                _items.insertAll(itemIndex + 1, tempItems.take(_limitDisplay));
+              });
+            }
+          },
+        );
       },
     );
   }
 
-  void _fetchMoreItems(DataEvent? e) async {
+  void _fetchMoreItems() async {
     if (_initialized != true || _loading == true) return;
-    if (e == null) return;
-    fetchList(e);
+    fetchFromLastEvent();
   }
 
   Future<void> _showNewItems() async {
@@ -497,85 +513,10 @@ class NostrFeedState extends State<NostrFeed> {
       _throttler.throttle(
           duration: const Duration(milliseconds: 1000),
           onThrottle: () {
-            _fetchMoreItems(_items.last);
+            _fetchMoreItems();
           });
       return true;
     }
     return false;
-  }
-
-  Future<void> _fetchUsersFromEvents(List<DataEvent> events) async {
-    Set<String> pubkeySet = <String>{};
-    for (var e in events) {
-      pubkeySet.add(e.pubkey);
-      e.tags?.where((t) => t.firstOrNull == 'p').forEach((t) {
-        pubkeySet.add(t[1]);
-      });
-      if (e.kind == 6) {
-        try {
-          if (e.content == null) continue;
-          var eventJson = jsonDecode(e.content!);
-          pubkeySet.add(eventJson['pubkey']);
-          ((eventJson['tags'] ?? []) as List<dynamic>)
-              .where((t) => ((t ?? []) as List<dynamic>).firstOrNull == 'p')
-              .forEach((t) {
-            var val = SafeParser.parseString(t[1]);
-            if (val != null) {
-              pubkeySet.add(val);
-            }
-          });
-        } catch (err) {
-          print('_fetchUsersFromEvents: ERROR: $err');
-        }
-      }
-    }
-    print(
-        '_fetchUsersFromEvents: events: ${events.length}, pubkey: ${pubkeySet.length}');
-    if (pubkeySet.isEmpty) return;
-    await NostrService.fetchUsers(
-      pubkeySet.toList(),
-      timeout: const Duration(seconds: 3),
-      relays: widget.relays,
-    );
-  }
-
-  Future<void> _fetchRelatedEventsFromEvents(List<DataEvent> events) async {
-    Set<String> idSet = <String>{};
-    for (var e in events) {
-      if (e.kind == 1) {
-        e.tags
-            ?.where((t) => t.firstOrNull == 'e' || t.firstOrNull == 'a')
-            .forEach((t) {
-          var value = t.elementAt(1);
-          idSet.add(value);
-        });
-      } else if (e.kind == 6) {
-        try {
-          if (e.content == null) continue;
-          var eventJson = jsonDecode(e.content!);
-          idSet.add(eventJson['pubkey']);
-          ((eventJson['tags'] ?? []) as List<dynamic>).where((t) {
-            var item = ((t ?? []) as List<dynamic>);
-            return item.firstOrNull == 'p' || item.firstOrNull == 'a';
-          }).forEach((t) {
-            var val = SafeParser.parseString(t[1]);
-            if (val != null) {
-              idSet.add(val);
-            }
-          });
-        } catch (err) {
-          print('_fetchRelatedEventsFromEvents: $err');
-        }
-      }
-    }
-    print(
-        '_fetchRelatedEventsFromEvents: events: ${events.length}, id: ${idSet.length}');
-    if (idSet.isEmpty) return;
-    await NostrService.fetchEventIds(
-      idSet.toList(),
-      eoseRatio: 1.2,
-      timeout: const Duration(seconds: 3),
-      relays: widget.relays,
-    );
   }
 }
