@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -30,6 +31,7 @@ class PostDetails extends StatefulWidget {
 class _PostDetailsState extends State<PostDetails> {
   DataEvent? _event;
   DataEvent? _parentEvent;
+  final _debouncer = Debouncer();
 
   @override
   void initState() {
@@ -188,15 +190,19 @@ class _PostDetailsState extends State<PostDetails> {
                                             PrimaryScrollController.of(context);
                                         if (scrollController.offset <
                                             newSize.height) {
-                                          Future.delayed(
-                                              Duration.zero,
-                                              () => scrollController.animateTo(
-                                                    newSize.height,
-                                                    duration: const Duration(
-                                                        milliseconds: 300),
-                                                    curve:
-                                                        Curves.easeInOutCubic,
-                                                  ));
+                                          _debouncer.debounce(
+                                            duration: const Duration(
+                                              milliseconds: 100,
+                                            ),
+                                            onDebounce: () {
+                                              scrollController.animateTo(
+                                                newSize.height,
+                                                duration: const Duration(
+                                                    milliseconds: 300),
+                                                curve: Curves.easeInOutCubic,
+                                              );
+                                            },
+                                          );
                                         }
                                       },
                                       child: PostItem(
