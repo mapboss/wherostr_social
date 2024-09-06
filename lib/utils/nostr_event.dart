@@ -66,11 +66,11 @@ String? getParentEventId({
         event.tags!.where((tag) => tag.firstOrNull == 'e');
     return eTags
             .where((tag) => tag.elementAtOrNull(3) == 'reply')
-            .firstOrNull
+            .lastOrNull
             ?.elementAtOrNull(1) ??
         eTags
             .where((tag) => tag.elementAtOrNull(3) == 'root')
-            .firstOrNull
+            .lastOrNull
             ?.elementAtOrNull(1);
   } catch (error) {}
   return null;
@@ -128,7 +128,7 @@ String? getReferencedEventId(NostrEvent event) {
     case 9735:
       return event.tags!
           .where((tag) => tag.firstOrNull == 'e')
-          .firstOrNull
+          .lastOrNull
           ?.elementAtOrNull(1);
     default:
       return null;

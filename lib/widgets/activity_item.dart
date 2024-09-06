@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -136,15 +138,66 @@ class _ActivityItemState extends State<ActivityItem> {
     return null;
   }
 
+  String getEllipsisText({
+    required String text,
+    required double maxWidth,
+    required int maxLines,
+    TextStyle? style,
+    String? ellipsisText = '...',
+  }) {
+    TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: style,
+      ),
+      maxLines: maxLines,
+      textDirection: ui.TextDirection.ltr,
+    );
+    textPainter.layout(maxWidth: maxWidth);
+    if (!textPainter.didExceedMaxLines) {
+      return text;
+    }
+    final textSize = textPainter.size;
+    final ellipsisTextPainter = TextPainter(
+      text: TextSpan(
+        text: ellipsisText,
+        style: style,
+      ),
+      maxLines: maxLines,
+      textDirection: ui.TextDirection.ltr,
+    );
+    ellipsisTextPainter.layout(maxWidth: maxWidth);
+    final ellipsisWidth = ellipsisTextPainter.size.width;
+    if (textPainter.didExceedMaxLines &&
+        textSize.width + ellipsisWidth > maxWidth) {
+      final textOffsetPosition = textPainter.getOffsetBefore(textPainter
+              .getPositionForOffset(
+                  Offset(textSize.width - ellipsisWidth, textSize.height))
+              .offset) ??
+          0;
+      return '${text.substring(0, textOffsetPosition)}$ellipsisText';
+    } else {
+      return text;
+    }
+  }
+
   Widget? _activityContentWidget() {
     switch (widget.event.kind) {
       case 1:
       case 9735:
         if ((widget.event.content ?? '') != '') {
+          final content = getEllipsisText(
+            text: widget.event.content!,
+            maxWidth: MediaQuery.sizeOf(context).width - 76,
+            maxLines: 5,
+          );
           return Padding(
             padding: const EdgeInsets.fromLTRB(60, 0, 0, 16),
             child: PostContent(
-              content: widget.event.content!,
+              content: content,
+              enableMedia: false,
+              enablePreview: false,
+              enableElementTap: false,
               depth: 1,
             ),
           );

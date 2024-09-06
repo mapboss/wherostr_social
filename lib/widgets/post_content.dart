@@ -221,11 +221,8 @@ class _PostContentState extends State<PostContent> {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          color: themeData.colorScheme.surfaceDim,
-                          child: LinkPreview(
-                            url: element.text,
-                          ),
+                        child: LinkPreview(
+                          url: element.text,
                         ),
                       ),
                     ),
@@ -448,63 +445,66 @@ class _LinkPreviewState extends State<LinkPreview> {
     final image = _metadata?.image;
     final title = _metadata?.title;
     final desc = _metadata?.desc;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (image != null)
-          Center(
-            child: FadeInImage(
-              placeholder: MemoryImage(kTransparentImage),
-              image: AppUtils.getImageProvider(image),
-              fadeInDuration: const Duration(milliseconds: 300),
-              fadeInCurve: Curves.easeInOutCubic,
-              fit: BoxFit.cover,
+    return Container(
+      color: themeData.colorScheme.surfaceDim,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (image != null)
+            Center(
+              child: FadeInImage(
+                placeholder: MemoryImage(kTransparentImage),
+                image: AppUtils.getImageProvider(image),
+                fadeInDuration: const Duration(milliseconds: 300),
+                fadeInCurve: Curves.easeInOutCubic,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              const Icon(Icons.link),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  widget.url,
-                  style: TextStyle(
-                    color: themeExtension.textDimColor,
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                const Icon(Icons.link),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.url,
+                    style: TextStyle(
+                      color: themeExtension.textDimColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-        ),
-        if (title != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              title,
-              style: themeData.textTheme.titleMedium,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+              ],
             ),
           ),
-        if (desc != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              desc,
-              style: TextStyle(
-                color: themeExtension.textDimColor,
+          if (title != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                title,
+                style: themeData.textTheme.titleMedium,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        const SizedBox(height: 8),
-      ],
+          if (desc != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                desc,
+                style: TextStyle(
+                  color: themeExtension.textDimColor,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 }
