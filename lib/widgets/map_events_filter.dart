@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:dart_nostr/dart_nostr.dart';
@@ -11,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/map_ui.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
 
@@ -110,7 +112,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
     final Debouncer debouncer = Debouncer();
     final relays = context.read<AppStatesProvider>().me.relayList.clone();
     final filter = NostrFilter(
-      limit: 1000,
+      since: DateTime.now().subtract(const Duration(days: 30)),
       kinds: const [1],
       additionalFilters: {
         "#g": fullExtentGeohash,
@@ -138,6 +140,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
       },
     );
     _newEventListener = _newEventStream!.stream.listen((event) {
+      if (isReply(event: event)) return;
       final geohash =
           GeoHash(event.tags!.where((e) => e.first == 'g').first.elementAt(1));
       final feature = Feature.fromMap({
@@ -202,10 +205,10 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
       await _mapController?.addLayer(
         layerId,
         layerId,
-        const SymbolLayerProperties(
+        SymbolLayerProperties(
           iconAllowOverlap: true,
           iconImage: 'assets/app/app-icon-circle.png',
-          iconSize: 0.3,
+          iconSize: Platform.isIOS ? 0.25 : 0.3,
           symbolSortKey: 'createdAt',
         ),
       );
@@ -221,7 +224,6 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
   void _queryRenderedFeatures(
       dynamic id, Point<double> point, LatLng coordinates) async {
     try {
-      print('_onFeatureTapped.id: $id');
       var feats =
           await _mapController?.queryRenderedFeatures(point, [layerId], null);
       if (mounted) {
@@ -232,7 +234,6 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
           widget: PostDetails(event: event),
         );
       }
-      print('_onFeatureTapped.feats: $feats');
     } catch (err) {
       print('_onFeatureTapped.ERROR: $err');
     }
