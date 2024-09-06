@@ -11,12 +11,10 @@ class NostrBandService {
     final url =
         Uri.parse(serviceUrl).replace(path: '/v0/stats/profile/$pubkey');
     final request = http.Request('GET', url);
-    print('url: $url');
 
     final response = await http.Response.fromStream(await request.send());
     if (response.statusCode == 200) {
       final Map<String, dynamic> result = jsonDecode(response.body);
-      print('result: ${result['stats'][pubkey]}');
       return result['stats'][pubkey];
     } else {
       throw Exception('Failed to request search');
