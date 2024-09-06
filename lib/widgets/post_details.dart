@@ -188,7 +188,7 @@ class _PostDetailsState extends State<PostDetails> {
                                           newSize.height) {
                                         _debouncer.debounce(
                                           duration: const Duration(
-                                            milliseconds: 100,
+                                            milliseconds: 300,
                                           ),
                                           onDebounce: () {
                                             scrollController.animateTo(

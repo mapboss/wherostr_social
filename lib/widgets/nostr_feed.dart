@@ -148,7 +148,7 @@ class NostrFeedState extends State<NostrFeed> {
                                         newSize.height) {
                                       _debouncer.debounce(
                                         duration:
-                                            const Duration(milliseconds: 1000),
+                                            const Duration(milliseconds: 300),
                                         onDebounce: () {
                                           setState(() {});
                                         },
