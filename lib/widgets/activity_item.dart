@@ -21,14 +21,14 @@ import 'package:wherostr_social/widgets/profile_display_name.dart';
 
 class ActivityItem extends StatefulWidget {
   final NostrEvent event;
-  final bool enableViewReferencedEventTap;
+  final bool enableTap;
   final bool showFollowButton;
   final bool showReferencedEvent;
 
   const ActivityItem({
     super.key,
     required this.event,
-    this.enableViewReferencedEventTap = false,
+    this.enableTap = false,
     this.showFollowButton = true,
     this.showReferencedEvent = false,
   });
@@ -67,8 +67,7 @@ class _ActivityItemState extends State<ActivityItem> {
         _user = user;
         _isMe = me.pubkey == user.pubkey;
         _isFollowing = me.following.contains(user.pubkey);
-        _referencedEventId = getReferencedEventId(widget.event) ??
-            (widget.event.kind == 1 ? widget.event.id : null);
+        _referencedEventId = getReferencedEventId(widget.event);
       });
     }
   }
@@ -269,13 +268,13 @@ class _ActivityItemState extends State<ActivityItem> {
             ),
           )
         : InkWell(
-            onTap: widget.enableViewReferencedEventTap &&
-                    _referencedEventId != null
+            onTap: widget.enableTap
                 ? () => appState.navigatorPush(
                       widget: PostDetails(
-                        eventId: widget.event.kind == 1
-                            ? widget.event.id
-                            : _referencedEventId,
+                        eventId:
+                            widget.event.kind == 1 || _referencedEventId == null
+                                ? widget.event.id
+                                : _referencedEventId,
                       ),
                     )
                 : null,
@@ -408,7 +407,7 @@ class _ActivityItemState extends State<ActivityItem> {
                                 child: PostItemLoader(
                                   eventId: _referencedEventId!,
                                   enableMenu: false,
-                                  enableTap: false,
+                                  enableTap: true,
                                   enableElementTap: false,
                                   enableActionBar: false,
                                   enableLocation: false,

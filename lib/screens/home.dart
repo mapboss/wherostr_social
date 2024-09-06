@@ -69,8 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 onDestinationSelected: (index) async {
                   if (_selectedIndex != index) {
                     popToHome();
-                    setState(() {
-                      _selectedIndex = index;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
                     });
                   } else if (index == 0) {
                     if (Navigator.of(homeNavigatorKey.currentContext!)

@@ -114,6 +114,7 @@ class NostrFeedState extends State<NostrFeed> {
                         controller: widget.scrollController == null
                             ? _scrollController
                             : null,
+                        physics: const ClampingScrollPhysics(),
                         reverse: widget.reverse,
                         itemCount: !widget.isAscending && _hasMore
                             ? _items.length + 1
