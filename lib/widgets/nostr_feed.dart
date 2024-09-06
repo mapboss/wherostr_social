@@ -78,6 +78,7 @@ class NostrFeedState extends State<NostrFeed> {
   ScrollController? _scrollController;
   DateTime? _since;
   final _debouncer = Debouncer();
+  final _throttler = Throttler();
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +147,9 @@ class NostrFeedState extends State<NostrFeed> {
                                       _debouncer.debounce(
                                         duration:
                                             const Duration(milliseconds: 1000),
-                                        onDebounce: () => setState(() {}),
+                                        onDebounce: () {
+                                          setState(() {});
+                                        },
                                       );
                                     }
                                     _heightMap[item.id!] = newSize.height;
@@ -468,19 +471,21 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   bool _handleNotification(ScrollNotification scrollNotification) {
-    if (!widget.isAscending &&
-        _hasMore &&
-        widget.reverse == false &&
-        scrollNotification.metrics.pixels > 0 &&
-        scrollNotification.metrics.atEdge) {
-      _allItems.sort(sorting);
-      _fetchMoreItems(_allItems.last);
-    } else if (!widget.isAscending &&
-        _hasMore &&
-        widget.reverse == true &&
-        scrollNotification.metrics.pixels == 0 &&
-        scrollNotification.metrics.atEdge) {
-      _fetchMoreItems(_allItems.first);
+    if (_loading ||
+        widget.isAscending ||
+        !_hasMore ||
+        !scrollNotification.metrics.atEdge) {
+      return false;
+    }
+    if ((widget.reverse == false && scrollNotification.metrics.pixels > 0) ||
+        (widget.reverse == true && scrollNotification.metrics.pixels == 0)) {
+      _throttler.throttle(
+          duration: const Duration(milliseconds: 1000),
+          onThrottle: () {
+            _allItems.sort(sorting);
+            _fetchMoreItems(_allItems.last);
+          });
+      return true;
     }
     return false;
   }

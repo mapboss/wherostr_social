@@ -12,13 +12,6 @@ import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 import 'package:wherostr_social/utils/text_parser.dart';
 
-TextParser emojiParser = TextParser(matchers: [const CustomEmojiMatcher()]);
-TextParser contentParser = TextParser(matchers: [
-  const CustomEmojiMatcher(),
-  const NostrLinkMatcher(),
-  const HashTagMatcher()
-]);
-
 class DataEvent extends NostrEvent {
   @override
   String pubkey = '';
@@ -290,7 +283,13 @@ class DataEvent extends NostrEvent {
   }
 
   Future<void> generateContentTags() async {
-    var elements = await contentParser.parse(content!);
+    // TextParser emojiParser = TextParser(matchers: [const CustomEmojiMatcher()]);
+    TextParser contentParser = TextParser(matchers: [
+      // const CustomEmojiMatcher(),
+      const NostrLinkMatcher(),
+      const HashTagMatcher()
+    ]);
+    var elements = await contentParser.parse(content!, useIsolate: false);
     for (var element in elements) {
       switch (element.matcherType) {
         case NostrLinkMatcher:
@@ -328,9 +327,9 @@ class DataEvent extends NostrEvent {
           addTag("t", hashtag.trim().toLowerCase());
           continue;
 
-        case CustomEmojiMatcher:
-          addTag("emoji", element.text);
-          continue;
+        // case CustomEmojiMatcher:
+        //   addTag("emoji", element.text);
+        //   continue;
       }
     }
   }
