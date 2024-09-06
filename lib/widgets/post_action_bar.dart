@@ -60,9 +60,10 @@ class _PostActionBarState extends State<PostActionBar> {
     final me = context.read<AppStatesProvider>().me;
     if (_muteList.length != me.muteList.length) {
       _muteList = me.muteList.toList();
-      resetCounts();
-      updateCounts(_allItems);
-      setState(() {});
+      setState(() {
+        resetCounts();
+        updateCounts(_allItems);
+      });
     }
   }
 
@@ -84,7 +85,6 @@ class _PostActionBarState extends State<PostActionBar> {
     const duration = Duration(milliseconds: 300);
     final Debouncer debouncer = Debouncer();
     final relayList = context.read<AppStatesProvider>().me.relayList;
-    List<DataEvent> events = [];
     NostrFilter filter = NostrFilter(
       kinds: const [1, 6, 7, 9735],
       e: [widget.event.id!],
@@ -92,23 +92,21 @@ class _PostActionBarState extends State<PostActionBar> {
     _newEventStream = NostrService.subscribe(
       [filter],
       relays: relayList,
-      onEose: (relay, ease) {
-        debouncer.debounce(
-          duration: duration,
-          onDebounce: () {
-            _allItems.addAll(events);
-            events.clear();
-            if (mounted) {
-              setState(() {});
-            }
-          },
-        );
-      },
     );
     _newEventListener = _newEventStream!.stream.listen((event) {
       final e = DataEvent.fromEvent(event);
-      events.add(e);
-      updateCounts([e]);
+      _allItems.add(e);
+      debouncer.debounce(
+        duration: duration,
+        onDebounce: () {
+          if (mounted) {
+            setState(() {
+              resetCounts();
+              updateCounts(_allItems);
+            });
+          }
+        },
+      );
     });
   }
 
