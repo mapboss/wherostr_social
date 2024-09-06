@@ -36,6 +36,7 @@ class NotificationCenterContainer extends StatelessWidget {
                 ActivityItem(
                   event: event,
                   enableViewReferencedEventTap: true,
+                  showCreatedAt: true,
                   showFollowButton: false,
                   showReferencedEvent: true,
                 ),

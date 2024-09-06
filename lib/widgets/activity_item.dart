@@ -7,14 +7,15 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
+import 'package:wherostr_social/utils/formatter.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/utils/text_parser.dart';
 import 'package:wherostr_social/widgets/post_content.dart';
 import 'package:wherostr_social/widgets/post_details.dart';
-import 'package:wherostr_social/widgets/post_item_loader.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -22,6 +23,7 @@ import 'package:wherostr_social/widgets/profile_display_name.dart';
 class ActivityItem extends StatefulWidget {
   final NostrEvent event;
   final bool enableViewReferencedEventTap;
+  final bool showCreatedAt;
   final bool showFollowButton;
   final bool showReferencedEvent;
 
@@ -29,6 +31,7 @@ class ActivityItem extends StatefulWidget {
     super.key,
     required this.event,
     this.enableViewReferencedEventTap = false,
+    this.showCreatedAt = false,
     this.showFollowButton = true,
     this.showReferencedEvent = false,
   });
@@ -189,7 +192,7 @@ class _ActivityItemState extends State<ActivityItem> {
           final content = getEllipsisText(
             text: widget.event.content!,
             maxWidth: MediaQuery.sizeOf(context).width - 76,
-            maxLines: 5,
+            maxLines: 3,
           );
           return Padding(
             padding: const EdgeInsets.fromLTRB(60, 0, 0, 16),
@@ -325,63 +328,65 @@ class _ActivityItemState extends State<ActivityItem> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                  trailing: Transform.translate(
-                    offset: const Offset(4, 0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_user != null &&
-                            !_isMe &&
-                            widget.showFollowButton) ...[
-                          if (_isFollowing) ...[
-                            MenuAnchor(
-                              builder: (BuildContext context,
-                                  MenuController controller, Widget? child) {
-                                return OutlinedButton(
-                                  onPressed: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  child: const Text('Following'),
-                                );
-                              },
-                              menuChildren: [
-                                MenuItemButton(
-                                  onPressed: () async {
-                                    await appState.me.unfollow(_user!.pubkey);
-                                    setState(() {
-                                      _isFollowing = false;
-                                    });
-                                  },
-                                  leadingIcon: Icon(
-                                    Icons.person_remove,
-                                    color: themeData.colorScheme.error,
-                                  ),
-                                  child: Text(
-                                    'Unfollow',
-                                    style: TextStyle(
-                                        color: themeData.colorScheme.error),
-                                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.showCreatedAt)
+                        Text(
+                          formatTime(widget.event.createdAt),
+                          style: TextStyle(color: themeExtension.textDimColor),
+                        ),
+                      if (_user != null &&
+                          !_isMe &&
+                          widget.showFollowButton) ...[
+                        if (_isFollowing) ...[
+                          MenuAnchor(
+                            builder: (BuildContext context,
+                                MenuController controller, Widget? child) {
+                              return OutlinedButton(
+                                onPressed: () {
+                                  if (controller.isOpen) {
+                                    controller.close();
+                                  } else {
+                                    controller.open();
+                                  }
+                                },
+                                child: const Text('Following'),
+                              );
+                            },
+                            menuChildren: [
+                              MenuItemButton(
+                                onPressed: () async {
+                                  await appState.me.unfollow(_user!.pubkey);
+                                  setState(() {
+                                    _isFollowing = false;
+                                  });
+                                },
+                                leadingIcon: Icon(
+                                  Icons.person_remove,
+                                  color: themeData.colorScheme.error,
                                 ),
-                              ],
-                            ),
-                          ] else ...[
-                            FilledButton(
-                              onPressed: () async {
-                                await appState.me.follow(_user!.pubkey);
-                                setState(() {
-                                  _isFollowing = true;
-                                });
-                              },
-                              child: const Text('Follow'),
-                            ),
-                          ],
+                                child: Text(
+                                  'Unfollow',
+                                  style: TextStyle(
+                                      color: themeData.colorScheme.error),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          FilledButton(
+                            onPressed: () async {
+                              await appState.me.follow(_user!.pubkey);
+                              setState(() {
+                                _isFollowing = true;
+                              });
+                            },
+                            child: const Text('Follow'),
+                          ),
                         ],
                       ],
-                    ),
+                    ],
                   ),
                 ),
                 // if (referenceTypeMessageWidget != null)
@@ -405,17 +410,70 @@ class _ActivityItemState extends State<ActivityItem> {
                               child: SingleChildScrollView(
                                 physics: const NeverScrollableScrollPhysics(),
                                 primary: false,
-                                child: PostItemLoader(
-                                  eventId: _referencedEventId!,
-                                  enableMenu: false,
-                                  enableTap: false,
-                                  enableElementTap: false,
-                                  enableActionBar: false,
-                                  enableLocation: false,
-                                  enableProofOfWork: false,
-                                  enablePreview: false,
-                                  enableMedia: false,
-                                  depth: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 16),
+                                  child: FutureBuilder(
+                                    future: NostrService.fetchEventById(
+                                        _referencedEventId!),
+                                    builder: (BuildContext context,
+                                        AsyncSnapshot<DataEvent?> snapshot) {
+                                      return snapshot.hasData
+                                          ? PostContent(
+                                              enableElementTap: false,
+                                              enablePreview: false,
+                                              enableMedia: false,
+                                              content: getEllipsisText(
+                                                text: snapshot.data?.content ??
+                                                    '',
+                                                maxWidth:
+                                                    MediaQuery.sizeOf(context)
+                                                            .width -
+                                                        108,
+                                                maxLines: 3,
+                                              ),
+                                              contentLeading: snapshot
+                                                          .data?.pubkey !=
+                                                      null
+                                                  ? Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              right: 4),
+                                                      child: ProfileDisplayName(
+                                                        pubkey: snapshot
+                                                            .data!.pubkey,
+                                                        withBadge: true,
+                                                        textStyle: TextStyle(
+                                                            color: themeExtension
+                                                                .textDimColor),
+                                                      ),
+                                                    )
+                                                  : null,
+                                            )
+                                          : Shimmer.fromColors(
+                                              baseColor: themeExtension
+                                                  .shimmerBaseColor!,
+                                              highlightColor: themeExtension
+                                                  .shimmerHighlightColor!,
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.max,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Container(
+                                                    height: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Container(
+                                                    height: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
