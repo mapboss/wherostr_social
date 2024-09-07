@@ -248,10 +248,11 @@ class NostrService {
     DataRelayList? relays,
   }) async {
     final readRelays = relays
-        ?.clone()
-        .leftCombine(AppRelays.relays)
-        .leftCombine(AppRelays.defaults)
-        .readRelays;
+            ?.clone()
+            .leftCombine(AppRelays.relays)
+            .leftCombine(AppRelays.defaults)
+            .readRelays ??
+        NostrService.instance.relaysService.relaysList;
     int eose = 0;
     final completer = Completer<NostrUser>();
     Map<String, NostrUser> events = {};

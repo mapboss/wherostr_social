@@ -14,8 +14,8 @@ class ProofOfWorkAdjustment extends StatefulWidget {
     this.value,
     this.onChange,
     this.min = 0,
-    this.max = 12,
-    this.step = 1,
+    this.max = 48,
+    this.step = 8,
   });
 
   @override
