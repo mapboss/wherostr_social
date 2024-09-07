@@ -1,6 +1,7 @@
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:wherostr_social/models/app_secret.dart';
+import 'package:wherostr_social/models/custom_keypairs.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
@@ -41,11 +42,27 @@ class AppStatesProvider with ChangeNotifier {
     return true;
   }
 
-  Future<bool> login(String nsec) async {
-    if (!verifyNsec(nsec)) return false;
-    final privateKey = nsecToPrivateKey(nsec);
-    if (privateKey == null) return false;
-    await AppSecret.write(privateKey);
+  Future<bool> login(String val) async {
+    final isNsec = verifyNsec(val);
+    final isNpub = verifyNpub(val);
+    if (!isNsec && !isNpub) return false;
+    if (isNsec) {
+      final privateKey = nsecToPrivateKey(val);
+      if (privateKey == null) return false;
+      await AppSecret.write(privateKey);
+    }
+    if (isNpub) {
+      final npubHex = Nostr.instance.keysService.decodeNpubKeyToPublicKey(val);
+      if (npubHex.isEmpty) return false;
+      final keyPairs = NostrKeyPairs.generate();
+      try {
+        CustomKeyPairs(private: keyPairs.private, public: npubHex);
+      } catch (err) {
+        print(err);
+      }
+      await AppSecret.writeCustomKeyPairs(
+          CustomKeyPairs(private: keyPairs.private, public: npubHex));
+    }
     return true;
   }
 
@@ -74,6 +91,18 @@ class AppStatesProvider with ChangeNotifier {
     return true;
   }
 
+  bool verifyNpub(String npub) {
+    if (!npub.startsWith('npub1')) return false;
+    String npubHex = '';
+    try {
+      npubHex = Nostr.instance.keysService.decodeNpubKeyToPublicKey(npub);
+    } catch (err) {
+      return false;
+    }
+    if (npubHex.isEmpty) return false;
+    return true;
+  }
+
   String? nsecToPrivateKey(String nsec) {
     if (!nsec.startsWith('nsec1')) return null;
     String nsecHex = '';
@@ -97,8 +126,7 @@ class AppStatesProvider with ChangeNotifier {
     try {
       NostrKeyPairs? keypairs = await AppSecret.read();
       if (keypairs == null) return null;
-      print('init.pubkey: ${keypairs.public}');
-      await setMe(keypairs);
+      _me = NostrUser(pubkey: keypairs.public);
       final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
       await me.fetchProfile();
       if (me.displayName == 'Deleted Account') {

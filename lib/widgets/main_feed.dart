@@ -76,38 +76,8 @@ class MainFeedState extends State<MainFeed> {
             centerTitle: true,
             title: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: FeedFilterMenu(
-                      onChange: _handleChange,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.memory),
-                    onPressed: () => showModalBottomSheet(
-                      context: context,
-                      useRootNavigator: true,
-                      enableDrag: true,
-                      showDragHandle: true,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) {
-                        return ProofOfWorkAdjustment(
-                          max: 48,
-                          step: 8,
-                          value: _difficulty,
-                          onChange: (value) {
-                            setState(() {
-                              _difficulty = value;
-                            });
-                          },
-                        );
-                      },
-                    ),
-                  )
-                ],
+              child: FeedFilterMenu(
+                onChange: _handleChange,
               ),
             ),
           ),

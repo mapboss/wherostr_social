@@ -23,7 +23,6 @@ class AppRelays {
   static Future<void> init() async {
     try {
       var storage = GetStorage('app');
-      print('storage: ${storage.hasData('app_relays')}');
       if (storage.hasData('app_relays')) {
         final appRelays = storage.read<List<dynamic>>('app_relays');
         print('appRelays: $appRelays');
