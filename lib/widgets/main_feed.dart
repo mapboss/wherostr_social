@@ -36,7 +36,7 @@ class MainFeedState extends State<MainFeed> {
     if (item.id == 'following') {
       final me = context.read<AppStatesProvider>().me;
       setState(() {
-        _authors = me.following;
+        _authors = [me.pubkey, if (me.following.isNotEmpty) ...me.following];
         _t = null;
       });
     } else if (item.type == 'tag') {
