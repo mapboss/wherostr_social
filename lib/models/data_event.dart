@@ -1,8 +1,10 @@
 // ignore_for_file: must_be_immutable
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:text_parser/text_parser.dart';
+import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -87,7 +89,7 @@ class DataEvent extends NostrEvent {
   factory DataEvent.fromJson(Map<String, dynamic> data) {
     final tagsToUse = ((data['tags'] ?? []) as List<dynamic>)
         .map((t) => (t as List<dynamic>)
-            .map((e) => SafeParser.parseString(e))
+            .map((e) => SafeParser.parseString(e) ?? '')
             .whereType<String>()
             .toList())
         .toList();
@@ -181,6 +183,14 @@ class DataEvent extends NostrEvent {
     return jsonEncode(data);
   }
 
+  Stream<String> mine(int difficulty) {
+    late Stream<String> streamString;
+    content ??= '';
+    createdAt ??= DateTime.now();
+    streamString = minePoW(this, targetDifficulty: difficulty, nonceStart: 0);
+    return streamString;
+  }
+
   Future<void> publish({
     int? difficulty,
     DataRelayList? relays,
@@ -200,12 +210,11 @@ class DataEvent extends NostrEvent {
       content ??= '';
       if (difficulty != null) {
         final result = await isolateMinePoW(this,
-            isolateCount: 1, targetDifficulty: difficulty);
+            isolateCount: 2, targetDifficulty: difficulty);
         final [hash, nonce, date, index] = result.split('|');
         id = hash;
         createdAt = DateTime.fromMillisecondsSinceEpoch(int.parse(date));
         addTagIfNew(['nonce', nonce, difficulty.toString()]);
-
         // final stream =
         //     minePoW(this, targetDifficulty: difficulty, nonceStart: 0);
         // await for (final result in stream) {
@@ -221,27 +230,34 @@ class DataEvent extends NostrEvent {
       } else {
         id = generateEventId();
       }
-      if (sig?.isEmpty != false) {
-        sig ??= keyPairs!.sign(id!);
-      }
-      if (!isVerified()) {
-        throw Exception('event is not valid.');
-      }
-      // final result =
-      //     await NostrService.instance.relaysService.sendEventToRelaysAsync(
-      //   this,
-      //   timeout: timeout,
-      //   relays: relays
-      //       ?.clone()
-      //       .leftCombine(AppRelays.relays)
-      //       .leftCombine(AppRelays.defaults)
-      //       .writeRelays,
-      // );
-      // print("publish: $result");
-      print('publish: ${toMap()}');
+      await sendEventToRelays(relays: relays, timeout: timeout);
     } catch (err) {
       print('publish: ${toMap()}, ERROR: $err');
     }
+  }
+
+  Future<void> sendEventToRelays(
+      {DataRelayList? relays,
+      Duration timeout = const Duration(seconds: 10)}) async {
+    NostrKeyPairs? keyPairs = await AppSecret.read();
+    if (sig?.isEmpty != false) {
+      sig ??= keyPairs!.sign(id!);
+    }
+    if (!isVerified()) {
+      throw Exception('event is not valid.');
+    }
+    final result =
+        await NostrService.instance.relaysService.sendEventToRelaysAsync(
+      this,
+      timeout: timeout,
+      relays: relays
+          ?.clone()
+          .leftCombine(AppRelays.relays)
+          .leftCombine(AppRelays.defaults)
+          .writeRelays,
+    );
+    print("publish: $result");
+    // print('publish: ${toMap()}');
   }
 
   // Future<void> generateTags() async {

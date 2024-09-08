@@ -7,7 +7,6 @@ import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/widgets/feed_menu.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
-import 'package:wherostr_social/widgets/post_proof_of_work_adjustment.dart';
 
 class MainFeed extends StatefulWidget {
   const MainFeed({
