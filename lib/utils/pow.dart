@@ -13,11 +13,12 @@ Future<Completer<DataEvent>> minePow(DataEvent unsigned,
   event.tags?.add(tag);
   Completer<DataEvent> completer = Completer();
   while (true) {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final current = (event.createdAt?.millisecondsSinceEpoch ?? 0) ~/ 1000;
 
-    if (now != event.createdAt?.millisecondsSinceEpoch) {
+    if (now != current) {
       count = 0;
-      event.createdAt = DateTime.fromMillisecondsSinceEpoch(now);
+      event.createdAt = DateTime.fromMillisecondsSinceEpoch(now * 1000);
     }
     tag[1] = (++count).toString();
     event.id = event.generateEventId();

@@ -79,7 +79,7 @@ class _ProofOfWorkAdjustmentState extends State<ProofOfWorkAdjustment> {
                   value: _pow.toDouble(),
                   label: _pow.round().toString(),
                   min: 0,
-                  max: 12,
+                  max: 20,
                   inactiveColor: themeData.colorScheme.surfaceDim,
                   onChanged: _handleChange,
                 ),
