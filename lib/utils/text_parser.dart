@@ -66,7 +66,7 @@ class NostrNAddressMatcher extends TextMatcher {
 class NostrLinkMatcher extends TextMatcher {
   const NostrLinkMatcher()
       : super(
-            r'(@|nostr:n)(pub|profile|event|ote|addr|)1([acdefghjklmnpqrstuvwxyz023456789]+)');
+            r'(@|nostr:n)(pub|profile|event|ote|addr)1([acdefghjklmnpqrstuvwxyz023456789]+)');
 }
 
 class ImageUrlMatcher extends TextMatcher {
@@ -87,7 +87,7 @@ class AudioUrlMatcher extends TextMatcher {
 }
 
 class CustomEmojiMatcher extends TextMatcher {
-  const CustomEmojiMatcher() : super(r'\:([\w\d-_])+\:');
+  const CustomEmojiMatcher() : super(r'\:([\w-]+)\:');
 }
 
 class YouTubeMatcher extends TextMatcher {
@@ -154,9 +154,9 @@ class CashuMatcher extends TextMatcher {
 Future<List<TextElement>> textParser(String content) {
   return TextParser(matchers: [
     // standard media video & live provider url
-    const ImageUrlMatcher(),
-    const VideoUrlMatcher(),
-    const AudioUrlMatcher(),
+    // const ImageUrlMatcher(),
+    // const VideoUrlMatcher(),
+    // const AudioUrlMatcher(),
 
     // // video & live provider url
     // const YouTubeMatcher(),

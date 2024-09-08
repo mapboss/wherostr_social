@@ -208,6 +208,75 @@ class _PostContentState extends State<PostContent> {
         // case TiktokMatcher:
         // case RumbleMatcher:
         case UrlMatcher:
+          if (widget.enableMedia) {
+            if (RegExp(const ImageUrlMatcher().pattern)
+                    .firstMatch(element.text)?[0] !=
+                null) {
+              final imageProvider = AppUtils.getCachedImageProvider(
+                  element.text, maxImageCacheSize);
+              imageProviders.add(imageProvider);
+              widgets.add(
+                WidgetSpan(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            constraints: BoxConstraints(
+                              maxHeight: maxMediaHeight,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: InkWell(
+                                onTap: widget.enableElementTap
+                                    ? () => _handleImageTap(imageProvider)
+                                    : null,
+                                child: Image(
+                                  image: imageProvider,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              continue;
+            } else if (RegExp(const VideoUrlMatcher().pattern)
+                    .firstMatch(element.text)?[0] !=
+                null) {
+              widgets.add(
+                WidgetSpan(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxHeight: maxMediaHeight,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: VideoPlayer(url: element.text),
+                    ),
+                  ),
+                ),
+              );
+              continue;
+            } else if (RegExp(const AudioUrlMatcher().pattern)
+                    .firstMatch(element.text)?[0] !=
+                null) {
+              widgets.add(
+                WidgetSpan(
+                  child: AudioPlayer(url: element.text),
+                ),
+              );
+              continue;
+            }
+          }
           if (widget.enablePreview) {
             widgets.add(
               WidgetSpan(
