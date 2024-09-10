@@ -5,6 +5,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:wherostr_social/models/custom_keypairs.dart';
 
 const secretStorageKey = '_sec';
+const nwcStorageKey = '_nwc';
 const secretStorageName = 'nostr-secret';
 
 IOSOptions _getIOSOptions() => const IOSOptions(
@@ -61,5 +62,18 @@ class AppSecret with ChangeNotifier {
     return secureStorage
         .delete(key: secretStorageKey)
         .catchError((err) => print('_deletePrivateKey: $err'));
+  }
+
+  static Future<void> writeNWC(String privateKey) async {
+    await secureStorage
+        .write(value: privateKey, key: nwcStorageKey)
+        .catchError((err) => print('writePrivateKey: $err'));
+  }
+
+  static Future<String?> readNWC() async {
+    return secureStorage.read(key: nwcStorageKey).catchError((err) {
+      secureStorage.delete(key: nwcStorageKey);
+      print('readNWC: $err');
+    });
   }
 }

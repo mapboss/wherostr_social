@@ -18,7 +18,6 @@ class MainFeed extends StatefulWidget {
 }
 
 class MainFeedState extends State<MainFeed> {
-  int? _difficulty;
   List<String>? _authors;
   List<String>? _t;
   GlobalKey<NostrFeedState> nostrFeedKey = GlobalKey();
@@ -61,6 +60,8 @@ class MainFeedState extends State<MainFeed> {
 
   @override
   Widget build(BuildContext context) {
+    final powFilter = context.watch<AppFeedProvider>().powPostFilter;
+    final difficulty = powFilter?.enabled == true ? powFilter?.value : null;
     final relayList = context.read<AppStatesProvider>().me.relayList.clone();
     ThemeData themeData = Theme.of(context);
     return NestedScrollView(
@@ -87,13 +88,12 @@ class MainFeedState extends State<MainFeed> {
           final scrollController = PrimaryScrollController.of(context);
           return NostrFeed(
             key: nostrFeedKey,
-            limit: _difficulty != null && _difficulty! > 0 ? 500 : 100,
             scrollController: scrollController,
             kinds: const [1, 6],
             authors: _authors,
             relays: relayList,
-            ids: _difficulty != null && _difficulty! > 0
-                ? [difficultyToHex(_difficulty!, true)]
+            ids: difficulty != null && difficulty > 0
+                ? [difficultyToHex(difficulty, true)]
                 : null,
             t: _t,
             itemBuilder: (context, item) => Container(

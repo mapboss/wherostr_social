@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/pow_filter.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 
 class PowFilterSettings extends StatefulWidget {
@@ -10,8 +13,8 @@ class PowFilterSettings extends StatefulWidget {
 }
 
 class _PowFilterSettingsState extends State<PowFilterSettings> {
-  int _powPost = 16;
-  int _powReply = 8;
+  late PoWfilter _powPost;
+  late PoWfilter _powComment;
 
   @override
   void initState() {
@@ -19,7 +22,14 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
     initialize();
   }
 
-  void initialize() async {}
+  void initialize() async {
+    final appFeed = context.read<AppFeedProvider>();
+    setState(() {
+      _powPost = appFeed.powPostFilter ?? PoWfilter(value: 16, enabled: false);
+      _powComment =
+          appFeed.powCommentFilter ?? PoWfilter(value: 8, enabled: false);
+    });
+  }
 
   _handlePostChange(double value) {
     _setPostValue(value.toInt());
@@ -27,23 +37,28 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
 
   _setPostValue(int? value) {
     setState(() {
-      _powPost = value ?? 16;
+      _powPost.value = value ?? 16;
     });
   }
 
-  _handleReplyChange(double value) {
-    _setReplyValue(value.toInt());
+  _handleCommentChange(double value) {
+    _setCommentValue(value.toInt());
   }
 
-  _setReplyValue(int? value) {
+  _setCommentValue(int? value) {
     setState(() {
-      _powReply = value ?? 8;
+      _powComment.value = value ?? 8;
     });
   }
 
   save() async {
+    final appFeed = context.read<AppFeedProvider>();
     AppUtils.showLoading();
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.wait([
+      Future.delayed(const Duration(milliseconds: 200)),
+      appFeed.setPoWPostFilter(_powPost),
+      appFeed.setPoWCommentFilter(_powComment)
+    ]);
     AppUtils.showSnackBar(
       text: 'Saved successfully.',
       status: AppStatus.success,
@@ -87,18 +102,25 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.memory),
+                leading: Switch(
+                  value: _powPost.enabled,
+                  onChanged: (value) {
+                    setState(() {
+                      _powPost.enabled = value;
+                    });
+                  },
+                ),
                 title: Slider(
                   divisions: 48 ~/ 8,
-                  value: _powPost.toDouble(),
-                  label: _powPost.round().toString(),
+                  value: _powPost.value.toDouble(),
+                  label: _powPost.value.round().toString(),
                   min: 0,
                   max: 48,
                   inactiveColor: themeData.colorScheme.surfaceDim,
-                  onChanged: _handlePostChange,
+                  onChanged: _powPost.enabled ? _handlePostChange : null,
                 ),
                 trailing: Text(
-                  _powPost.round().toString(),
+                  _powPost.value.round().toString(),
                   style: themeData.textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: themeData.colorScheme.primary,
@@ -114,18 +136,25 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.memory),
+                leading: Switch(
+                  value: _powComment.enabled,
+                  onChanged: (value) {
+                    setState(() {
+                      _powComment.enabled = value;
+                    });
+                  },
+                ),
                 title: Slider(
                   divisions: 48 ~/ 8,
-                  value: _powReply.toDouble(),
-                  label: _powReply.round().toString(),
+                  value: _powComment.value.toDouble(),
+                  label: _powComment.value.round().toString(),
                   min: 0,
                   max: 48,
                   inactiveColor: themeData.colorScheme.surfaceDim,
-                  onChanged: _handleReplyChange,
+                  onChanged: _powComment.enabled ? _handleCommentChange : null,
                 ),
                 trailing: Text(
-                  _powReply.round().toString(),
+                  _powComment.value.round().toString(),
                   style: themeData.textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: themeData.colorScheme.primary,
