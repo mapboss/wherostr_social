@@ -29,7 +29,7 @@ dependencies:
   dart_nostr:
     git:
       url: https://github.com/mapboss/dart_nostr.git
-      ref: v8.2.3
+      ref: v8.2.4
   flutter:
     sdk: flutter
   flutter_web_plugins:
@@ -78,6 +78,7 @@ dependencies:
   universal_html: ^2.2.4
   flutter_cache_manager: ^3.4.1
   flutter_debouncer: ^2.0.0
+  nwc: ^1.0.1
 
 dev_dependencies:
   flutter_test:

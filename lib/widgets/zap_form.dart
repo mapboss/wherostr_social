@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
+import 'package:wherostr_social/utils/nwc.dart';
 import 'package:wherostr_social/utils/zap_utils.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
@@ -67,67 +69,94 @@ class _ZapFormState extends State<ZapForm> {
       autoHide: false,
     );
     try {
-      final (zapRequest, invoice) = await createInvoice(
-        relays: appState.me.relayList,
-        content: _commentTextController.text,
-        amount: _zapAmount!,
-        targetUser: widget.user,
-        targetEvent: widget.event,
-      )
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () => (null, null),
-          )
-          .catchError(
-            (e) => (null, null),
+      final connectionURI = await AppSecret.readNWC();
+      if (connectionURI != null) {
+        final (_, invoice) = await createInvoice(
+          relays: appState.me.relayList,
+          content: _commentTextController.text,
+          amount: _zapAmount!,
+          targetUser: widget.user,
+          targetEvent: widget.event,
+        )
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () => (null, null),
+            )
+            .catchError(
+              (e) => (null, null),
+            );
+        if (invoice?.isEmpty ?? true) {
+          AppUtils.showSnackBar(
+            text: 'Unable to generate invoice.',
+            status: AppStatus.error,
           );
-      if (zapRequest == null || invoice?.isNotEmpty != true) {
-        AppUtils.showSnackBar(
-          text: 'Unable to generate invoice.',
-          status: AppStatus.error,
-        );
-        return;
-      }
-      AppUtils.hideSnackBar();
-      zapCompleter = waitZapReceipt(zapRequest, invoice!);
-      if (useQr) {
-        showQRInvoiceModal(context, invoice).whenComplete(() {
-          if (zapCompleter?.isCompleted != true) {
-            zapCompleter?.completeError(Exception());
+          return;
+        }
+        if (invoice == null) return;
+        final preimage = await payInvoice(invoice);
+      } else {
+        final (zapRequest, invoice) = await createInvoice(
+          relays: appState.me.relayList,
+          content: _commentTextController.text,
+          amount: _zapAmount!,
+          targetUser: widget.user,
+          targetEvent: widget.event,
+        )
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () => (null, null),
+            )
+            .catchError(
+              (e) => (null, null),
+            );
+        if (zapRequest == null || invoice?.isNotEmpty != true) {
+          AppUtils.showSnackBar(
+            text: 'Unable to generate invoice.',
+            status: AppStatus.error,
+          );
+          return;
+        }
+        AppUtils.hideSnackBar();
+        zapCompleter = waitZapReceipt(zapRequest, invoice!);
+        if (useQr) {
+          showQRInvoiceModal(context, invoice).whenComplete(() {
+            if (zapCompleter?.isCompleted != true) {
+              zapCompleter?.completeError(Exception());
+              if (mounted) {
+                setState(() => _isLoading = false);
+              }
+            }
+          });
+        } else {
+          showDialog(
+            context: context,
+            useRootNavigator: true,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Zapping'),
+                content:
+                    const Text('Waiting for Zapping Confirmation to Proceed.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      appState.navigatorPop();
+                      zapCompleter?.completeError(Exception());
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                ],
+              );
+            },
+          ).whenComplete(() {
             if (mounted) {
               setState(() => _isLoading = false);
             }
-          }
-        });
-      } else {
-        showDialog(
-          context: context,
-          useRootNavigator: true,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Zapping'),
-              content:
-                  const Text('Waiting for Zapping Confirmation to Proceed.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    appState.navigatorPop();
-                    zapCompleter?.completeError(Exception());
-                  },
-                  child: const Text('Cancel'),
-                ),
-              ],
-            );
-          },
-        ).whenComplete(() {
-          if (mounted) {
-            setState(() => _isLoading = false);
-          }
-        });
-        await showWalletSelector(context, invoice);
+          });
+          await showWalletSelector(context, invoice);
+        }
+        await zapCompleter.future;
       }
-      await zapCompleter.future;
       AppUtils.showSnackBar(
         text: 'Zapped successfully.',
         status: AppStatus.success,
@@ -137,6 +166,7 @@ class _ZapFormState extends State<ZapForm> {
         appState.navigatorPop();
       }
     } on Exception {
+      AppUtils.handleError();
     } catch (error) {
       AppUtils.hideSnackBar();
       AppUtils.handleError();

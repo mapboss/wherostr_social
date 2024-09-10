@@ -76,4 +76,10 @@ class AppSecret with ChangeNotifier {
       print('readNWC: $err');
     });
   }
+
+  static Future<void> deleteNWC() async {
+    return secureStorage
+        .delete(key: nwcStorageKey)
+        .catchError((err) => print('_deletePrivateKey: $err'));
+  }
 }

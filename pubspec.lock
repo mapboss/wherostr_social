@@ -125,10 +125,10 @@ packages:
     dependency: transitive
     description:
       name: bip340
-      sha256: "9a2f454d3f5e2d67a1b21494203132786d95bde8784e7ada74adac00df3ddc11"
+      sha256: b7bcd70a860e605046006adaa72bc4f7453f4d31d7ba74a4ad9d5de387a0fc0b
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.0"
+    version: "0.3.0"
   bip39:
     dependency: transitive
     description:
@@ -293,11 +293,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v8.2.3"
-      resolved-ref: "3e18784cdb5d77e04a24759fbbbff122bade2616"
+      ref: "v8.2.4"
+      resolved-ref: d0a58fe37fee376a4098f52c6b2ed5c77af7a484
       url: "https://github.com/mapboss/dart_nostr.git"
     source: git
-    version: "8.2.3"
+    version: "8.2.4"
   dart_quill_delta:
     dependency: transitive
     description:
@@ -1086,6 +1086,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  nwc:
+    dependency: "direct main"
+    description:
+      name: nwc
+      sha256: "3a0175bd7ea236cc9d88a4445d034b808c72086f84a1c868b79fcc78b12cacf7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   octo_image:
     dependency: transitive
     description:
@@ -1631,10 +1639,10 @@ packages:
     dependency: transitive
     description:
       name: vm_service
-      sha256: f652077d0bdf60abe4c1f6377448e8655008eef28f128bc023f7b5e8dfeb48fc
+      sha256: "5c5f338a667b4c644744b661f309fb8080bb94b18a7e91ef1dbd343bed00ed6d"
       url: "https://pub.dev"
     source: hosted
-    version: "14.2.4"
+    version: "14.2.5"
   wakelock_plus:
     dependency: "direct main"
     description:

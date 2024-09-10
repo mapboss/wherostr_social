@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
@@ -141,7 +142,7 @@ Future<String?> getZapEndpoint(NostrUser user) async {
   return null;
 }
 
-NostrEvent makeZapRequest({
+DataEvent makeZapRequest({
   required NostrKeyPairs keyPairs,
   required String pubkey,
   required String lnurl,
@@ -156,7 +157,7 @@ NostrEvent makeZapRequest({
       .leftCombine(AppRelays.relays)
       .leftCombine(AppRelays.defaults)
       .writeRelays;
-  return NostrEvent.fromPartialData(
+  return DataEvent.fromEvent(NostrEvent.fromPartialData(
     kind: 9734,
     content: content,
     keyPairs: keyPairs,
@@ -170,7 +171,7 @@ NostrEvent makeZapRequest({
         [!eventId.contains(":") ? 'e' : 'a', eventId]
       ]
     ],
-  );
+  ));
 }
 
 Future<String?> getInvoice({

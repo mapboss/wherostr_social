@@ -1,16 +1,19 @@
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
+import 'package:nwc/nwc.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/custom_keypairs.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/utils/nwc.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
 
 class AppStatesProvider with ChangeNotifier {
   static GlobalKey<ScaffoldState> homeScaffoldKey = GlobalKey();
   static GlobalKey<NavigatorState> homeNavigatorKey = GlobalKey();
   static GlobalKey<MainFeedState> mainFeedKey = GlobalKey();
+  static final nwc = NWC();
 
   NostrUser? _me;
   NostrUser get me => _me ?? NostrUser(pubkey: '');
@@ -134,6 +137,7 @@ class AppStatesProvider with ChangeNotifier {
       } else {
         me.initRelays(relays);
         await Future.wait([
+          conectNWC(),
           me.fetchFollowing(),
           me.fetchMuteList(),
           me.fetchFollowSets(),
@@ -197,5 +201,11 @@ class AppStatesProvider with ChangeNotifier {
         name: 'Deleted Account',
       )
     ]);
+  }
+
+  Future<void> conectNWC() async {
+    final connectionURI = await AppSecret.readNWC();
+    if (connectionURI?.isEmpty ?? true) return;
+    await initNWC(connectionURI!);
   }
 }
