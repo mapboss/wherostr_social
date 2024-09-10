@@ -17,7 +17,9 @@ Future<void> initNWC(String connectionURI) async {
   await nwc.dispose();
   await nwcInstance.dispose();
   nwc = NWC();
+  nwc.disableLogs();
   nwcInstance = Nostr();
+  nwcInstance.disableLogs();
   parsedUri = nwc.nip47.parseNostrConnectUri(connectionURI);
   await nwcInstance.relaysService.init(relaysUrl: [parsedUri.relay]);
 
@@ -38,7 +40,9 @@ Future<void> initNWC(String connectionURI) async {
   );
 
   nostrStream.stream.listen((NostrEvent event) {
-    if (event.kind == 23195 && event.content != null) {
+    if (event.kind == 23195 &&
+        event.content != null &&
+        event.pubkey == parsedUri.pubkey) {
       try {
         final decryptedContent = nwc.nip04.decrypt(
           parsedUri.secret,
