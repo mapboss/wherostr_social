@@ -61,7 +61,7 @@ class MainFeedState extends State<MainFeed> {
   @override
   Widget build(BuildContext context) {
     final powFilter = context.watch<AppFeedProvider>().powPostFilter;
-    final difficulty = powFilter?.enabled == true ? powFilter?.value : null;
+    final difficulty = powFilter.enabled == true ? powFilter.value : null;
     final relayList = context.read<AppStatesProvider>().me.relayList.clone();
     ThemeData themeData = Theme.of(context);
     return NestedScrollView(

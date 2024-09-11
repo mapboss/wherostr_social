@@ -15,10 +15,10 @@ class AppFeedProvider with ChangeNotifier {
     _init();
   }
 
-  PoWfilter? _powPostFilter;
-  PoWfilter? _powCommentFilter;
-  PoWfilter? get powPostFilter => _powPostFilter;
-  PoWfilter? get powCommentFilter => _powCommentFilter;
+  PoWfilter _powPostFilter = PoWfilter(enabled: false, value: 16);
+  PoWfilter _powCommentFilter = PoWfilter(enabled: false, value: 8);
+  PoWfilter get powPostFilter => _powPostFilter;
+  PoWfilter get powCommentFilter => _powCommentFilter;
 
   FeedMenuItem _selectedItem = followingMenuItem;
 
