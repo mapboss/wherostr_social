@@ -6,14 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
+import 'package:wherostr_social/models/pow_filter.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
+import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/widgets/emoji_picker.dart';
 import 'package:wherostr_social/widgets/post_compose.dart';
 import 'package:wherostr_social/widgets/zap_form.dart';
@@ -31,6 +34,7 @@ class _PostActionBarState extends State<PostActionBar> {
   NostrEventsStream? _newEventStream;
   StreamSubscription<NostrEvent>? _newEventListener;
   NostrUser? _user;
+  PoWfilter? _powFilter;
   int _repostCount = 0;
   int _commentCount = 0;
   int _reactionCount = 0;
@@ -66,10 +70,22 @@ class _PostActionBarState extends State<PostActionBar> {
         updateCounts(_allItems);
       });
     }
+    final powFilter = context.read<AppFeedProvider>().powCommentFilter;
+    if (_powFilter.toString() != powFilter.toString()) {
+      _powFilter = PoWfilter.fromString(powFilter.toString());
+      setState(() {
+        _allItems.clear();
+        resetCounts();
+      });
+      unsubscribe();
+      subscribe();
+    }
   }
 
   void initialize() {
+    final powFilter = context.read<AppFeedProvider>().powCommentFilter;
     final me = context.read<AppStatesProvider>().me;
+    _powFilter = PoWfilter.fromString(powFilter.toString());
     _muteList.addAll(me.muteList.toList());
     subscribe();
     NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
@@ -86,12 +102,21 @@ class _PostActionBarState extends State<PostActionBar> {
     const duration = Duration(milliseconds: 300);
     final Debouncer debouncer = Debouncer();
     final relayList = context.read<AppStatesProvider>().me.relayList;
-    NostrFilter filter = NostrFilter(
-      kinds: const [1, 6, 7, 9735],
-      e: [widget.event.id!],
-    );
+    final ids = (_powFilter?.enabled ?? false) && (_powFilter?.value ?? 0) > 0
+        ? [difficultyToHex(_powFilter!.value, true)]
+        : null;
     _newEventStream = NostrService.subscribe(
-      [filter],
+      [
+        NostrFilter(
+          kinds: const [6, 7, 9735],
+          e: [widget.event.id!],
+        ),
+        NostrFilter(
+          kinds: const [1],
+          e: [widget.event.id!],
+          ids: ids,
+        ),
+      ],
       relays: relayList,
     );
     _newEventListener = _newEventStream!.stream.listen((event) {
@@ -111,9 +136,9 @@ class _PostActionBarState extends State<PostActionBar> {
     });
   }
 
-  void unsubscribe() {
+  Future<void> unsubscribe() async {
     if (_newEventListener != null) {
-      _newEventListener!.cancel();
+      await _newEventListener!.cancel();
       _newEventListener = null;
     }
     if (_newEventStream != null) {

@@ -1,5 +1,6 @@
 // ignore_for_file: must_be_immutable
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:text_parser/text_parser.dart';
@@ -11,6 +12,12 @@ import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 import 'package:wherostr_social/utils/text_parser.dart';
+
+const clientTag = [
+  'client',
+  'Wherostr',
+  '31990:3db5e1b9daa57cc6a7d552a86a87574eea265e0759ddeb87d44e0727f79ed88d:1697703329057'
+];
 
 class DataEvent extends NostrEvent {
   @override
@@ -82,7 +89,7 @@ class DataEvent extends NostrEvent {
   factory DataEvent.fromJson(Map<String, dynamic> data) {
     final tagsToUse = ((data['tags'] ?? []) as List<dynamic>)
         .map((t) => (t as List<dynamic>)
-            .map((e) => SafeParser.parseString(e))
+            .map((e) => SafeParser.parseString(e) ?? '')
             .whereType<String>()
             .toList())
         .toList();
@@ -154,11 +161,11 @@ class DataEvent extends NostrEvent {
     return tagIndex;
   }
 
-  String generateEventId() {
+  String generateEventId([DateTime? dt]) {
     var eventId = NostrEvent.getEventId(
       kind: kind!,
       content: content ?? '',
-      createdAt: createdAt ?? DateTime.now(),
+      createdAt: dt ?? createdAt ?? DateTime.now(),
       tags: tags ?? [],
       pubkey: pubkey,
     );
@@ -174,6 +181,14 @@ class DataEvent extends NostrEvent {
     data['createdAt'] = createdAt?.millisecondsSinceEpoch;
     data['tags'] = tags;
     return jsonEncode(data);
+  }
+
+  Stream<String> mine(int difficulty) {
+    late Stream<String> streamString;
+    content ??= '';
+    createdAt ??= DateTime.now();
+    streamString = minePoW(this, targetDifficulty: difficulty, nonceStart: 0);
+    return streamString;
   }
 
   Future<void> publish({
@@ -194,31 +209,55 @@ class DataEvent extends NostrEvent {
       createdAt = DateTime.now();
       content ??= '';
       if (difficulty != null) {
-        await minePow(this, difficulty);
+        final result = await isolateMinePoW(this,
+            isolateCount: 2, targetDifficulty: difficulty);
+        final [hash, nonce, date, index] = result.split('|');
+        id = hash;
+        createdAt = DateTime.fromMillisecondsSinceEpoch(int.parse(date));
+        addTagIfNew(['nonce', nonce, difficulty.toString()]);
+        // final stream =
+        //     minePoW(this, targetDifficulty: difficulty, nonceStart: 0);
+        // await for (final result in stream) {
+        //   final [hash, nonce, date] = result.split('|');
+        //   if (Nostr.instance.utilsService.countDifficultyOfHex(hash) >
+        //       difficulty) {
+        //     id = hash;
+        //     createdAt = DateTime.fromMillisecondsSinceEpoch(int.parse(date));
+        //     addTagIfNew(['nonce', nonce, difficulty.toString()]);
+        //     break;
+        //   }
+        // }
       } else {
         id = generateEventId();
       }
-      if (sig?.isEmpty != false) {
-        sig ??= keyPairs!.sign(id!);
-      }
-      if (!isVerified()) {
-        throw Exception('event is not valid.');
-      }
-      final result =
-          await NostrService.instance.relaysService.sendEventToRelaysAsync(
-        this,
-        timeout: timeout,
-        relays: relays
-            ?.clone()
-            .leftCombine(AppRelays.relays)
-            .leftCombine(AppRelays.defaults)
-            .writeRelays,
-      );
-      print("publish: $result");
-      // print('publish: ${toMap()}');
+      await sendEventToRelays(relays: relays, timeout: timeout);
     } catch (err) {
       print('publish: ${toMap()}, ERROR: $err');
     }
+  }
+
+  Future<void> sendEventToRelays(
+      {DataRelayList? relays,
+      Duration timeout = const Duration(seconds: 10)}) async {
+    NostrKeyPairs? keyPairs = await AppSecret.read();
+    if (sig?.isEmpty != false) {
+      sig ??= keyPairs!.sign(id!);
+    }
+    if (!isVerified()) {
+      throw Exception('event is not valid.');
+    }
+    final result =
+        await NostrService.instance.relaysService.sendEventToRelaysAsync(
+      this,
+      timeout: timeout,
+      relays: relays
+          ?.clone()
+          .leftCombine(AppRelays.relays)
+          .leftCombine(AppRelays.defaults)
+          .writeRelays,
+    );
+    print("publish: $result");
+    // print('publish: ${toMap()}');
   }
 
   // Future<void> generateTags() async {
@@ -289,23 +328,27 @@ class DataEvent extends NostrEvent {
       const NostrLinkMatcher(),
       const HashTagMatcher()
     ]);
-    var elements = await contentParser.parse(content!, useIsolate: false);
-    for (var element in elements) {
+    final elements = await contentParser.parse(content!, useIsolate: false);
+
+    // add client
+    addTagIfNew(clientTag);
+
+    for (final element in elements) {
       switch (element.matcherType) {
         case NostrLinkMatcher:
           final nostrUrl = element.text.startsWith(r'nostr:')
               ? element.text.replaceAll(r'nostr:', '')
               : element.text;
           if (nostrUrl.startsWith('npub')) {
-            var data =
+            final data =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
             addTagUser(data, 'mention');
           } else if (nostrUrl.startsWith('nprofile')) {
-            var data = NostrService.instance.utilsService
+            final data = NostrService.instance.utilsService
                 .decodeNprofileToMap(nostrUrl)['pubkey'];
             addTagUser(data, 'mention');
           } else if (nostrUrl.startsWith('note')) {
-            var id =
+            final id =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
             addTagEvent(id, 'mention');
           } else if (nostrUrl.startsWith('naddr') ||

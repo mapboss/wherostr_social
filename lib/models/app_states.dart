@@ -1,16 +1,20 @@
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
+import 'package:nwc/nwc.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_secret.dart';
+import 'package:wherostr_social/models/custom_keypairs.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/utils/nwc.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
 
 class AppStatesProvider with ChangeNotifier {
   static GlobalKey<ScaffoldState> homeScaffoldKey = GlobalKey();
   static GlobalKey<NavigatorState> homeNavigatorKey = GlobalKey();
   static GlobalKey<MainFeedState> mainFeedKey = GlobalKey();
+  static final nwc = NWC();
 
   NostrUser? _me;
   NostrUser get me => _me ?? NostrUser(pubkey: '');
@@ -55,11 +59,27 @@ class AppStatesProvider with ChangeNotifier {
     return true;
   }
 
-  Future<bool> login(String nsec) async {
-    if (!verifyNsec(nsec)) return false;
-    final privateKey = nsecToPrivateKey(nsec);
-    if (privateKey == null) return false;
-    await AppSecret.write(privateKey);
+  Future<bool> login(String val) async {
+    final isNsec = verifyNsec(val);
+    final isNpub = verifyNpub(val);
+    if (!isNsec && !isNpub) return false;
+    if (isNsec) {
+      final privateKey = nsecToPrivateKey(val);
+      if (privateKey == null) return false;
+      await AppSecret.write(privateKey);
+    }
+    if (isNpub) {
+      final npubHex = Nostr.instance.keysService.decodeNpubKeyToPublicKey(val);
+      if (npubHex.isEmpty) return false;
+      final keyPairs = NostrKeyPairs.generate();
+      try {
+        CustomKeyPairs(private: keyPairs.private, public: npubHex);
+      } catch (err) {
+        print(err);
+      }
+      await AppSecret.writeCustomKeyPairs(
+          CustomKeyPairs(private: keyPairs.private, public: npubHex));
+    }
     return true;
   }
 
@@ -67,9 +87,11 @@ class AppStatesProvider with ChangeNotifier {
     _me = null;
     await Future.wait([
       AppSecret.delete(),
+      AppSecret.deleteNWC(),
       NostrService.instance.dispose(),
       NostrService.searchInstance.dispose(),
       NostrService.countInstance.dispose(),
+      disconnectNWC(),
     ]);
     NostrService.instance = Nostr();
     NostrService.searchInstance = Nostr();
@@ -85,6 +107,18 @@ class AppStatesProvider with ChangeNotifier {
       print(err);
     }
     if (!NostrKeyPairs.isValidPrivateKey(nsecHex)) return false;
+    return true;
+  }
+
+  bool verifyNpub(String npub) {
+    if (!npub.startsWith('npub1')) return false;
+    String npubHex = '';
+    try {
+      npubHex = Nostr.instance.keysService.decodeNpubKeyToPublicKey(npub);
+    } catch (err) {
+      return false;
+    }
+    if (npubHex.isEmpty) return false;
     return true;
   }
 
@@ -108,29 +142,23 @@ class AppStatesProvider with ChangeNotifier {
   }
 
   Future<bool?> init() async {
-    try {
-      NostrKeyPairs? keypairs = await AppSecret.read();
-      if (keypairs == null) return null;
-      print('init.pubkey: ${keypairs.public}');
-      await setMe(keypairs);
-      final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
-      await me.fetchProfile();
-      if (me.displayName == 'Deleted Account') {
-        return false;
-      } else {
-        me.initRelays(relays);
-        await Future.wait([
-          me.fetchFollowing(),
-          me.fetchMuteList(),
-          me.fetchFollowSets(),
-          me.fetchInterestSets()
-        ]);
-        return true;
-      }
-    } catch (err) {
-      print('init: $err');
+    NostrKeyPairs? keypairs = await AppSecret.read();
+    if (keypairs == null) return null;
+    _me = NostrUser(pubkey: keypairs.public);
+    final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
+    await me.fetchProfile();
+    if (me.displayName == 'Deleted Account') {
+      return false;
+    } else {
+      me.initRelays(relays);
+      await Future.wait([
+        me.fetchFollowing(),
+        me.fetchMuteList(),
+        me.fetchFollowSets(),
+        me.fetchInterestSets()
+      ]);
+      return true;
     }
-    return false;
   }
 
   Future<void> updateProfile({
@@ -183,5 +211,16 @@ class AppStatesProvider with ChangeNotifier {
         name: 'Deleted Account',
       )
     ]);
+  }
+
+  Future<String?> conectNWC() async {
+    final connectionURI = await AppSecret.readNWC();
+    if (connectionURI?.isEmpty ?? true) return null;
+    await initNWC(connectionURI!);
+    return connectionURI;
+  }
+
+  Future<void> disconnectNWC() async {
+    await disposeNWC();
   }
 }

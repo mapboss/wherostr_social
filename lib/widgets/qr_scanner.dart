@@ -6,10 +6,12 @@ import 'package:wherostr_social/constant.dart';
 
 class QrScanner extends StatefulWidget {
   final FutureOr<bool> Function(BarcodeCapture data) onScan;
+  String text;
 
-  const QrScanner({
+  QrScanner({
     super.key,
     required this.onScan,
+    this.text = "Scan Nostr public key (npub) QR code.",
   });
 
   @override
@@ -144,13 +146,13 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
                     state.error != null) {
                   return const SizedBox.shrink();
                 }
-                return const Align(
+                return Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(16, 328, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 328, 16, 8),
                     child: Text(
-                      'Scan Nostr public key (npub) QR code.',
-                      style: TextStyle(color: Colors.white),
+                      widget.text,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 );

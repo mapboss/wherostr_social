@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/feed_menu_item.dart';
+import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/widgets/feed_menu.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
@@ -59,6 +60,8 @@ class MainFeedState extends State<MainFeed> {
 
   @override
   Widget build(BuildContext context) {
+    final powFilter = context.watch<AppFeedProvider>().powPostFilter;
+    final difficulty = powFilter.enabled == true ? powFilter.value : null;
     final relayList = context.read<AppStatesProvider>().me.relayList.clone();
     ThemeData themeData = Theme.of(context);
     return NestedScrollView(
@@ -72,7 +75,7 @@ class MainFeedState extends State<MainFeed> {
             forceElevated: innerBoxIsScrolled,
             centerTitle: true,
             title: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
               child: FeedFilterMenu(
                 onChange: _handleChange,
               ),
@@ -89,6 +92,9 @@ class MainFeedState extends State<MainFeed> {
             kinds: const [1, 6],
             authors: _authors,
             relays: relayList,
+            ids: difficulty != null && difficulty > 0
+                ? [difficultyToHex(difficulty, true)]
+                : null,
             t: _t,
             itemBuilder: (context, item) => Container(
               margin: const EdgeInsets.only(bottom: 4),

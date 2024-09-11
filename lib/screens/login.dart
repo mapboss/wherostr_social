@@ -65,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     key: _nsecFormFieldKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     controller: _loginController,
                     decoration: InputDecoration(
                       filled: true,
@@ -83,7 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         _nsecFormFieldKey.currentState?.validate(),
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
-                      if (appState.verifyNsec(value)) return null;
+                      if (appState.verifyNsec(value) ||
+                          appState.verifyNpub(value)) return null;
                       return 'Invalid private key';
                     },
                   ),
@@ -93,7 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       minimumSize: const Size(double.infinity, 48),
                     ),
                     onPressed: () async {
-                      if (!appState.verifyNsec(_loginController.text)) return;
+                      if (_nsecFormFieldKey.currentState?.validate() != true) {
+                        return;
+                      }
                       bool isLoggedId =
                           await appState.login(_loginController.text);
                       if (!isLoggedId) return;

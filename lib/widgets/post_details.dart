@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
@@ -9,6 +10,7 @@ import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
+import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_activity.dart';
 import 'package:wherostr_social/widgets/post_compose.dart';
@@ -79,6 +81,8 @@ class _PostDetailsState extends State<PostDetails> {
         MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
+    final powFilter = context.watch<AppFeedProvider>().powCommentFilter;
+    final difficulty = powFilter?.enabled == true ? powFilter?.value : null;
     final appState = context.watch<AppStatesProvider>();
     final scrollController = PrimaryScrollController.of(context);
     return Scaffold(
@@ -283,6 +287,9 @@ class _PostDetailsState extends State<PostDetails> {
                       scrollController: scrollController,
                       kinds: const [1],
                       e: [_event!.id!],
+                      ids: difficulty != null && difficulty > 0
+                          ? [difficultyToHex(difficulty, true)]
+                          : null,
                       includeReplies: true,
                       autoRefresh: true,
                       isAscending: true,

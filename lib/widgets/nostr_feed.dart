@@ -216,7 +216,8 @@ class NostrFeedState extends State<NostrFeed> {
     super.didUpdateWidget(oldWidget);
     final oldRelay = oldWidget.relays?.readRelays?.toString();
     final newRelay = widget.relays?.readRelays?.toString();
-    if (oldWidget.authors?.length != widget.authors?.length ||
+    if (oldWidget.ids?.join(',') != widget.ids?.join(',') ||
+        oldWidget.authors?.length != widget.authors?.length ||
         oldWidget.t?.elementAtOrNull(0) != widget.t?.elementAtOrNull(0) ||
         oldWidget.isAscending != widget.isAscending ||
         oldRelay != newRelay) {

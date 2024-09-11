@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -51,15 +52,26 @@ class _PostComposeState extends State<PostCompose> {
   String? _geohash;
   int? _difficulty;
   bool _isLoading = false;
+  String? _bestHash;
+  Completer<String>? _powCompleter;
+  final StreamController<String> _bestHashController =
+      StreamController<String>();
+  StateSetter? _setState;
 
   @override
   void initState() {
     super.initState();
     _editorController.addListener(editorListener);
+    _bestHashController.stream.listen((data) {
+      _setState?.call(() {
+        _bestHash = data;
+      });
+    });
   }
 
   @override
   void dispose() {
+    _bestHashController.close();
     _editorController.removeListener(editorListener);
     _editorController.dispose();
     super.dispose();
@@ -183,16 +195,69 @@ class _PostComposeState extends State<PostCompose> {
     }
   }
 
+  Future<void> _showDialog() {
+    return showDialog(
+      useRootNavigator: true,
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            _setState = setState;
+            final currentDiff = _bestHash != null
+                ? NostrService.instance.utilsService
+                    .countDifficultyOfHex(_bestHash!)
+                : 0;
+            return AlertDialog(
+              title: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Hashing...'),
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LinearProgressIndicator(
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    value: (currentDiff / _difficulty!).toDouble(),
+                  ),
+                  Text('Difficulty level: $currentDiff/$_difficulty'),
+                  Text('Hash: ${_bestHash?.substring(0, 16)}...'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      _powCompleter?.completeError('cancel');
+                      print('canceled: $_bestHash');
+                    } catch (err) {
+                      print(err);
+                    }
+                  },
+                  child: const Text('Cancel'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _handlePostPressed() async {
     setState(() {
       _isLoading = true;
     });
     _hideProfileList();
-    AppUtils.showSnackBar(
-      text: 'Posting...',
-      withProgressBar: true,
-      autoHide: false,
-    );
     _editorController.readOnly = true;
     try {
       final items = _editorController.document.toDelta().toList();
@@ -260,7 +325,60 @@ class _PostComposeState extends State<PostCompose> {
             event.addTagIfNew(tag);
           });
         }
-        await event.publish(autoGenerateTags: true, difficulty: _difficulty);
+        final me = context.read<AppStatesProvider>().me;
+        if (_difficulty != null && _difficulty! > 0) {
+          event.pubkey = me.pubkey;
+          await event.generateContentTags();
+          final streamPoW = event.mine(_difficulty!);
+          int bestDiff = 0;
+          int currentDiff = 0;
+          _powCompleter = Completer<String>();
+          final streamListener = streamPoW.listen(null);
+          streamListener.onData((text) async {
+            final [hash, nonce, date, index] = text.split('|');
+            currentDiff =
+                NostrService.instance.utilsService.countDifficultyOfHex(hash);
+            if (currentDiff >= _difficulty!) {
+              streamListener.cancel();
+              _powCompleter?.complete(text);
+            } else if (currentDiff > bestDiff) {
+              bestDiff = currentDiff;
+              _bestHashController.add(hash);
+              print('best hash: $hash, index: $index');
+            }
+          });
+          _showDialog();
+          // AppUtils.showSnackBar(
+          //   text: 'Hashing...',
+          //   withProgressBar: true,
+          //   autoHide: false,
+          // );
+          await _powCompleter?.future.then((v) {
+            if (v.isEmpty) return null;
+            final [hash, nonce, date, index] = v.split('|');
+            event.id = hash;
+            event.createdAt =
+                DateTime.fromMillisecondsSinceEpoch(int.parse(date));
+            event.addTagIfNew(['nonce', nonce, _difficulty!.toString()]);
+            return event.sendEventToRelays(relays: me.relayList);
+          }).catchError((e) {
+            streamListener.cancel();
+            throw const FormatException('Canceled.');
+          }).whenComplete(() {
+            context.read<AppStatesProvider>().navigatorPop();
+          });
+        } else {
+          AppUtils.showSnackBar(
+            text: 'Posting...',
+            withProgressBar: true,
+            autoHide: false,
+          );
+          await event.publish(
+            autoGenerateTags: true,
+            difficulty: _difficulty,
+            relays: me.relayList,
+          );
+        }
         AppUtils.showSnackBar(
           text: 'Posted successfully.',
           status: AppStatus.success,
@@ -271,13 +389,17 @@ class _PostComposeState extends State<PostCompose> {
       } else {
         AppUtils.hideSnackBar();
       }
+    } on FormatException catch (e) {
+      AppUtils.showSnackBar(text: e.message, status: AppStatus.error);
     } catch (error) {
+      print(error);
       AppUtils.hideSnackBar();
       AppUtils.handleError();
     } finally {
       if (mounted) {
         _editorController.readOnly = false;
         setState(() {
+          _bestHash = null;
           _isLoading = false;
         });
       }

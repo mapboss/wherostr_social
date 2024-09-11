@@ -10,6 +10,8 @@ import 'package:wherostr_social/widgets/appearance_settings.dart';
 import 'package:wherostr_social/widgets/following_hashtag_settings.dart';
 import 'package:wherostr_social/widgets/muted_account_settings.dart';
 import 'package:wherostr_social/widgets/nostr_key_settings.dart';
+import 'package:wherostr_social/widgets/nwc_settings.dart';
+import 'package:wherostr_social/widgets/pow_filter_settings.dart';
 import 'package:wherostr_social/widgets/relay_settings.dart';
 
 class SettingsContainer extends StatefulWidget {
@@ -103,6 +105,23 @@ class _SettingsContainerState extends State<SettingsContainer> {
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () => context.read<AppStatesProvider>().navigatorPush(
                         widget: const AppearanceSettings(),
+                      ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.memory),
+                  title: const Text('PoW Filters'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () => context.read<AppStatesProvider>().navigatorPush(
+                        rootNavigator: true,
+                        widget: const PowFilterSettings(),
+                      ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.electric_bolt),
+                  title: const Text('NWC for Seamless Zapping'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () => context.read<AppStatesProvider>().navigatorPush(
+                        widget: const NWCSettings(),
                       ),
                 ),
                 const Divider(),
