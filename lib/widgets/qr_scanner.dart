@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:wherostr_social/constant.dart';
 
 class QrScanner extends StatefulWidget {
   final FutureOr<bool> Function(BarcodeCapture data) onScan;
@@ -84,8 +85,15 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    Offset offset;
+    if (MediaQuery.sizeOf(context).width >=
+        Constants.largeDisplayContentWidth) {
+      offset = const Offset(Constants.largeDisplayContentWidth / 2, 192);
+    } else {
+      offset = MediaQuery.sizeOf(context).topCenter(const Offset(0, 192));
+    }
     final scanWindow = Rect.fromCenter(
-      center: MediaQuery.sizeOf(context).topCenter(const Offset(0, 192)),
+      center: offset,
       width: 240,
       height: 240,
     );

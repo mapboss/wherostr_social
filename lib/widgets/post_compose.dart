@@ -5,6 +5,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -292,6 +293,8 @@ class _PostComposeState extends State<PostCompose> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final me = context.watch<AppStatesProvider>().me;
@@ -303,6 +306,7 @@ class _PostComposeState extends State<PostCompose> {
         ),
         body: GradientDecoratedBox(
           child: SafeArea(
+            bottom: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,111 +421,127 @@ class _PostComposeState extends State<PostCompose> {
                     ),
                   ),
                 Material(
-                  child: Column(
-                    children: [
-                      if (_isProfileListOpen) ...[
-                        SizedBox(
-                          height: MediaQuery.sizeOf(context).height > 640
-                              ? 192
-                              : 128,
-                          child: ProfileList(
-                            keyword: _keyword,
-                            onProfileSelected: _handleProfileSelected,
-                          ),
-                        ),
-                        const Divider(height: 1),
-                      ],
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 4, horizontal: 16),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: _handleChooseFromLibraryPressed,
-                              icon: const Icon(Icons.photo),
-                              color: themeExtension.textDimColor,
+                  borderRadius: isLargeDisplay
+                      ? const BorderRadiusDirectional.vertical(
+                          top: Radius.circular(12),
+                        )
+                      : null,
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        if (_isProfileListOpen) ...[
+                          SizedBox(
+                            height: MediaQuery.sizeOf(context).height > 640
+                                ? 192
+                                : 128,
+                            child: ProfileList(
+                              keyword: _keyword,
+                              onProfileSelected: _handleProfileSelected,
                             ),
-                            if (!kIsWeb &&
-                                (Platform.isAndroid || Platform.isIOS)) ...[
-                              const SizedBox(width: 4),
+                          ),
+                          const Divider(height: 1),
+                        ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 16),
+                          child: Row(
+                            children: [
                               IconButton(
-                                onPressed: _handleTakeAPhotoPressed,
-                                icon: const Icon(Icons.camera_alt),
+                                onPressed: _handleChooseFromLibraryPressed,
+                                icon: const Icon(Icons.photo),
                                 color: themeExtension.textDimColor,
                               ),
-                            ],
-                            if (!widget.isReply) ...[
+                              if (!kIsWeb &&
+                                  (Platform.isAndroid || Platform.isIOS)) ...[
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  onPressed: _handleTakeAPhotoPressed,
+                                  icon: const Icon(Icons.camera_alt),
+                                  color: themeExtension.textDimColor,
+                                ),
+                              ],
+                              if (!widget.isReply) ...[
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  onPressed: () => showModalBottomSheet(
+                                    isScrollControlled: true,
+                                    useSafeArea: true,
+                                    useRootNavigator: true,
+                                    enableDrag: false,
+                                    showDragHandle: true,
+                                    context: context,
+                                    constraints: const BoxConstraints(
+                                      maxWidth:
+                                          Constants.largeDisplayContentWidth,
+                                    ),
+                                    builder: (context) {
+                                      return SafeArea(
+                                        child: FractionallySizedBox(
+                                          heightFactor:
+                                              MediaQuery.sizeOf(context)
+                                                          .height >
+                                                      640
+                                                  ? 0.75
+                                                  : 1,
+                                          child: Container(
+                                            padding: EdgeInsets.only(
+                                                bottom: MediaQuery.of(context)
+                                                    .viewInsets
+                                                    .bottom),
+                                            child: MapGeohashPicker(
+                                              initialGeohash: _geohash,
+                                              onGeohashUpdate: _updateGeohash,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  icon: const Icon(Icons.share_location),
+                                  color: _geohash == null
+                                      ? themeExtension.textDimColor
+                                      : themeData.colorScheme.secondary,
+                                ),
+                              ],
                               const SizedBox(width: 4),
                               IconButton(
                                 onPressed: () => showModalBottomSheet(
+                                  context: context,
+                                  useRootNavigator: true,
+                                  enableDrag: true,
+                                  showDragHandle: true,
                                   isScrollControlled: true,
                                   useSafeArea: true,
-                                  useRootNavigator: true,
-                                  enableDrag: false,
-                                  showDragHandle: true,
-                                  context: context,
+                                  constraints: const BoxConstraints(
+                                    maxWidth:
+                                        Constants.largeDisplayContentWidth,
+                                  ),
                                   builder: (context) {
-                                    return SafeArea(
-                                      child: FractionallySizedBox(
-                                        heightFactor:
-                                            MediaQuery.sizeOf(context).height >
-                                                    640
-                                                ? 0.75
-                                                : 1,
-                                        child: Container(
-                                          padding: EdgeInsets.only(
-                                              bottom: MediaQuery.of(context)
-                                                  .viewInsets
-                                                  .bottom),
-                                          child: MapGeohashPicker(
-                                            initialGeohash: _geohash,
-                                            onGeohashUpdate: _updateGeohash,
-                                          ),
-                                        ),
-                                      ),
+                                    return ProofOfWorkAdjustment(
+                                      value: _difficulty,
+                                      onChange: (value) {
+                                        setState(() {
+                                          _difficulty = value;
+                                        });
+                                      },
                                     );
                                   },
                                 ),
-                                icon: const Icon(Icons.share_location),
-                                color: _geohash == null
+                                icon: const Icon(Icons.memory),
+                                color: _difficulty == null
                                     ? themeExtension.textDimColor
                                     : themeData.colorScheme.secondary,
                               ),
-                            ],
-                            const SizedBox(width: 4),
-                            IconButton(
-                              onPressed: () => showModalBottomSheet(
-                                context: context,
-                                useRootNavigator: true,
-                                enableDrag: true,
-                                showDragHandle: true,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (context) {
-                                  return ProofOfWorkAdjustment(
-                                    value: _difficulty,
-                                    onChange: (value) {
-                                      setState(() {
-                                        _difficulty = value;
-                                      });
-                                    },
-                                  );
-                                },
+                              const Spacer(),
+                              FilledButton(
+                                onPressed: _isEmpty ? null : _handlePostPressed,
+                                child: const Text('Post'),
                               ),
-                              icon: const Icon(Icons.memory),
-                              color: _difficulty == null
-                                  ? themeExtension.textDimColor
-                                  : themeData.colorScheme.secondary,
-                            ),
-                            const Spacer(),
-                            FilledButton(
-                              onPressed: _isEmpty ? null : _handlePostPressed,
-                              child: const Text('Post'),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -557,7 +577,10 @@ class ImageEmbedBuilder extends EmbedBuilder {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Container(
                 constraints: BoxConstraints(
-                  maxHeight: (MediaQuery.sizeOf(context).width - 32) * (4 / 3),
+                  maxHeight: MediaQuery.sizeOf(context).width >=
+                          Constants.largeDisplayWidth
+                      ? MediaQuery.sizeOf(context).height * 0.5
+                      : (MediaQuery.sizeOf(context).width - 32) * (4 / 3),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),

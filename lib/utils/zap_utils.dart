@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -202,7 +203,18 @@ Future<void> showQRInvoiceModal(BuildContext context, String invoice) async {
     useSafeArea: true,
     showDragHandle: true,
     context: context,
+    constraints: const BoxConstraints(
+      maxWidth: Constants.largeDisplayContentWidth,
+    ),
     builder: (context) {
+      double qrSize =
+          (MediaQuery.sizeOf(context).height < MediaQuery.sizeOf(context).width
+                  ? MediaQuery.sizeOf(context).height
+                  : MediaQuery.sizeOf(context).width) *
+              0.5;
+      if (qrSize > 240) {
+        qrSize = 240;
+      }
       return DecoratedBox(
         decoration: wherostrBackgroundDecoration,
         child: SafeArea(
@@ -239,6 +251,7 @@ Future<void> showQRInvoiceModal(BuildContext context, String invoice) async {
                 ),
                 const SizedBox(height: 16),
                 QrImageView(
+                  size: qrSize,
                   backgroundColor: Colors.white,
                   padding: const EdgeInsets.all(16),
                   data: invoice,

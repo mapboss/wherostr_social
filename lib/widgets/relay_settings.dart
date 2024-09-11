@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
@@ -113,6 +114,8 @@ class _RelaySettingsState extends State<RelaySettings> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return Scaffold(
@@ -208,6 +211,11 @@ class _RelaySettingsState extends State<RelaySettings> {
         ),
       ),
       bottomNavigationBar: Material(
+        borderRadius: isLargeDisplay
+            ? const BorderRadiusDirectional.vertical(
+                top: Radius.circular(12),
+              )
+            : null,
         elevation: 1,
         child: SafeArea(
           child: Padding(

@@ -179,8 +179,8 @@ class _CustomFlickVideoPlayerState extends State<CustomFlickVideoPlayer>
       document.documentElement?.requestFullscreen();
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
-          _videoHeight = MediaQuery.of(context).size.height;
-          _videoWidth = MediaQuery.of(context).size.width;
+          _videoHeight = MediaQuery.sizeOf(context).height;
+          _videoWidth = MediaQuery.sizeOf(context).width;
           setState(() {});
         }
       });

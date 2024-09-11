@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:text_parser/text_parser.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -92,7 +93,11 @@ class _PostContentState extends State<PostContent> {
       ));
     }
     List<ImageProvider> imageProviders = [];
-    double maxMediaHeight = (MediaQuery.sizeOf(context).width - 32) * (4 / 3);
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
+    double maxMediaHeight = isLargeDisplay
+        ? MediaQuery.sizeOf(context).height * 0.5
+        : (MediaQuery.sizeOf(context).width - 32) * (4 / 3);
     int maxImageCacheSize = MediaQuery.sizeOf(context).height.toInt();
     for (var element in elements) {
       switch (element.matcherType) {
@@ -152,12 +157,13 @@ class _PostContentState extends State<PostContent> {
             widgets.add(
               WidgetSpan(
                 child: Container(
-                  constraints: BoxConstraints(
-                    maxHeight: maxMediaHeight,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: VideoPlayer(url: element.text),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: VideoPlayer(url: element.text),
+                    ),
                   ),
                 ),
               ),
@@ -255,12 +261,13 @@ class _PostContentState extends State<PostContent> {
               widgets.add(
                 WidgetSpan(
                   child: Container(
-                    constraints: BoxConstraints(
-                      maxHeight: maxMediaHeight,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: VideoPlayer(url: element.text),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: VideoPlayer(url: element.text),
+                      ),
                     ),
                   ),
                 ),

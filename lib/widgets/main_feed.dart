@@ -92,7 +92,12 @@ class MainFeedState extends State<MainFeed> {
             t: _t,
             itemBuilder: (context, item) => Container(
               margin: const EdgeInsets.only(bottom: 4),
-              child: PostItem(event: item),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(12),
+                ),
+                child: PostItem(event: item),
+              ),
             ),
           );
         },

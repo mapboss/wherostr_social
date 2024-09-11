@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_relay.dart';
@@ -81,9 +82,11 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    return Scaffold(
+    final child = Scaffold(
       appBar: AppBar(
         title: const Text('App relays'),
         bottom: PreferredSize(
@@ -173,6 +176,11 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
         ),
       ),
       bottomNavigationBar: Material(
+        borderRadius: isLargeDisplay
+            ? const BorderRadiusDirectional.vertical(
+                top: Radius.circular(12),
+              )
+            : null,
         elevation: 1,
         child: SafeArea(
           child: Padding(
@@ -241,6 +249,17 @@ class _AppRelaySettingsState extends State<AppRelaySettings> {
                 }).toList() ??
                 [],
       ),
+    );
+    return Container(
+      color: themeData.colorScheme.surfaceDim,
+      child: isLargeDisplay
+          ? Center(
+              child: SizedBox(
+                width: Constants.largeDisplayContentWidth,
+                child: child,
+              ),
+            )
+          : child,
     );
   }
 }

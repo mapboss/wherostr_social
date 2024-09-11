@@ -94,8 +94,14 @@ class _SplashScreenState extends State<SplashScreen> {
           duration: const Duration(milliseconds: 2000),
           onEnd: _onSplashed,
           opacity: _opacity,
-          child: const ThemedLogo(
-            textEnabled: true,
+          child: Center(
+            child: LimitedBox(
+              maxWidth: MediaQuery.sizeOf(context).width * 0.5,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.5,
+              child: const ThemedLogo(
+                textEnabled: true,
+              ),
+            ),
           ),
         ),
       ),

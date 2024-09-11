@@ -1,5 +1,6 @@
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
@@ -19,7 +20,20 @@ class AppStatesProvider with ChangeNotifier {
     bool rootNavigator = false,
   }) {
     Navigator.of(homeNavigatorKey.currentContext!, rootNavigator: rootNavigator)
-        .push(MaterialPageRoute(builder: (context) => widget));
+        .push(MaterialPageRoute(
+            builder: (context) => rootNavigator &&
+                    MediaQuery.sizeOf(context).width >=
+                        Constants.largeDisplayWidth
+                ? Container(
+                    color: Theme.of(context).colorScheme.surfaceDim,
+                    child: Center(
+                      child: SizedBox(
+                        width: Constants.largeDisplayContentWidth,
+                        child: widget,
+                      ),
+                    ),
+                  )
+                : widget));
   }
 
   void navigatorPop({

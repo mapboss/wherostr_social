@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
@@ -80,6 +81,14 @@ class _ProfileState extends State<Profile> {
     final homeScaffoldKey = AppStatesProvider.homeScaffoldKey;
     final topPadding =
         MediaQuery.of(homeScaffoldKey.currentContext!).viewPadding.top;
+    double qrSize =
+        (MediaQuery.sizeOf(context).height < MediaQuery.sizeOf(context).width
+                ? MediaQuery.sizeOf(context).height
+                : MediaQuery.sizeOf(context).width) *
+            0.5;
+    if (qrSize > 240) {
+      qrSize = 240;
+    }
     return NestedScrollView(
       headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
         const expandedHeight = kToolbarHeight + 120 + kToolbarHeight + 24;
@@ -393,6 +402,10 @@ class _ProfileState extends State<Profile> {
                                   showDragHandle: true,
                                   isScrollControlled: true,
                                   useSafeArea: true,
+                                  constraints: const BoxConstraints(
+                                    maxWidth:
+                                        Constants.largeDisplayContentWidth,
+                                  ),
                                   builder: (context) {
                                     final TextEditingController
                                         npubTextController =
@@ -442,6 +455,7 @@ class _ProfileState extends State<Profile> {
                                               ),
                                               const SizedBox(height: 16),
                                               QrImageView(
+                                                size: qrSize,
                                                 backgroundColor: Colors.white,
                                                 padding:
                                                     const EdgeInsets.all(16),
@@ -558,7 +572,12 @@ class _ProfileState extends State<Profile> {
               includeMuted: true,
               itemBuilder: (context, item) => Container(
                 margin: const EdgeInsets.only(bottom: 4),
-                child: PostItem(event: item),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(12),
+                  ),
+                  child: PostItem(event: item),
+                ),
               ),
             );
           },

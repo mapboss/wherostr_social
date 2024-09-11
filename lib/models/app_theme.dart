@@ -115,7 +115,7 @@ final darkThemeData = ThemeData(
   colorScheme: const ColorScheme.dark(
     primary: Color.fromRGBO(20, 121, 112, 1),
     secondary: Color.fromRGBO(250, 178, 16, 1),
-    surfaceDim: Color.fromRGBO(24, 24, 24, 1),
+    surfaceDim: Color.fromRGBO(25, 26, 30, 1),
     outline: Color.fromRGBO(217, 217, 217, 1),
   ),
   appBarTheme: const AppBarTheme(
@@ -124,11 +124,11 @@ final darkThemeData = ThemeData(
     surfaceTintColor: Colors.transparent,
     shadowColor: Colors.black,
   ),
-  scaffoldBackgroundColor: const Color.fromRGBO(24, 24, 24, 1),
+  scaffoldBackgroundColor: const Color.fromRGBO(25, 26, 30, 1),
   menuTheme: const MenuThemeData(
     style: MenuStyle(
       backgroundColor: WidgetStatePropertyAll(
-        Color.fromRGBO(24, 24, 24, 1),
+        Color.fromRGBO(25, 26, 30, 1),
       ),
     ),
   ),
@@ -139,7 +139,7 @@ final darkThemeData = ThemeData(
     ),
   ),
   dividerTheme: const DividerThemeData(
-    color: Color.fromRGBO(24, 24, 24, 1),
+    color: Color.fromRGBO(25, 26, 30, 1),
   ),
   inputDecorationTheme: const InputDecorationTheme(
     hintStyle: TextStyle(

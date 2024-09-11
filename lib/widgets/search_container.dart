@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
@@ -259,6 +260,9 @@ class _SearchContainerState extends State<SearchContainer> {
                   enableDrag: true,
                   showDragHandle: true,
                   context: context,
+                  constraints: const BoxConstraints(
+                    maxWidth: Constants.largeDisplayContentWidth,
+                  ),
                   builder: (context) {
                     return FractionallySizedBox(
                       heightFactor: 0.75,

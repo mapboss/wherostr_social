@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -346,6 +347,9 @@ class _PostActionBarState extends State<PostActionBar> {
                       showDragHandle: true,
                       useSafeArea: true,
                       context: context,
+                      constraints: const BoxConstraints(
+                        maxWidth: Constants.largeDisplayContentWidth,
+                      ),
                       builder: (context) {
                         return EmojiPicker(
                           onChanged: (value) {

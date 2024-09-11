@@ -2,6 +2,7 @@ import 'package:dart_geohash/dart_geohash.dart';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/services/map.dart';
 import 'package:wherostr_social/widgets/map_ui.dart';
@@ -87,6 +88,9 @@ class _PostLocationChipState extends State<PostLocationChip> {
                       enableDrag: false,
                       showDragHandle: true,
                       context: context,
+                      constraints: const BoxConstraints(
+                        maxWidth: Constants.largeDisplayContentWidth,
+                      ),
                       builder: (BuildContext context) {
                         return FractionallySizedBox(
                           heightFactor: 0.75,

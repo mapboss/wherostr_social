@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -151,6 +152,8 @@ class _ZapFormState extends State<ZapForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return PopScope(
@@ -344,6 +347,11 @@ class _ZapFormState extends State<ZapForm> {
                 ),
               ),
               Material(
+                borderRadius: isLargeDisplay
+                    ? const BorderRadiusDirectional.vertical(
+                        top: Radius.circular(12),
+                      )
+                    : null,
                 elevation: 1,
                 child: SafeArea(
                   top: false,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -74,6 +75,8 @@ class _PostDetailsState extends State<PostDetails> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final appState = context.watch<AppStatesProvider>();
@@ -91,26 +94,33 @@ class _PostDetailsState extends State<PostDetails> {
       bottomNavigationBar: _event == null
           ? null
           : Material(
+              borderRadius: isLargeDisplay
+                  ? const BorderRadiusDirectional.vertical(
+                      top: Radius.circular(12),
+                    )
+                  : null,
               elevation: 1,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    filled: true,
-                    fillColor: themeData.colorScheme.surfaceDim,
-                    prefixIcon: const Icon(Icons.comment_outlined),
-                    hintText: 'Add a reply',
-                  ),
-                  readOnly: true,
-                  onTap: () => appState.navigatorPush(
-                    widget: PostCompose(
-                      referencedEvent: _event,
-                      isReply: true,
+              child: SafeArea(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      filled: true,
+                      fillColor: themeData.colorScheme.surfaceDim,
+                      prefixIcon: const Icon(Icons.comment_outlined),
+                      hintText: 'Add a reply',
                     ),
-                    rootNavigator: true,
+                    readOnly: true,
+                    onTap: () => appState.navigatorPush(
+                      widget: PostCompose(
+                        referencedEvent: _event,
+                        isReply: true,
+                      ),
+                      rootNavigator: true,
+                    ),
                   ),
                 ),
               ),
@@ -285,9 +295,14 @@ class _PostDetailsState extends State<PostDetails> {
                       },
                       itemBuilder: (context, event) => Container(
                         margin: const EdgeInsets.only(bottom: 4),
-                        child: PostItem(
-                          event: event,
-                          contentPadding: const EdgeInsets.only(left: 54),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12),
+                          ),
+                          child: PostItem(
+                            event: event,
+                            contentPadding: const EdgeInsets.only(left: 54),
+                          ),
                         ),
                       ),
                     ),

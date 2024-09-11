@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:text_parser/text_parser.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/services/file.dart';
@@ -242,6 +243,8 @@ class _ProfileEditingState extends State<ProfileEditing> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final bannerFile =
@@ -535,6 +538,11 @@ class _ProfileEditingState extends State<ProfileEditing> {
             ),
           ),
           Material(
+            borderRadius: isLargeDisplay
+                ? const BorderRadiusDirectional.vertical(
+                    top: Radius.circular(12),
+                  )
+                : null,
             elevation: 1,
             child: SafeArea(
               top: false,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -191,7 +192,11 @@ class _ActivityItemState extends State<ActivityItem> {
         if ((widget.event.content ?? '') != '') {
           final content = getEllipsisText(
             text: widget.event.content!,
-            maxWidth: MediaQuery.sizeOf(context).width - 76,
+            maxWidth:
+                (MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth
+                        ? Constants.largeDisplayContentWidth
+                        : MediaQuery.sizeOf(context).width) -
+                    76,
             maxLines: 3,
           );
           return Padding(
@@ -426,10 +431,17 @@ class _ActivityItemState extends State<ActivityItem> {
                                               content: getEllipsisText(
                                                 text: snapshot.data?.content ??
                                                     '',
-                                                maxWidth:
-                                                    MediaQuery.sizeOf(context)
-                                                            .width -
-                                                        108,
+                                                maxWidth: (MediaQuery.sizeOf(
+                                                                    context)
+                                                                .width >=
+                                                            Constants
+                                                                .largeDisplayWidth
+                                                        ? Constants
+                                                            .largeDisplayContentWidth
+                                                        : MediaQuery.sizeOf(
+                                                                context)
+                                                            .width) -
+                                                    108,
                                                 maxLines: 3,
                                               ),
                                               contentLeading: snapshot
