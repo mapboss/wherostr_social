@@ -14,8 +14,7 @@ late NostrWalletConnectUri parsedUri;
 final completers = <String, Completer<String>>{};
 
 Future<void> initNWC(String connectionURI) async {
-  await nwc.dispose();
-  await nwcInstance.dispose();
+  await disposeNWC();
   nwc = NWC();
   nwc.disableLogs();
   nwcInstance = Nostr();
@@ -199,7 +198,10 @@ Future<String?> payInvoice(String invoice) async {
   print('[+] payInvoice() => okCommand: $okCommand');
   return completers['pay_invoice']
       ?.future
-      .timeout(const Duration(seconds: 5))
+      .timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw Exception('Timeout'),
+      )
       .whenComplete(() {
     completers.remove('pay_invoice');
   });
@@ -237,7 +239,7 @@ Future<void> listTransactions() async {
   print('[+] listTransactions() => okCommand: $okCommand');
 }
 
-Future<void> dispose() async {
+Future<void> disposeNWC() async {
   await Future.wait([
     nwc.dispose(),
     nwcInstance.dispose(),

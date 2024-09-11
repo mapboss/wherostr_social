@@ -73,9 +73,11 @@ class AppStatesProvider with ChangeNotifier {
     _me = null;
     await Future.wait([
       AppSecret.delete(),
+      AppSecret.deleteNWC(),
       NostrService.instance.dispose(),
       NostrService.searchInstance.dispose(),
       NostrService.countInstance.dispose(),
+      disconnectNWC(),
     ]);
     NostrService.instance = Nostr();
     NostrService.searchInstance = Nostr();
@@ -126,29 +128,23 @@ class AppStatesProvider with ChangeNotifier {
   }
 
   Future<bool?> init() async {
-    try {
-      NostrKeyPairs? keypairs = await AppSecret.read();
-      if (keypairs == null) return null;
-      _me = NostrUser(pubkey: keypairs.public);
-      final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
-      await me.fetchProfile();
-      if (me.displayName == 'Deleted Account') {
-        return false;
-      } else {
-        me.initRelays(relays);
-        await Future.wait([
-          conectNWC(),
-          me.fetchFollowing(),
-          me.fetchMuteList(),
-          me.fetchFollowSets(),
-          me.fetchInterestSets()
-        ]);
-        return true;
-      }
-    } catch (err) {
-      print('init: $err');
+    NostrKeyPairs? keypairs = await AppSecret.read();
+    if (keypairs == null) return null;
+    _me = NostrUser(pubkey: keypairs.public);
+    final relays = await NostrService.initWithNpubOrPubkey(keypairs.public);
+    await me.fetchProfile();
+    if (me.displayName == 'Deleted Account') {
+      return false;
+    } else {
+      me.initRelays(relays);
+      await Future.wait([
+        me.fetchFollowing(),
+        me.fetchMuteList(),
+        me.fetchFollowSets(),
+        me.fetchInterestSets()
+      ]);
+      return true;
     }
-    return false;
   }
 
   Future<void> updateProfile({
@@ -203,9 +199,14 @@ class AppStatesProvider with ChangeNotifier {
     ]);
   }
 
-  Future<void> conectNWC() async {
+  Future<String?> conectNWC() async {
     final connectionURI = await AppSecret.readNWC();
-    if (connectionURI?.isEmpty ?? true) return;
+    if (connectionURI?.isEmpty ?? true) return null;
     await initNWC(connectionURI!);
+    return connectionURI;
+  }
+
+  Future<void> disconnectNWC() async {
+    await disposeNWC();
   }
 }

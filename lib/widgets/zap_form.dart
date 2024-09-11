@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -69,53 +68,38 @@ class _ZapFormState extends State<ZapForm> {
       autoHide: false,
     );
     try {
-      final connectionURI = await AppSecret.readNWC();
-      if (connectionURI != null) {
-        final (_, invoice) = await createInvoice(
-          relays: appState.me.relayList,
-          content: _commentTextController.text,
-          amount: _zapAmount!,
-          targetUser: widget.user,
-          targetEvent: widget.event,
-        )
-            .timeout(
-              const Duration(seconds: 10),
-              onTimeout: () => (null, null),
-            )
-            .catchError(
-              (e) => (null, null),
-            );
-        if (invoice?.isEmpty ?? true) {
-          AppUtils.showSnackBar(
-            text: 'Unable to generate invoice.',
-            status: AppStatus.error,
+      final (zapRequest, invoice) = await createInvoice(
+        relays: appState.me.relayList,
+        content: _commentTextController.text,
+        amount: _zapAmount!,
+        targetUser: widget.user,
+        targetEvent: widget.event,
+      )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => (null, null),
+          )
+          .catchError(
+            (e) => (null, null),
           );
-          return;
-        }
-        if (invoice == null) return;
-        final preimage = await payInvoice(invoice);
+      if (zapRequest == null || invoice?.isNotEmpty != true) {
+        AppUtils.showSnackBar(
+          text: 'Unable to generate invoice.',
+          status: AppStatus.error,
+        );
+        return;
+      }
+      final nwcString = await appState.conectNWC();
+      bool useNWC = nwcString?.isNotEmpty ?? false;
+      if (useNWC) {
+        AppUtils.showSnackBar(
+          text: 'Zapping...',
+          withProgressBar: true,
+          autoHide: false,
+        );
+        zapCompleter = waitZapReceipt(zapRequest, invoice!);
+        await payInvoice(invoice);
       } else {
-        final (zapRequest, invoice) = await createInvoice(
-          relays: appState.me.relayList,
-          content: _commentTextController.text,
-          amount: _zapAmount!,
-          targetUser: widget.user,
-          targetEvent: widget.event,
-        )
-            .timeout(
-              const Duration(seconds: 10),
-              onTimeout: () => (null, null),
-            )
-            .catchError(
-              (e) => (null, null),
-            );
-        if (zapRequest == null || invoice?.isNotEmpty != true) {
-          AppUtils.showSnackBar(
-            text: 'Unable to generate invoice.',
-            status: AppStatus.error,
-          );
-          return;
-        }
         AppUtils.hideSnackBar();
         zapCompleter = waitZapReceipt(zapRequest, invoice!);
         if (useQr) {
@@ -155,8 +139,8 @@ class _ZapFormState extends State<ZapForm> {
           });
           await showWalletSelector(context, invoice);
         }
-        await zapCompleter.future;
       }
+      await zapCompleter.future;
       AppUtils.showSnackBar(
         text: 'Zapped successfully.',
         status: AppStatus.success,
