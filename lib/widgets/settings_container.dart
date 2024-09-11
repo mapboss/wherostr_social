@@ -118,7 +118,7 @@ class _SettingsContainerState extends State<SettingsContainer> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.electric_bolt),
-                  title: const Text('NWC for Seamless Zapping'),
+                  title: const Text('NWC'),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () => context.read<AppStatesProvider>().navigatorPush(
                         widget: const NWCSettings(),

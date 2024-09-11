@@ -77,7 +77,7 @@ class _NWCSettingsState extends State<NWCSettings> {
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seamless Zapping'),
+        title: const Text('NWC'),
       ),
       body: SingleChildScrollView(
         child: Padding(

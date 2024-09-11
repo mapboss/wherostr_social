@@ -82,7 +82,7 @@ class _PostDetailsState extends State<PostDetails> {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final powFilter = context.watch<AppFeedProvider>().powCommentFilter;
-    final difficulty = powFilter?.enabled == true ? powFilter?.value : null;
+    final difficulty = powFilter.enabled == true ? powFilter.value : null;
     final appState = context.watch<AppStatesProvider>();
     final scrollController = PrimaryScrollController.of(context);
     return Scaffold(
