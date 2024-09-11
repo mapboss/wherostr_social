@@ -146,12 +146,11 @@ Future<String?> makeInvoice({
     tags: [
       if (eventId != null && (targetEvent?.kind ?? 0) < 30000) ['e', eventId],
       if (eventId != null && (targetEvent?.kind ?? 0) > 30000) ['a', eventId],
-      ['p', targetUser.pubkey]
+      ['p', parsedUri.pubkey]
     ],
     createdAt: DateTime.now(),
     keyPairs: NostrKeyPairs(private: parsedUri.secret),
   );
-  print('request: $request');
 
   final okCommand = await nwcInstance.relaysService.sendEventToRelaysAsync(
     request,

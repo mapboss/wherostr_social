@@ -17,6 +17,7 @@ class NWCSettings extends StatefulWidget {
 class _NWCSettingsState extends State<NWCSettings> {
   String? _nwcString;
   NostrWalletConnectUri? _nwcParsed;
+  bool _isConnected = false;
 
   @override
   void initState() {
@@ -26,9 +27,12 @@ class _NWCSettingsState extends State<NWCSettings> {
 
   void initialize() async {
     final connectionString = await AppSecret.readNWC();
-    getBalance();
     setState(() {
+      _isConnected = connectionString?.isNotEmpty ?? false;
       _nwcString = connectionString;
+      if (_isConnected) {
+        _nwcParsed = parseNostrConnectUri(connectionString!);
+      }
     });
   }
 
@@ -39,22 +43,24 @@ class _NWCSettingsState extends State<NWCSettings> {
       _nwcString = text;
       _nwcParsed = nwc;
     });
-    // print('pubkey: ${nwc.pubkey}');
-    // print('relay: ${nwc.relay}');
-    // print('lud16: ${nwc.lud16}');
-    // await AppSecret.writeNWC(text);
-    // await initNWC(text);
   }
 
-  void _connect(String nwcString) async {
-    // print('pubkey: ${nwc.pubkey}');
-    // print('relay: ${nwc.relay}');
-    // print('lud16: ${nwc.lud16}');
-    await AppSecret.writeNWC(nwcString);
-    await initNWC(nwcString);
+  void _connect() async {
+    if (_nwcString == null) return;
+    await AppSecret.writeNWC(_nwcString!);
+    await initNWC(_nwcString!);
     setState(() {
-      _nwcString = nwcString;
+      _isConnected = true;
+    });
+  }
+
+  void _disconnect() async {
+    await AppSecret.deleteNWC();
+    await disposeNWC();
+    setState(() {
+      _isConnected = false;
       _nwcParsed = null;
+      _nwcString = null;
     });
   }
 
@@ -80,34 +86,39 @@ class _NWCSettingsState extends State<NWCSettings> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: themeExtension.shimmerBaseColor,
-                      foregroundImage:
-                          const AssetImage('assets/app/ic_launcher.png'),
-                    ),
-                    const Stack(
+                if (!_isConnected) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: Icon(Icons.chevron_right),
+                        CircleAvatar(
+                          backgroundColor: themeExtension.shimmerBaseColor,
+                          foregroundImage:
+                              const AssetImage('assets/app/ic_launcher.png'),
                         ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Icon(Icons.chevron_right),
+                        const Stack(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(Icons.chevron_right),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 8),
+                              child: Icon(Icons.chevron_right),
+                            ),
+                          ],
+                        ),
+                        CircleAvatar(
+                          backgroundColor: themeExtension.shimmerBaseColor,
+                          foregroundColor: Colors.orange,
+                          child: const Icon(Icons.electric_bolt),
                         ),
                       ],
                     ),
-                    CircleAvatar(
-                      backgroundColor: themeExtension.shimmerBaseColor,
-                      foregroundColor: Colors.orange,
-                      child: const Icon(Icons.electric_bolt),
-                    ),
-                  ],
-                ),
-                if (_nwcParsed != null) ...[
+                  ),
+                ],
+                if (!_isConnected && _nwcParsed != null) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Column(
@@ -115,7 +126,7 @@ class _NWCSettingsState extends State<NWCSettings> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            "Are you sure you want to connect to this service?",
+                            "Are you sure you want to connect?",
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -138,7 +149,7 @@ class _NWCSettingsState extends State<NWCSettings> {
                       ],
                     ),
                   ),
-                ] else
+                ] else if (!_isConnected)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Column(
@@ -146,13 +157,13 @@ class _NWCSettingsState extends State<NWCSettings> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            "Seamless Zapping Service",
+                            "Seamless Zapping",
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
                             "Connect your app for seamless zapping via NWC.",
                             textAlign: TextAlign.center,
@@ -163,7 +174,9 @@ class _NWCSettingsState extends State<NWCSettings> {
                       ],
                     ),
                   ),
-                if (_nwcParsed == null && _nwcString == null) ...[
+                if (!_isConnected &&
+                    _nwcString == null &&
+                    _nwcParsed == null) ...[
                   FilledButton(
                     onPressed: () async {
                       final clipboardData =
@@ -209,14 +222,12 @@ class _NWCSettingsState extends State<NWCSettings> {
                       ],
                     ),
                   ),
-                ] else if (_nwcParsed != null)
+                ] else if (!_isConnected)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       FilledButton(
-                        onPressed: _nwcString != null
-                            ? () => _connect(_nwcString!)
-                            : null,
+                        onPressed: _connect,
                         child: const Text('Connect'),
                       ),
                       OutlinedButton(
@@ -238,18 +249,42 @@ class _NWCSettingsState extends State<NWCSettings> {
                       ),
                     ],
                   )
-                else if (_nwcString != null)
+                else if (_isConnected) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            "You're connected to NWC.",
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            _nwcParsed!.relay,
+                            style:
+                                TextStyle(color: themeExtension.textDimColor),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            _nwcParsed!.lud16!,
+                            style:
+                                TextStyle(color: themeExtension.textDimColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: themeData.colorScheme.error),
                     ),
-                    onPressed: () async {
-                      await disposeNWC();
-                      await AppSecret.deleteNWC();
-                      setState(() {
-                        _nwcString = null;
-                      });
-                    },
+                    onPressed: _disconnect,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -261,7 +296,8 @@ class _NWCSettingsState extends State<NWCSettings> {
                         ),
                       ],
                     ),
-                  )
+                  ),
+                ],
               ],
             ),
           ),

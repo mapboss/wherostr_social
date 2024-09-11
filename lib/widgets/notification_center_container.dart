@@ -27,7 +27,15 @@ class NotificationCenterContainer extends StatelessWidget {
         includeReplies: true,
         kinds: const [1, 6, 7, 9735],
         p: [appState.me.pubkey],
-        itemFilter: (event) => event.pubkey != appState.me.pubkey,
+        itemFilter: (event) {
+          if (event.kind == 9735 &&
+              event.pubkey != appState.me.pubkey &&
+              (event.getTagValues("p")?.contains(appState.me.pubkey) ??
+                  false)) {
+            return false;
+          }
+          return event.pubkey != appState.me.pubkey;
+        },
         itemBuilder: (context, event) => Material(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

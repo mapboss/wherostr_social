@@ -154,7 +154,7 @@ class DataEvent extends NostrEvent {
     }
     _tagIndex = {};
     tags?.forEach((e) {
-      final key = e.elementAt(0);
+      final key = e.elementAt(0).toLowerCase();
       _tagIndex![key] ??= [];
       _tagIndex![key]!.add(e);
     });
