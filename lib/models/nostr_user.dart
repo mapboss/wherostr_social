@@ -689,6 +689,18 @@ class NostrUser {
     this.lud06 = content['lud06'];
     this.lud16 = content['lud16'];
     this.nip05 = content['nip05'];
+    if (NostrService.profileList.containsKey(pubkey)) {
+      final cache = NostrService.profileList[pubkey];
+      cache?.picture = content['picture'];
+      cache?.banner = content['banner'];
+      cache?.name = content['name'];
+      cache?.displayName = content['display_name'];
+      cache?.about = content['about'];
+      cache?.website = content['website'];
+      cache?.lud06 = content['lud06'];
+      cache?.lud16 = content['lud16'];
+      cache?.nip05 = content['nip05'];
+    }
   }
 }
 
