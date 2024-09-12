@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -7,6 +9,8 @@ import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 
 enum AppStatus { success, info, warning, error }
+
+final base64Regexp = RegExp(r'^data:[^;]+;[^,]+,(.*)$');
 
 class AppUtils {
   static Icon statusIcon({
@@ -114,19 +118,35 @@ class AppUtils {
   }
 
   static AppImageCacheManager appImageCacheManager = AppImageCacheManager();
-  static ImageProvider getCachedImageProvider(String url, int? maxSize) =>
-      url.endsWith('.svg')
-          ? (Svg(url, source: SvgSource.network) as ImageProvider)
-          : CachedNetworkImageProvider(
-              url,
-              cacheManager: appImageCacheManager,
-              maxHeight: maxSize,
-              maxWidth: maxSize,
-              errorListener: (err) => print('getCachedImageProvider: $err'),
-            );
-  static ImageProvider getImageProvider(String url) => url.endsWith('.svg')
-      ? (Svg(url, source: SvgSource.network) as ImageProvider)
-      : Image.network(url).image;
+  static ImageProvider getCachedImageProvider(String url, int? maxSize) {
+    if (url.endsWith('.svg')) {
+      return (Svg(url, source: SvgSource.network) as ImageProvider);
+    }
+    if (url.startsWith('data:image')) {
+      final base64 = base64Regexp.firstMatch(url)?[1];
+      if (base64 == null) throw Exception();
+      return Image.memory(base64Decode(base64)).image;
+    }
+    return CachedNetworkImageProvider(
+      url,
+      cacheManager: appImageCacheManager,
+      maxHeight: maxSize,
+      maxWidth: maxSize,
+      errorListener: (err) => print('getCachedImageProvider: $err'),
+    );
+  }
+
+  static ImageProvider getImageProvider(String url) {
+    if (url.endsWith('.svg')) {
+      return (Svg(url, source: SvgSource.network) as ImageProvider);
+    }
+    if (url.startsWith('data:image')) {
+      final base64 = base64Regexp.firstMatch(url)?[1];
+      if (base64 == null) throw Exception();
+      return Image.memory(base64Decode(base64)).image;
+    }
+    return Image.network(url).image;
+  }
 
   static void handleError() {
     AppUtils.showSnackBar(
