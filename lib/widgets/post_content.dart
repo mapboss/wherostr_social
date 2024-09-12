@@ -470,7 +470,7 @@ class _PostContentState extends State<PostContent> {
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(
+    return SelectableText.rich(
       TextSpan(
         children: _elementWidgets,
       ),
