@@ -79,11 +79,6 @@ Future<void> initNWC(String connectionURI) async {
       }
     }
   });
-
-  // await getBalance();
-  // await makeInvoice(nwc, parsedUri);
-  // await payInvoice(nwc, parsedUri);
-  // await listTransactions();
 }
 
 NostrWalletConnectUri parseNostrConnectUri(String connectionURI) {
@@ -195,13 +190,7 @@ Future<String?> payInvoice(String invoice) async {
   );
 
   print('[+] payInvoice() => okCommand: $okCommand');
-  return completers['pay_invoice']
-      ?.future
-      .timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => throw Exception('Timeout'),
-      )
-      .whenComplete(() {
+  return completers['pay_invoice']?.future.whenComplete(() {
     completers.remove('pay_invoice');
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:nwc/nwc.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/utils/nwc.dart';
@@ -202,6 +203,9 @@ class _NWCSettingsState extends State<NWCSettings> {
                         enableDrag: true,
                         showDragHandle: true,
                         context: context,
+                        constraints: const BoxConstraints(
+                          maxWidth: Constants.largeDisplayContentWidth,
+                        ),
                         builder: (context) {
                           return FractionallySizedBox(
                             heightFactor: 0.75,

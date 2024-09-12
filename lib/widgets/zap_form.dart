@@ -90,29 +90,31 @@ class _ZapFormState extends State<ZapForm> {
         );
         return;
       }
-      final nwcString = await appState.conectNWC();
-      bool useNWC = nwcString?.isNotEmpty ?? false;
-      if (useNWC) {
-        AppUtils.showSnackBar(
-          text: 'Zapping...',
-          withProgressBar: true,
-          autoHide: false,
-        );
-        zapCompleter = waitZapReceipt(zapRequest, invoice!);
-        await payInvoice(invoice);
-      } else {
+
+      zapCompleter = waitZapReceipt(zapRequest, invoice!);
+      if (useQr) {
         AppUtils.hideSnackBar();
-        zapCompleter = waitZapReceipt(zapRequest, invoice!);
-        if (useQr) {
-          showQRInvoiceModal(context, invoice).whenComplete(() {
-            if (zapCompleter?.isCompleted != true) {
-              zapCompleter?.completeError(Exception());
-              if (mounted) {
-                setState(() => _isLoading = false);
-              }
+        showQRInvoiceModal(context, invoice).whenComplete(() {
+          if (zapCompleter?.isCompleted != true) {
+            zapCompleter?.completeError(const FormatException());
+            if (mounted) {
+              setState(() => _isLoading = false);
             }
-          });
+          }
+        });
+      } else {
+        final nwcString = await appState.conectNWC();
+        bool useNWC = nwcString?.isNotEmpty ?? false;
+        if (useNWC) {
+          AppUtils.showSnackBar(
+            text: 'Zapping...',
+            withProgressBar: true,
+            autoHide: false,
+          );
+          await payInvoice(invoice);
+          await appState.disconnectNWC();
         } else {
+          AppUtils.hideSnackBar();
           showDialog(
             context: context,
             useRootNavigator: true,
@@ -126,7 +128,7 @@ class _ZapFormState extends State<ZapForm> {
                   TextButton(
                     onPressed: () {
                       appState.navigatorPop();
-                      zapCompleter?.completeError(Exception());
+                      zapCompleter?.completeError(const FormatException());
                     },
                     child: const Text('Cancel'),
                   ),
@@ -150,8 +152,11 @@ class _ZapFormState extends State<ZapForm> {
         appState.navigatorPop();
         appState.navigatorPop();
       }
-    } on Exception {
-      AppUtils.handleError();
+    } on FormatException catch (error) {
+      AppUtils.hideSnackBar();
+      if (error.message == 'TIMEOUT') {
+        AppUtils.handleError();
+      }
     } catch (error) {
       AppUtils.hideSnackBar();
       AppUtils.handleError();
