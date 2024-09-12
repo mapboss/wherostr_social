@@ -71,7 +71,7 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PoW Filters'),
+        title: const Text('PoW filters'),
       ),
       bottomNavigationBar: Material(
         elevation: 1,
