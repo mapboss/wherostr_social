@@ -84,8 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         _nsecFormFieldKey.currentState?.validate(),
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
-                      if (appState.verifyNsec(value) ||
-                          appState.verifyNpub(value)) return null;
+                      if (appState.verifyNsec(value)) return null;
                       return 'Invalid private key';
                     },
                   ),
