@@ -28,6 +28,7 @@ class PostContent extends StatefulWidget {
   final bool enableElementTap;
   final bool enablePreview;
   final bool enableMedia;
+  final bool enableTextSelection;
   final int depth;
   final Widget? contentLeading;
 
@@ -40,6 +41,7 @@ class PostContent extends StatefulWidget {
     this.enableMedia = true,
     this.depth = 0,
     this.contentLeading,
+    this.enableTextSelection = false,
   });
 
   @override
@@ -470,11 +472,17 @@ class _PostContentState extends State<PostContent> {
 
   @override
   Widget build(BuildContext context) {
-    return SelectableText.rich(
-      TextSpan(
-        children: _elementWidgets,
-      ),
-    );
+    return widget.enableTextSelection
+        ? SelectableText.rich(
+            TextSpan(
+              children: _elementWidgets,
+            ),
+          )
+        : Text.rich(
+            TextSpan(
+              children: _elementWidgets,
+            ),
+          );
   }
 }
 
