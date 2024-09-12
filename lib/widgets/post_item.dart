@@ -239,6 +239,7 @@ class ShortTextNote extends PostItem {
         enablePreview: enablePreview,
         enableMedia: enableMedia,
         depth: depth,
+        enableTextSelection: !enableTap,
       ),
     );
     return InkWell(
