@@ -109,7 +109,7 @@ class _SettingsContainerState extends State<SettingsContainer> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.memory),
-                  title: const Text('PoW Filters'),
+                  title: const Text('PoW filters'),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () => context.read<AppStatesProvider>().navigatorPush(
                         rootNavigator: true,
