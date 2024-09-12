@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_locale.dart';
 import 'package:wherostr_social/models/app_relays.dart';
@@ -63,6 +65,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.sizeOf(context).width < Constants.largeDisplayWidth &&
+        MediaQuery.sizeOf(context).height < Constants.largeDisplayWidth) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppFeedProvider()),
