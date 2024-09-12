@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/pow_filter.dart';
@@ -67,6 +68,8 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeDisplay =
+        MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return Scaffold(
@@ -74,6 +77,11 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
         title: const Text('PoW filters'),
       ),
       bottomNavigationBar: Material(
+        borderRadius: isLargeDisplay
+            ? const BorderRadiusDirectional.vertical(
+                top: Radius.circular(12),
+              )
+            : null,
         elevation: 1,
         child: SafeArea(
           child: Padding(
@@ -89,27 +97,34 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
         ),
       ),
       body: SingleChildScrollView(
-        child: Material(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Divider(),
-              const ListTile(
-                title: Text(
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text(
                   'Post filter',
+                  style: themeData.textTheme.titleMedium,
                 ),
-                subtitle: Text(
-                  'Set the PoW difficulty level to filter incoming posts. Posts that do not meet the specified difficulty will be hidden, ensuring that only high-quality content is shown.',
+              ),
+              Text.rich(
+                TextSpan(
+                  text:
+                      'Set the PoW difficulty level to filter incoming posts. Posts that do not meet the specified difficulty will be hidden, ensuring that only high-quality content is shown.',
+                  style: TextStyle(color: themeExtension.textDimColor),
                 ),
               ),
               ListTile(
-                leading: Switch(
-                  value: _powPost.enabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _powPost.enabled = value;
-                    });
-                  },
+                leading: Text(
+                  _powPost.value.round().toString(),
+                  style: themeData.textTheme.titleLarge!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: _powPost.enabled
+                        ? themeData.colorScheme.primary
+                        : themeExtension.textDimColor,
+                  ),
                 ),
                 title: Slider(
                   divisions: 48 ~/ 8,
@@ -120,33 +135,38 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
                   inactiveColor: themeData.colorScheme.surfaceDim,
                   onChanged: _powPost.enabled ? _handlePostChange : null,
                 ),
-                trailing: Text(
-                  _powPost.value.round().toString(),
-                  style: themeData.textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: _powPost.enabled
-                        ? themeData.colorScheme.primary
-                        : themeExtension.textDimColor,
-                  ),
+                trailing: Switch(
+                  value: _powPost.enabled,
+                  onChanged: (value) {
+                    setState(() {
+                      _powPost.enabled = value;
+                    });
+                  },
                 ),
               ),
-              const Divider(),
-              const ListTile(
-                title: Text(
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text(
                   'Comment filter',
+                  style: themeData.textTheme.titleMedium,
                 ),
-                subtitle: Text(
-                  'Set the PoW difficulty level to filter incoming comments. Comments that fail to meet the required difficulty will be hidden, helping to reduce spam and low-quality responses.',
+              ),
+              Text.rich(
+                TextSpan(
+                  text:
+                      'Set the PoW difficulty level to filter incoming comments. Comments that fail to meet the required difficulty will be hidden, helping to reduce spam and low-quality responses.',
+                  style: TextStyle(color: themeExtension.textDimColor),
                 ),
               ),
               ListTile(
-                leading: Switch(
-                  value: _powComment.enabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _powComment.enabled = value;
-                    });
-                  },
+                leading: Text(
+                  _powComment.value.round().toString(),
+                  style: themeData.textTheme.titleLarge!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: _powComment.enabled
+                        ? themeData.colorScheme.primary
+                        : themeExtension.textDimColor,
+                  ),
                 ),
                 title: Slider(
                   divisions: 48 ~/ 8,
@@ -157,14 +177,13 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
                   inactiveColor: themeData.colorScheme.surfaceDim,
                   onChanged: _powComment.enabled ? _handleCommentChange : null,
                 ),
-                trailing: Text(
-                  _powComment.value.round().toString(),
-                  style: themeData.textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: _powComment.enabled
-                        ? themeData.colorScheme.primary
-                        : themeExtension.textDimColor,
-                  ),
+                trailing: Switch(
+                  value: _powComment.enabled,
+                  onChanged: (value) {
+                    setState(() {
+                      _powComment.enabled = value;
+                    });
+                  },
                 ),
               ),
             ],

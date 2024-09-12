@@ -25,14 +25,15 @@ class AppStatesProvider with ChangeNotifier {
   }) {
     Navigator.of(homeNavigatorKey.currentContext!, rootNavigator: rootNavigator)
         .push(MaterialPageRoute(
-            builder: (context) => rootNavigator &&
-                    MediaQuery.sizeOf(context).width >=
-                        Constants.largeDisplayWidth
+            builder: (context) => rootNavigator
                 ? Container(
                     color: Theme.of(context).colorScheme.surfaceDim,
                     child: Center(
                       child: SizedBox(
-                        width: Constants.largeDisplayContentWidth,
+                        width: MediaQuery.sizeOf(context).width >=
+                                Constants.largeDisplayWidth
+                            ? Constants.largeDisplayContentWidth
+                            : null,
                         child: widget,
                       ),
                     ),

@@ -24,11 +24,15 @@ class ThemedLogo extends StatelessWidget {
                 Expanded(
                   child: Image.asset(
                     'assets/app/logo-light.png',
+                    alignment: Alignment.bottomCenter,
                   ),
                 ),
                 if (textEnabled == true) ...[
-                  Image.asset(
-                    'assets/app/logo-name-light.png',
+                  Expanded(
+                    child: Image.asset(
+                      'assets/app/logo-name-light.png',
+                      alignment: Alignment.topCenter,
+                    ),
                   ),
                 ],
               ]
@@ -36,11 +40,15 @@ class ThemedLogo extends StatelessWidget {
                 Expanded(
                   child: Image.asset(
                     'assets/app/logo-dark.png',
+                    alignment: Alignment.bottomCenter,
                   ),
                 ),
                 if (textEnabled == true) ...[
-                  Image.asset(
-                    'assets/app/logo-name-dark.png',
+                  Expanded(
+                    child: Image.asset(
+                      'assets/app/logo-name-dark.png',
+                      alignment: Alignment.topCenter,
+                    ),
                   ),
                 ],
               ],

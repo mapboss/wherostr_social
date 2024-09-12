@@ -61,8 +61,7 @@ class _NostrKeySettingsState extends State<NostrKeySettings> {
                 padding: const EdgeInsets.only(top: 16),
                 child: Text(
                   'Public key (npub)',
-                  style: themeData.textTheme.titleMedium!
-                      .copyWith(color: themeExtension.textDimColor),
+                  style: themeData.textTheme.titleMedium,
                 ),
               ),
               Padding(
