@@ -93,11 +93,13 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                child: Text(
-                  'Post',
-                  style: TextStyle(color: themeExtension.textDimColor),
+              const Divider(),
+              const ListTile(
+                title: Text(
+                  'Post filter',
+                ),
+                subtitle: Text(
+                  'Set the PoW difficulty level to filter incoming posts. Posts that do not meet the specified difficulty will be hidden, ensuring that only high-quality content is shown.',
                 ),
               ),
               ListTile(
@@ -122,16 +124,19 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
                   _powPost.value.round().toString(),
                   style: themeData.textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: themeData.colorScheme.primary,
+                    color: _powPost.enabled
+                        ? themeData.colorScheme.primary
+                        : themeExtension.textDimColor,
                   ),
                 ),
               ),
               const Divider(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                child: Text(
-                  'Comment',
-                  style: TextStyle(color: themeExtension.textDimColor),
+              const ListTile(
+                title: Text(
+                  'Comment filter',
+                ),
+                subtitle: Text(
+                  'Set the PoW difficulty level to filter incoming comments. Comments that fail to meet the required difficulty will be hidden, helping to reduce spam and low-quality responses.',
                 ),
               ),
               ListTile(
@@ -156,31 +161,12 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
                   _powComment.value.round().toString(),
                   style: themeData.textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: themeData.colorScheme.primary,
+                    color: _powComment.enabled
+                        ? themeData.colorScheme.primary
+                        : themeExtension.textDimColor,
                   ),
                 ),
               ),
-              // const Divider(),
-              // Padding(
-              //   padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              //   child: Text(
-              //     'Language',
-              //     style: TextStyle(color: themeExtension.textDimColor),
-              //   ),
-              // ),
-              // ListTile(
-              //   leading: const Icon(Icons.key),
-              //   title: const Text('Language'),
-              //   trailing: const Icon(Icons.arrow_forward_ios),
-              //   onTap: () {
-              //     var appLocale = context.read<AppLocaleProvider>();
-              //     if (appLocale.locale == const Locale('th')) {
-              //       appLocale.setLocale(const Locale('en'));
-              //     } else {
-              //       appLocale.setLocale(const Locale('th'));
-              //     }
-              //   },
-              // ),
             ],
           ),
         ),
