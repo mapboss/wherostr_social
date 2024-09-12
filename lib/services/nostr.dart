@@ -301,7 +301,10 @@ class NostrService {
       }
     });
     return completer.future.timeout(timeout, onTimeout: () {
-      return NostrUser(pubkey: pubkey);
+      if (!NostrService.profileList.containsKey(pubkey)) {
+        NostrService.profileList[pubkey] = NostrUser(pubkey: pubkey);
+      }
+      return NostrService.profileList[pubkey]!;
     }).whenComplete(() {
       sub.cancel().whenComplete(() {
         nostrStream.close();

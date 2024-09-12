@@ -170,6 +170,9 @@ class NostrUser {
       relays: _relayList,
       force: force,
     );
+    if (force) {
+      NostrService.profileList[pubkey] = profile;
+    }
     name = profile.name;
     displayName = profile._displayName;
     nip05 = profile.nip05;
