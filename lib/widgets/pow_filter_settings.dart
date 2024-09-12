@@ -26,8 +26,8 @@ class _PowFilterSettingsState extends State<PowFilterSettings> {
   void initialize() async {
     final appFeed = context.read<AppFeedProvider>();
     setState(() {
-      _powPost = appFeed.powPostFilter;
-      _powComment = appFeed.powCommentFilter;
+      _powPost = PoWfilter.fromString(appFeed.powPostFilter.toString());
+      _powComment = PoWfilter.fromString(appFeed.powCommentFilter.toString());
     });
   }
 
