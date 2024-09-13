@@ -23,7 +23,7 @@ import 'package:wherostr_social/widgets/profile_display_name.dart';
 
 class ActivityItem extends StatefulWidget {
   final NostrEvent event;
-  final bool enableViewReferencedEventTap;
+  final bool enableTap;
   final bool showCreatedAt;
   final bool showFollowButton;
   final bool showReferencedEvent;
@@ -31,7 +31,7 @@ class ActivityItem extends StatefulWidget {
   const ActivityItem({
     super.key,
     required this.event,
-    this.enableViewReferencedEventTap = false,
+    this.enableTap = false,
     this.showCreatedAt = false,
     this.showFollowButton = true,
     this.showReferencedEvent = false,
@@ -277,8 +277,7 @@ class _ActivityItemState extends State<ActivityItem> {
             ),
           )
         : InkWell(
-            onTap: widget.enableViewReferencedEventTap &&
-                    _referencedEventId != null
+            onTap: widget.enableTap && _referencedEventId != null
                 ? () => appState.navigatorPush(
                       widget: PostDetails(
                         eventId: widget.event.kind == 1
@@ -403,88 +402,98 @@ class _ActivityItemState extends State<ActivityItem> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(60, 0, 0, 8),
-                          child: Container(
-                            foregroundDecoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: themeData.colorScheme.primary,
+                          child: InkWell(
+                            onTap: () => appState.navigatorPush(
+                              widget: PostDetails(
+                                eventId: _referencedEventId,
                               ),
                             ),
-                            child: LimitedBox(
-                              maxHeight: 108,
-                              child: SingleChildScrollView(
-                                physics: const NeverScrollableScrollPhysics(),
-                                primary: false,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 16),
-                                  child: FutureBuilder(
-                                    future: NostrService.fetchEventById(
-                                        _referencedEventId!),
-                                    builder: (BuildContext context,
-                                        AsyncSnapshot<DataEvent?> snapshot) {
-                                      return snapshot.hasData
-                                          ? PostContent(
-                                              enableElementTap: false,
-                                              enablePreview: false,
-                                              enableMedia: false,
-                                              content: getEllipsisText(
-                                                text: snapshot.data?.content ??
-                                                    '',
-                                                maxWidth: (MediaQuery.sizeOf(
-                                                                    context)
-                                                                .width >=
-                                                            Constants
-                                                                .largeDisplayWidth
-                                                        ? Constants
-                                                            .largeDisplayContentWidth
-                                                        : MediaQuery.sizeOf(
-                                                                context)
-                                                            .width) -
-                                                    108,
-                                                maxLines: 3,
-                                              ),
-                                              contentLeading: snapshot
-                                                          .data?.pubkey !=
-                                                      null
-                                                  ? Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              right: 4),
-                                                      child: ProfileDisplayName(
-                                                        pubkey: snapshot
-                                                            .data!.pubkey,
-                                                        withBadge: true,
-                                                        textStyle: TextStyle(
-                                                            color: themeExtension
-                                                                .textDimColor),
-                                                      ),
-                                                    )
-                                                  : null,
-                                            )
-                                          : Shimmer.fromColors(
-                                              baseColor: themeExtension
-                                                  .shimmerBaseColor!,
-                                              highlightColor: themeExtension
-                                                  .shimmerHighlightColor!,
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.max,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Container(
-                                                    height: 16,
-                                                    color: Colors.white,
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Container(
-                                                    height: 16,
-                                                    color: Colors.white,
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                    },
+                            child: Container(
+                              foregroundDecoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: themeData.colorScheme.primary,
+                                ),
+                              ),
+                              child: LimitedBox(
+                                maxHeight: 108,
+                                child: SingleChildScrollView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  primary: false,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    child: FutureBuilder(
+                                      future: NostrService.fetchEventById(
+                                          _referencedEventId!),
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<DataEvent?> snapshot) {
+                                        return snapshot.hasData
+                                            ? PostContent(
+                                                enableElementTap: false,
+                                                enablePreview: false,
+                                                enableMedia: false,
+                                                content: getEllipsisText(
+                                                  text:
+                                                      snapshot.data?.content ??
+                                                          '',
+                                                  maxWidth: (MediaQuery.sizeOf(
+                                                                      context)
+                                                                  .width >=
+                                                              Constants
+                                                                  .largeDisplayWidth
+                                                          ? Constants
+                                                              .largeDisplayContentWidth
+                                                          : MediaQuery.sizeOf(
+                                                                  context)
+                                                              .width) -
+                                                      108,
+                                                  maxLines: 3,
+                                                ),
+                                                contentLeading: snapshot
+                                                            .data?.pubkey !=
+                                                        null
+                                                    ? Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(right: 4),
+                                                        child:
+                                                            ProfileDisplayName(
+                                                          pubkey: snapshot
+                                                              .data!.pubkey,
+                                                          withBadge: true,
+                                                          textStyle: TextStyle(
+                                                              color: themeExtension
+                                                                  .textDimColor),
+                                                        ),
+                                                      )
+                                                    : null,
+                                              )
+                                            : Shimmer.fromColors(
+                                                baseColor: themeExtension
+                                                    .shimmerBaseColor!,
+                                                highlightColor: themeExtension
+                                                    .shimmerHighlightColor!,
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Container(
+                                                      height: 16,
+                                                      color: Colors.white,
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 16,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
