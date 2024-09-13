@@ -127,6 +127,9 @@ class AppUtils {
       if (base64 == null) throw Exception();
       return Image.memory(base64Decode(base64)).image;
     }
+    if (url.endsWith('.gif')) {
+      return Image.network(url).image;
+    }
     return CachedNetworkImageProvider(
       url,
       cacheManager: appImageCacheManager,
@@ -181,7 +184,8 @@ class AppImageCacheManager extends CacheManager with ImageCacheManager {
   AppImageCacheManager._()
       : super(Config(
           key,
-          stalePeriod: const Duration(days: 7),
+          stalePeriod: const Duration(days: 1),
+          maxNrOfCacheObjects: 200,
         ));
 }
 
