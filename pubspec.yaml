@@ -3,6 +3,13 @@ description: "Wherostr social"
 publish_to: "none"
 version: 1.2.1+8
 
+flutter_native_splash:
+  color: "#ffffff"
+  color_dark: "#121212"
+  android_12:
+    color: "#ffffff"
+    color_dark: "#121212"
+
 flutter_launcher_icons:
   image_path: "assets/icon/1024.png"
   android: true
@@ -79,6 +86,7 @@ dependencies:
   flutter_cache_manager: ^3.4.1
   flutter_debouncer: ^2.0.0
   nwc: ^1.0.1
+  flutter_native_splash: ^2.4.1
 
 dev_dependencies:
   flutter_test:
