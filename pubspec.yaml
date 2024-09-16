@@ -88,6 +88,8 @@ dependencies:
   nwc: ^1.0.1
   flutter_native_splash: ^2.4.1
   native_device_orientation: ^2.0.3
+  exif: ^3.3.0
+  image: ^4.2.0
 
 dev_dependencies:
   flutter_test:

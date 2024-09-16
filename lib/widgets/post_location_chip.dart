@@ -117,12 +117,14 @@ class _PostLocationChipState extends State<PostLocationChip> {
                     color: themeExtension.textDimColor,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    _locationName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: themeData.textTheme.labelMedium
-                        ?.copyWith(color: themeData.colorScheme.primary),
+                  Expanded(
+                    child: Text(
+                      _locationName ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: themeData.textTheme.labelMedium
+                          ?.copyWith(color: themeData.colorScheme.primary),
+                    ),
                   ),
                 ],
               ),

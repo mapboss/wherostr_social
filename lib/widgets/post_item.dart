@@ -275,7 +275,10 @@ class ShortTextNote extends PostItem {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (enableLocation == true) PostLocationChip(event: event),
+                  if (enableLocation == true)
+                    Expanded(
+                      child: PostLocationChip(event: event),
+                    ),
                   if (enableProofOfWork == true)
                     PostProofOfWorkChip(difficulty: getDifficulty(event)),
                 ],

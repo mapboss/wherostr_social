@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dart_geohash/dart_geohash.dart';
+import 'package:exif/exif.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -477,7 +479,11 @@ class _PostComposeState extends State<PostCompose> {
                               autoFocus: true,
                               expands: true,
                               embedBuilders: [
-                                ImageEmbedBuilder(),
+                                ImageEmbedBuilder(
+                                  onTagLocationTap: (geohash) => setState(() {
+                                    _geohash = geohash;
+                                  }),
+                                ),
                                 ProfileMentionEmbedBuilder(),
                               ],
                             ),
@@ -496,9 +502,11 @@ class _PostComposeState extends State<PostCompose> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         if (_geohash != null)
-                          PostLocationChip(
-                            geohash: _geohash,
-                            enableShowMapAction: false,
+                          Expanded(
+                            child: PostLocationChip(
+                              geohash: _geohash,
+                              enableShowMapAction: false,
+                            ),
                           ),
                         const Spacer(),
                         if (_difficulty != null)
@@ -680,39 +688,148 @@ class CustomEmbed {
   static const String profileMentionType = "profile-mention";
 }
 
+double? gpsValuesToFloat(IfdValues? values) {
+  if (values == null || values is! IfdRatios) {
+    return null;
+  }
+
+  double sum = 0.0;
+  double unit = 1.0;
+
+  for (final v in values.ratios) {
+    sum += v.toDouble() * unit;
+    unit /= 60.0;
+  }
+
+  return sum;
+}
+
 class ImageEmbedBuilder extends EmbedBuilder {
+  final Function(String)? onTagLocationTap;
+
+  ImageEmbedBuilder({
+    this.onTagLocationTap,
+  });
+
   @override
   String get key => CustomEmbed.imageFileType;
+
+  Future<String?> _getLocation(File file) async {
+    final fileBytes = file.readAsBytesSync();
+    final data = await readExifFromBytes(fileBytes);
+    if (data.isEmpty) {
+      return null;
+    }
+    final latRef = data['GPS GPSLatitudeRef']?.toString();
+    var latVal = gpsValuesToFloat(data['GPS GPSLatitude']?.values);
+    final lngRef = data['GPS GPSLongitudeRef']?.toString();
+    var lngVal = gpsValuesToFloat(data['GPS GPSLongitude']?.values);
+    if (latRef == null || latVal == null || lngRef == null || lngVal == null) {
+      return null;
+    }
+    if (latRef == 'S') {
+      latVal *= -1;
+    }
+    if (lngRef == 'W') {
+      lngVal *= -1;
+    }
+    return GeoHash.fromDecimalDegrees(lngVal, latVal).geohash;
+  }
 
   @override
   Widget build(BuildContext context, QuillController controller, Embed node,
       bool readOnly, bool inline, TextStyle textStyle) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).width >=
-                          Constants.largeDisplayWidth
-                      ? MediaQuery.sizeOf(context).height * 0.5
-                      : (MediaQuery.sizeOf(context).width - 32) * (4 / 3),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(node.value.data),
-                ),
+    ThemeData themeData = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(
+          Radius.circular(12),
+        ),
+        child: Material(
+          elevation: 1,
+          child: LimitedBox(
+            maxHeight: 120,
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 8, 0, 8),
+                      child: LimitedBox(
+                        maxWidth: 160,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(12),
+                            ),
+                            child: Image.file(node.value.data),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        onPressed: readOnly
+                            ? null
+                            : () {
+                                controller.document
+                                    .delete(node.documentOffset, node.length);
+                              },
+                        color: themeData.colorScheme.error,
+                        icon: const Icon(Icons.delete),
+                      ),
+                      const Spacer(),
+                      if (onTagLocationTap != null)
+                        FutureBuilder(
+                          future: _getLocation(node.value.data),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<String?> snapshot) {
+                            return snapshot.data != null
+                                ? Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        LimitedBox(
+                                          maxWidth: 160,
+                                          child: IntrinsicWidth(
+                                            child: PostLocationChip(
+                                              geohash: snapshot.data,
+                                              enableShowMapAction: false,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        FilledButton.tonal(
+                                          onPressed: readOnly
+                                              ? null
+                                              : () => onTagLocationTap!(
+                                                  snapshot.data!),
+                                          child:
+                                              const Text('Tag this location'),
+                                        ),
+                                        const SizedBox(height: 4),
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox.shrink();
+                          },
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }

@@ -112,7 +112,7 @@ class _MapGeohashPickerState extends State<MapGeohashPicker> {
             onPressed: () {
               widget.onGeohashUpdate?.call(_geohash);
             },
-            child: const Text("Use this location"),
+            child: const Text("Tag this location"),
           ),
         ),
         if (widget.initialGeohash != null)
