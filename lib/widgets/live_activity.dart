@@ -44,6 +44,7 @@ class _LiveActivityState extends State<LiveActivity> {
                 a: [getNostrAddress(widget.event)],
                 autoRefresh: true,
                 reverse: true,
+                isDynamicHeight: true,
                 itemBuilder: (context, event) => Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: MessageItem(

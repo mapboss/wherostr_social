@@ -72,6 +72,7 @@ class PostActivity extends StatelessWidget {
               kinds: const [9735],
               e: [event.id!],
               autoRefresh: true,
+              isDynamicHeight: true,
               itemBuilder: (context, event) => Material(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

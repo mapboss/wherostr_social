@@ -570,6 +570,7 @@ class _ProfileState extends State<Profile> {
                 widget.user.pubkey,
               ],
               includeMuted: true,
+              isDynamicHeight: true,
               itemBuilder: (context, item) => Container(
                 margin: const EdgeInsets.only(bottom: 4),
                 child: ClipRRect(

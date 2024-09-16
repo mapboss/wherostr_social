@@ -29,6 +29,7 @@ class NostrFeed extends StatefulWidget {
   final bool includeReplies;
   final bool includeMuted;
   final bool disableSubscribe;
+  final bool isDynamicHeight;
   final ScrollController? scrollController;
   final Color? backgroundColor;
 
@@ -52,6 +53,7 @@ class NostrFeed extends StatefulWidget {
     this.includeReplies = false,
     this.includeMuted = false,
     this.disableSubscribe = false,
+    this.isDynamicHeight = false,
     this.scrollController,
     this.backgroundColor,
   });
@@ -138,33 +140,40 @@ class NostrFeedState extends State<NostrFeed> {
                                 ));
                           }
                           final item = _items[index];
-                          return AnimatedSize(
-                            key: ValueKey(item.id!),
-                            curve: Curves.easeInOutCubic,
-                            duration: _duration,
-                            child: SizedBox(
-                              height: _heightMap[item.id!],
-                              child: SingleChildScrollView(
-                                physics: const NeverScrollableScrollPhysics(),
-                                primary: false,
-                                child: ResizeObserver(
-                                  onResized: (Size? oldSize, Size newSize) {
-                                    if (_heightMap[item.id!] !=
-                                        newSize.height) {
-                                      _debouncer.debounce(
-                                        duration: _duration,
-                                        onDebounce: () {
-                                          setState(() {});
-                                        },
-                                      );
-                                    }
-                                    _heightMap[item.id!] = newSize.height;
-                                  },
-                                  child: widget.itemBuilder(context, item),
+                          if (widget.isDynamicHeight) {
+                            return AnimatedSize(
+                              key: ValueKey(item.id!),
+                              curve: Curves.easeInOutCubic,
+                              duration: _duration,
+                              child: SizedBox(
+                                height: _heightMap[item.id!],
+                                child: SingleChildScrollView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  primary: false,
+                                  child: ResizeObserver(
+                                    onResized: (Size? oldSize, Size newSize) {
+                                      if (_heightMap[item.id!] !=
+                                          newSize.height) {
+                                        _debouncer.debounce(
+                                          duration: _duration,
+                                          onDebounce: () {
+                                            setState(() {});
+                                          },
+                                        );
+                                      }
+                                      _heightMap[item.id!] = newSize.height;
+                                    },
+                                    child: widget.itemBuilder(context, item),
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
+                            );
+                          } else {
+                            return Container(
+                              key: ValueKey(item.id!),
+                              child: widget.itemBuilder(context, item),
+                            );
+                          }
                         },
                       ),
                     ),

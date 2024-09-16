@@ -293,6 +293,7 @@ class _PostDetailsState extends State<PostDetails> {
                       includeReplies: true,
                       autoRefresh: true,
                       isAscending: true,
+                      isDynamicHeight: true,
                       itemFilter: (itemEvent) {
                         return isReply(
                           event: itemEvent,

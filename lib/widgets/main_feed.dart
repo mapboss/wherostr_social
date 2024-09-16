@@ -96,6 +96,7 @@ class MainFeedState extends State<MainFeed> {
                 ? [difficultyToHex(difficulty, true)]
                 : null,
             t: _t,
+            isDynamicHeight: true,
             itemBuilder: (context, item) => Container(
               margin: const EdgeInsets.only(bottom: 4),
               child: ClipRRect(

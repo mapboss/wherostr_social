@@ -47,6 +47,7 @@ class NotificationCenterContainer extends StatelessWidget {
                   includeReplies: true,
                   kinds: kind,
                   p: [appState.me.pubkey],
+                  isDynamicHeight: true,
                   itemFilter: (event) => event.pubkey != appState.me.pubkey,
                   itemBuilder: (context, event) => Material(
                     child: Padding(

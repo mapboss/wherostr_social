@@ -73,6 +73,7 @@ class _HashtagSearchState extends State<HashtagSearch> {
         relays: appState.me.relayList.clone(),
         kinds: const [1],
         t: [widget.hashtag.toLowerCase()],
+        isDynamicHeight: true,
         itemBuilder: (context, item) => Container(
           margin: const EdgeInsets.only(bottom: 4),
           child: ClipRRect(
