@@ -72,7 +72,7 @@ class _HashtagSearchState extends State<HashtagSearch> {
       body: NostrFeed(
         relays: appState.me.relayList.clone(),
         kinds: const [1],
-        t: [widget.hashtag],
+        t: [widget.hashtag.toLowerCase()],
         itemBuilder: (context, item) => Container(
           margin: const EdgeInsets.only(bottom: 4),
           child: ClipRRect(
