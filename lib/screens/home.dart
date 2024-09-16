@@ -23,14 +23,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final List<Widget> _screens = [
-    const MainFeedContainer(),
-    const SearchContainer(),
-    const SizedBox.shrink(),
-    const SocialMapContainer(),
-    const SettingsContainer(),
-    const NotificationCenterContainer(),
-  ];
 
   void popToHome() {
     Navigator.popUntil(AppStatesProvider.homeNavigatorKey.currentContext!,
@@ -83,7 +75,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 return MaterialPageRoute(
                   builder: (context) => LazyIndexedStack(
                     index: _selectedIndex,
-                    children: _screens,
+                    children: [
+                      MainFeedContainer(
+                        onNotificationCenterTap: () =>
+                            handleDestinationSelected(5),
+                      ),
+                      _selectedIndex == 1
+                          ? const SearchContainer()
+                          : const SizedBox.shrink(),
+                      const SizedBox.shrink(),
+                      _selectedIndex == 3
+                          ? const SocialMapContainer()
+                          : const SizedBox.shrink(),
+                      const SettingsContainer(),
+                      _selectedIndex == 5
+                          ? const NotificationCenterContainer()
+                          : const SizedBox.shrink(),
+                    ],
                   ),
                 );
               },

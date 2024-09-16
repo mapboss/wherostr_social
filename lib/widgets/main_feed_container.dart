@@ -4,14 +4,17 @@ import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
-// import 'package:wherostr_social/widgets/messages_container.dart';
-import 'package:wherostr_social/widgets/notification_center_container.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 
 class MainFeedContainer extends StatelessWidget {
-  const MainFeedContainer({super.key});
+  final Function() onNotificationCenterTap;
+
+  const MainFeedContainer({
+    super.key,
+    required this.onNotificationCenterTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,15 +75,6 @@ class MainFeedContainer extends StatelessWidget {
                       color: themeData.colorScheme.surfaceDim,
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.notifications,
-                              color: themeData.colorScheme.primary,
-                            ),
-                            onPressed: () => appState.navigatorPush(
-                              widget: const NotificationCenterContainer(),
-                            ),
-                          ),
                           // IconButton(
                           //   icon: Icon(
                           //     Icons.sms,
@@ -90,6 +84,13 @@ class MainFeedContainer extends StatelessWidget {
                           //     widget: const MessagesContainer(),
                           //   ),
                           // ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.notifications,
+                              color: themeData.colorScheme.primary,
+                            ),
+                            onPressed: () => onNotificationCenterTap(),
+                          ),
                         ],
                       ),
                     ),

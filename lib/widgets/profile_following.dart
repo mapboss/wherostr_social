@@ -79,11 +79,13 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
             },
             tabs: [
               Tab(
-                  text:
-                      'Following${(_following?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_following!.length)})' : ''}'),
+                text:
+                    'Following${(_following?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_following!.length)})' : ''}',
+              ),
               Tab(
-                  text:
-                      'Followers${(_followers?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_followers!.length)})' : ''}'),
+                text:
+                    'Followers${(_followers?.isNotEmpty ?? false) ? ' (${NumberFormat.compact().format(_followers!.length)})' : ''}',
+              ),
             ],
           ),
         ),

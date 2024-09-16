@@ -71,8 +71,7 @@ class _ActivityItemState extends State<ActivityItem> {
         _user = user;
         _isMe = me.pubkey == user.pubkey;
         _isFollowing = me.following.contains(user.pubkey);
-        _referencedEventId = getReferencedEventId(widget.event) ??
-            (widget.event.kind == 1 ? widget.event.id : null);
+        _referencedEventId = getReferencedEventId(widget.event);
       });
     }
   }
@@ -277,7 +276,8 @@ class _ActivityItemState extends State<ActivityItem> {
             ),
           )
         : InkWell(
-            onTap: widget.enableTap && _referencedEventId != null
+            onTap: widget.enableTap &&
+                    (widget.event.kind == 1 || _referencedEventId != null)
                 ? () => appState.navigatorPush(
                       widget: PostDetails(
                         eventId: widget.event.kind == 1
