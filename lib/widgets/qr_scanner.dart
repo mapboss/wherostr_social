@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:wherostr_social/constant.dart';
 
 class QrScanner extends StatefulWidget {
@@ -77,9 +78,11 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
   void _handleScanned(BarcodeCapture data) async {
     _scannerSubscription?.pause();
     if (await widget.onScan(data)) {
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
     } else {
       _scannerSubscription?.resume();
     }
@@ -104,12 +107,39 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(
-            fit: BoxFit.cover,
-            controller: _controller,
-            scanWindow: scanWindow,
-            errorBuilder: (context, error, child) {
-              return ScannerErrorWidget(error: error);
+          NativeDeviceOrientationReader(
+            useSensor: true,
+            builder: (context) {
+              final orientation =
+                  NativeDeviceOrientationReader.orientation(context);
+              int turns = 0;
+              switch (orientation) {
+                case NativeDeviceOrientation.portraitUp:
+                  turns = 0;
+                  break;
+                case NativeDeviceOrientation.landscapeRight:
+                  turns = 1;
+                  break;
+                case NativeDeviceOrientation.portraitDown:
+                  turns = 2;
+                  break;
+                case NativeDeviceOrientation.landscapeLeft:
+                  turns = 3;
+                  break;
+                case NativeDeviceOrientation.unknown:
+                  turns = 0;
+                  break;
+              }
+              return RotatedBox(
+                quarterTurns: turns,
+                child: MobileScanner(
+                  fit: BoxFit.cover,
+                  controller: _controller,
+                  errorBuilder: (context, error, child) {
+                    return ScannerErrorWidget(error: error);
+                  },
+                ),
+              );
             },
           ),
           ValueListenableBuilder(
