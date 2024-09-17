@@ -20,6 +20,11 @@ class FileService {
     return file;
   }
 
+  static Future<XFile?> pickAMedia() async {
+    final file = await _imagePicker.pickMedia();
+    return file;
+  }
+
   static Future<List<IMetaTag>> uploadMultiple(List<File> files) async {
     final request = http.MultipartRequest('POST', Uri.parse(uploadServiceUrl));
     for (var file in files) {

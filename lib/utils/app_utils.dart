@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:mime/mime.dart';
 import 'package:wherostr_social/main.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
@@ -171,6 +172,9 @@ class AppUtils {
           curve: Curves.easeInOutCubic);
     }
   }
+
+  static bool isImage(String path) =>
+      lookupMimeType(path)?.startsWith('image/') ?? false;
 }
 
 class AppImageCacheManager extends CacheManager with ImageCacheManager {

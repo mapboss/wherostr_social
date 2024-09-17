@@ -8,6 +8,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
@@ -156,7 +157,7 @@ class _PostComposeState extends State<PostCompose> {
     _hideProfileList();
   }
 
-  Future<void> _addPhoto(XFile? file) async {
+  void _addPhoto(XFile? file) {
     if (file != null) {
       int index = _editorController.selection.baseOffset;
       final length = _editorController.selection.extentOffset - index;
@@ -175,17 +176,68 @@ class _PostComposeState extends State<PostCompose> {
     }
   }
 
+  void _addVideo(XFile? file) {
+    if (file != null) {
+      int index = _editorController.selection.baseOffset;
+      final length = _editorController.selection.extentOffset - index;
+      if (index > 0) {
+        _editorController.document.insert(index, '\n');
+        index += 1;
+      }
+      _editorController.replaceText(
+        index,
+        length,
+        Embeddable(CustomEmbed.videoFileType, File(file.path)),
+        null,
+      );
+      _editorController.document.insert(index + 1, '\n');
+      _editorController.moveCursorToPosition(index + 2);
+    }
+  }
+
   void _handleProfileSelected(NostrUser profile) async {
     _addProfileMention(profile);
   }
 
   Future<void> _handleChooseFromLibraryPressed() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isLoading = true;
+    });
+    _editorController.readOnly = true;
     try {
-      FocusScope.of(context).unfocus();
-      _addPhoto(await FileService.pickAPhoto());
+      AppUtils.showSnackBar(
+        text: 'Calculating size...',
+        withProgressBar: true,
+        autoHide: false,
+      );
+      final file = await FileService.pickAMedia();
+      if (file != null) {
+        if (AppUtils.isImage(file.path)) {
+          AppUtils.hideSnackBar();
+          _addPhoto(file);
+        } else {
+          final size = await file.length();
+          if (size < 7000000) {
+            AppUtils.hideSnackBar();
+            _addVideo(file);
+          } else {
+            AppUtils.showSnackBar(
+              text: 'Video size limit is 7MB.',
+              status: AppStatus.error,
+            );
+          }
+        }
+      } else {
+        AppUtils.hideSnackBar();
+      }
     } catch (error) {
       AppUtils.handleError();
     }
+    _editorController.readOnly = false;
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> _handleTakeAPhotoPressed() async {
@@ -278,6 +330,11 @@ class _PostComposeState extends State<PostCompose> {
               final fileId = '{${uuid.v1()}}';
               fileIds.add(fileId);
               content = content + fileId;
+            } else if (data.containsKey(CustomEmbed.videoFileType)) {
+              files.add(data[CustomEmbed.videoFileType]);
+              final fileId = '{${uuid.v1()}}';
+              fileIds.add(fileId);
+              content = content + fileId;
             } else if (data.containsKey(CustomEmbed.profileMentionType)) {
               content = content + data[CustomEmbed.profileMentionType];
             }
@@ -287,7 +344,7 @@ class _PostComposeState extends State<PostCompose> {
       if (files.isNotEmpty) {
         AppUtils.showSnackBar(
           text:
-              'Uploading ${files.length} image${files.length > 1 ? 's' : ''}...',
+              'Uploading ${files.length} file${files.length > 1 ? 's' : ''}...',
           withProgressBar: true,
           autoHide: false,
         );
@@ -484,6 +541,7 @@ class _PostComposeState extends State<PostCompose> {
                                     _geohash = geohash;
                                   }),
                                 ),
+                                VideoEmbedBuilder(),
                                 ProfileMentionEmbedBuilder(),
                               ],
                             ),
@@ -685,6 +743,7 @@ class _PostComposeState extends State<PostCompose> {
 
 class CustomEmbed {
   static const String imageFileType = "image-file";
+  static const String videoFileType = "video-file";
   static const String profileMentionType = "profile-mention";
 }
 
@@ -692,16 +751,35 @@ double? gpsValuesToFloat(IfdValues? values) {
   if (values == null || values is! IfdRatios) {
     return null;
   }
-
   double sum = 0.0;
   double unit = 1.0;
-
   for (final v in values.ratios) {
     sum += v.toDouble() * unit;
     unit /= 60.0;
   }
-
   return sum;
+}
+
+Future<String?> getFileLocation(File file) async {
+  final fileBytes = file.readAsBytesSync();
+  final data = await readExifFromBytes(fileBytes);
+  if (data.isEmpty) {
+    return null;
+  }
+  final latRef = data['GPS GPSLatitudeRef']?.toString();
+  var latVal = gpsValuesToFloat(data['GPS GPSLatitude']?.values);
+  final lngRef = data['GPS GPSLongitudeRef']?.toString();
+  var lngVal = gpsValuesToFloat(data['GPS GPSLongitude']?.values);
+  if (latRef == null || latVal == null || lngRef == null || lngVal == null) {
+    return null;
+  }
+  if (latRef == 'S') {
+    latVal *= -1;
+  }
+  if (lngRef == 'W') {
+    lngVal *= -1;
+  }
+  return GeoHash.fromDecimalDegrees(lngVal, latVal).geohash;
 }
 
 class ImageEmbedBuilder extends EmbedBuilder {
@@ -713,28 +791,6 @@ class ImageEmbedBuilder extends EmbedBuilder {
 
   @override
   String get key => CustomEmbed.imageFileType;
-
-  Future<String?> _getLocation(File file) async {
-    final fileBytes = file.readAsBytesSync();
-    final data = await readExifFromBytes(fileBytes);
-    if (data.isEmpty) {
-      return null;
-    }
-    final latRef = data['GPS GPSLatitudeRef']?.toString();
-    var latVal = gpsValuesToFloat(data['GPS GPSLatitude']?.values);
-    final lngRef = data['GPS GPSLongitudeRef']?.toString();
-    var lngVal = gpsValuesToFloat(data['GPS GPSLongitude']?.values);
-    if (latRef == null || latVal == null || lngRef == null || lngVal == null) {
-      return null;
-    }
-    if (latRef == 'S') {
-      latVal *= -1;
-    }
-    if (lngRef == 'W') {
-      lngVal *= -1;
-    }
-    return GeoHash.fromDecimalDegrees(lngVal, latVal).geohash;
-  }
 
   @override
   Widget build(BuildContext context, QuillController controller, Embed node,
@@ -748,63 +804,53 @@ class ImageEmbedBuilder extends EmbedBuilder {
         ),
         child: Material(
           elevation: 1,
-          child: LimitedBox(
-            maxHeight: 120,
-            child: IntrinsicHeight(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 8, 0, 8),
-                      child: LimitedBox(
-                        maxWidth: 160,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(12),
-                            ),
-                            child: Image.file(node.value.data),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Image.file(node.value.data),
+                ),
+                const SizedBox(width: 16),
+                SizedBox(
+                  width: 160,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IconButton(
-                        onPressed: readOnly
-                            ? null
-                            : () {
-                                controller.document
-                                    .delete(node.documentOffset, node.length);
-                              },
-                        color: themeData.colorScheme.error,
-                        icon: const Icon(Icons.delete),
+                      Row(
+                        children: [
+                          const Icon(Icons.photo),
+                          const SizedBox(width: 4),
+                          const Text('Photo'),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: readOnly
+                                ? null
+                                : () {
+                                    controller.document.delete(
+                                        node.documentOffset, node.length);
+                                  },
+                            color: themeData.colorScheme.error,
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
                       ),
                       const Spacer(),
                       if (onTagLocationTap != null)
                         FutureBuilder(
-                          future: _getLocation(node.value.data),
+                          future: getFileLocation(node.value.data),
                           builder: (BuildContext context,
                               AsyncSnapshot<String?> snapshot) {
                             return snapshot.data != null
                                 ? Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
+                                    padding: const EdgeInsets.only(right: 8),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        LimitedBox(
-                                          maxWidth: 160,
-                                          child: IntrinsicWidth(
-                                            child: PostLocationChip(
-                                              geohash: snapshot.data,
-                                              enableShowMapAction: false,
-                                            ),
-                                          ),
+                                        PostLocationChip(
+                                          geohash: snapshot.data,
+                                          enableShowMapAction: false,
                                         ),
                                         const SizedBox(height: 4),
                                         FilledButton.tonal(
@@ -812,8 +858,7 @@ class ImageEmbedBuilder extends EmbedBuilder {
                                               ? null
                                               : () => onTagLocationTap!(
                                                   snapshot.data!),
-                                          child:
-                                              const Text('Tag this location'),
+                                          child: const Text('Tag location'),
                                         ),
                                         const SizedBox(height: 4),
                                       ],
@@ -824,8 +869,104 @@ class ImageEmbedBuilder extends EmbedBuilder {
                         ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<int> getFileSize(File file) async {
+  return ((await file.length()) / 1000000).ceil();
+}
+
+Future<ImageProvider?> getVideoThumbnail(File file) async {
+  final bytes = await VideoThumbnail.thumbnailData(
+    video: file.path,
+    imageFormat: ImageFormat.JPEG,
+    maxWidth: 240,
+    quality: 50,
+  );
+  return bytes == null ? null : MemoryImage(bytes);
+}
+
+class VideoEmbedBuilder extends EmbedBuilder {
+  @override
+  String get key => CustomEmbed.videoFileType;
+
+  @override
+  Widget build(BuildContext context, QuillController controller, Embed node,
+      bool readOnly, bool inline, TextStyle textStyle) {
+    ThemeData themeData = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(
+          Radius.circular(12),
+        ),
+        child: Material(
+          elevation: 1,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: FutureBuilder(
+                    future: getVideoThumbnail(node.value.data),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<ImageProvider?> snapshot) {
+                      return snapshot.data != null
+                          ? Image(image: snapshot.data!)
+                          : const Icon(Icons.video_file);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                SizedBox(
+                  width: 160,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.videocam),
+                          const SizedBox(width: 4),
+                          const Text('Video'),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: readOnly
+                                ? null
+                                : () {
+                                    controller.document.delete(
+                                        node.documentOffset, node.length);
+                                  },
+                            color: themeData.colorScheme.error,
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      FutureBuilder(
+                        future: getFileSize(node.value.data),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<int> snapshot) {
+                          return snapshot.hasData
+                              ? Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 8, bottom: 8),
+                                  child: Text(
+                                      'Video size: ${snapshot.data! > 0 ? snapshot.data : '~1'} MB'),
+                                )
+                              : const SizedBox.shrink();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
