@@ -41,7 +41,7 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
       }));
     }
     if (me.interestSets.isNotEmpty == true) {
-      for (var t in me.interestSets) {
+      for (final t in me.interestSets) {
         menuItems.add(FeedMenuItem(id: t, name: t, type: 'tag', value: [t]));
       }
     } else {
