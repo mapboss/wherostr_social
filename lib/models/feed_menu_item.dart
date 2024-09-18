@@ -1,23 +1,18 @@
 class FeedMenuItem {
   final String type;
+  final String name;
+  final List<String> value;
 
   String? _id;
   String get id => _id ?? '';
   set id(String? v) => _id = v;
 
-  String? _name;
-  String get name => _name ?? '';
-  set name(String? v) => _name = v;
-
-  final List<String> value;
-
   FeedMenuItem({
     required String id,
-    required String name,
+    required this.name,
     required this.type,
     required this.value,
-  })  : _id = id.toLowerCase(),
-        _name = name.toLowerCase();
+  }) : _id = id.toLowerCase();
 
   factory FeedMenuItem.fromString(String value) {
     final [i, t, n, v] = value.split('|');
@@ -30,16 +25,16 @@ class FeedMenuItem {
 
   @override
   String toString() {
-    return '${id.toLowerCase()}|$type|${name.toLowerCase()}|${value.map((e) => e.toLowerCase()).join(',')}';
+    return '${id.toLowerCase()}|$type|$name|${value.map((e) => e.toLowerCase()).join(',')}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! FeedMenuItem) return false;
-    return other.toString() == toString();
+    return other.id == id;
   }
 
   @override
-  int get hashCode => toString().hashCode;
+  int get hashCode => id.hashCode;
 }
