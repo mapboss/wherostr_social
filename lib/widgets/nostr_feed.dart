@@ -22,6 +22,7 @@ class NostrFeed extends StatefulWidget {
   final List<String>? e;
   final Map<String, dynamic>? additionalFilters;
   final int limit;
+  final int Function(DataEvent a, DataEvent b)? itemSorting;
   final bool Function(DataEvent event)? itemFilter;
   final bool reverse;
   final bool isAscending;
@@ -29,6 +30,7 @@ class NostrFeed extends StatefulWidget {
   final bool includeReplies;
   final bool includeMuted;
   final bool disableSubscribe;
+  final bool disableLimit;
   final bool isDynamicHeight;
   final ScrollController? scrollController;
   final Color? backgroundColor;
@@ -46,12 +48,14 @@ class NostrFeed extends StatefulWidget {
     this.e,
     this.additionalFilters,
     this.limit = 30,
+    this.itemSorting,
     this.itemFilter,
     this.reverse = false,
     this.isAscending = false,
     this.autoRefresh = false,
     this.includeReplies = false,
     this.includeMuted = false,
+    this.disableLimit = false,
     this.disableSubscribe = false,
     this.isDynamicHeight = false,
     this.scrollController,
@@ -272,6 +276,9 @@ class NostrFeedState extends State<NostrFeed> {
   }
 
   int sorting(DataEvent a, DataEvent b) {
+    if (widget.itemSorting != null) {
+      return widget.itemSorting!(a, b);
+    }
     if (!widget.isAscending) {
       return b.createdAt!.compareTo(a.createdAt!);
     } else {
@@ -285,7 +292,7 @@ class NostrFeedState extends State<NostrFeed> {
       kinds: widget.kinds,
       authors: widget.authors,
       ids: widget.ids,
-      limit: _limitRequest,
+      limit: !widget.disableLimit ? _limitRequest : null,
       t: widget.t,
       a: widget.a,
       p: widget.p,
@@ -398,6 +405,11 @@ class NostrFeedState extends State<NostrFeed> {
           _initialized = true;
         });
       }
+    } else {
+      setState(() {
+        _items.sort(sorting);
+        _items = _items.take(_limitDisplay).toList();
+      });
     }
   }
 

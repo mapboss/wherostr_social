@@ -1,7 +1,11 @@
+import 'dart:convert';
+
+import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/widgets/activity_item.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 
@@ -73,6 +77,14 @@ class PostActivity extends StatelessWidget {
               e: [event.id!],
               autoRefresh: true,
               isDynamicHeight: true,
+              disableLimit: true,
+              itemSorting: (a, b) {
+                String? descA = a.getTagValue('bolt11');
+                String? descB = b.getTagValue('bolt11');
+                final boltB = Bolt11PaymentRequest(descB!);
+                return boltB.amount
+                    .compareTo(Bolt11PaymentRequest(descA!).amount);
+              },
               itemBuilder: (context, event) => Material(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
