@@ -10,7 +10,7 @@ const secretStorageName = 'nostr-secret';
 
 IOSOptions _getIOSOptions() => const IOSOptions(
       accountName: secretStorageName,
-      accessibility: KeychainAccessibility.passcode,
+      accessibility: KeychainAccessibility.unlocked,
     );
 
 AndroidOptions _getAndroidOptions() => const AndroidOptions(
@@ -55,19 +55,19 @@ class AppSecret with ChangeNotifier {
         .write(
             value: '${customKeyPairs.private}|${customKeyPairs.public}',
             key: secretStorageKey)
-        .catchError((err) => print('writePrivateKey: $err'));
+        .catchError((err) => print('writeCustomKeyPairs: $err'));
   }
 
   static Future<void> delete() async {
     return secureStorage
         .delete(key: secretStorageKey)
-        .catchError((err) => print('_deletePrivateKey: $err'));
+        .catchError((err) => print('deletePrivateKey: $err'));
   }
 
   static Future<void> writeNWC(String privateKey) async {
     await secureStorage
         .write(value: privateKey, key: nwcStorageKey)
-        .catchError((err) => print('writePrivateKey: $err'));
+        .catchError((err) => print('writeNWC: $err'));
   }
 
   static Future<String?> readNWC() async {
@@ -80,6 +80,6 @@ class AppSecret with ChangeNotifier {
   static Future<void> deleteNWC() async {
     return secureStorage
         .delete(key: nwcStorageKey)
-        .catchError((err) => print('_deletePrivateKey: $err'));
+        .catchError((err) => print('deleteNWC: $err'));
   }
 }
