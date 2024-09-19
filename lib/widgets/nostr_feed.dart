@@ -318,7 +318,9 @@ class NostrFeedState extends State<NostrFeed> {
             if (mounted) {
               setState(() {
                 _loading = false;
-                _hasMore = hasMore >= (_limitRequest / 2);
+                _hasMore = widget.disableLimit
+                    ? false
+                    : hasMore >= (_limitRequest / 2);
                 _items.sort(sorting);
                 _items = _items.take(_limitDisplay).toList();
               });
@@ -326,12 +328,12 @@ class NostrFeedState extends State<NostrFeed> {
           },
         );
         _loading = false;
-        _hasMore = hasMore >= (_limitRequest / 2);
+        _hasMore = widget.disableLimit ? false : hasMore >= (_limitRequest / 2);
       },
       onEnd: () {
         if (mounted) {
           setState(() {
-            _hasMore = hasMore >= _limitRequest;
+            _hasMore = widget.disableLimit ? false : hasMore >= _limitRequest;
           });
         }
       },
@@ -463,13 +465,14 @@ class NostrFeedState extends State<NostrFeed> {
         }
         if (mounted) {
           setState(() {
-            _hasMore = hasMore >= (_limitRequest / 2);
+            _hasMore =
+                widget.disableLimit ? false : hasMore >= (_limitRequest / 2);
           });
         }
       },
       onEnd: () {
         setState(() {
-          _hasMore = hasMore >= _limitRequest;
+          _hasMore = widget.disableLimit ? false : hasMore >= _limitRequest;
         });
       },
     );
@@ -484,7 +487,8 @@ class NostrFeedState extends State<NostrFeed> {
         if (!triggered) {
           triggered = true;
           setState(() {
-            _hasMore = hasMore >= (_limitRequest / 2);
+            _hasMore =
+                widget.disableLimit ? false : hasMore >= (_limitRequest / 2);
             _loading = false;
           });
         }
