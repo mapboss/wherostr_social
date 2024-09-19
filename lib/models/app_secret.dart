@@ -92,19 +92,41 @@ class AppSecret with ChangeNotifier {
   static Future<void> writeNWC(String privateKey) async {
     await secureStorage
         .write(value: privateKey, key: nwcStorageKey)
-        .catchError((err) => print('writeNWC: $err'));
+        .catchError((err) async {
+      await clear();
+      await write(privateKey);
+    });
   }
 
   static Future<String?> readNWC() async {
-    return secureStorage.read(key: nwcStorageKey).catchError((err) {
-      secureStorage.delete(key: nwcStorageKey);
-      print('readNWC: $err');
-    });
+    String? key = await secureStorage.read(key: nwcStorageKey);
+    if (key == null) {
+      String? oldKey = await secureStorage.read(
+        key: nwcStorageKey,
+        iOptions: _getIOSOptionsV1(),
+      );
+      key = oldKey;
+    }
+    return key;
   }
 
   static Future<void> deleteNWC() async {
     return secureStorage
         .delete(key: nwcStorageKey)
         .catchError((err) => print('deleteNWC: $err'));
+  }
+
+  static Future<void> clearNWC() async {
+    await Future.wait(KeychainAccessibility.values.map((e) {
+      return secureStorage
+          .delete(
+            key: nwcStorageKey,
+            iOptions: IOSOptions(
+              accountName: secretStorageName,
+              accessibility: e,
+            ),
+          )
+          .catchError((err) => print('clearNWC: $err'));
+    }));
   }
 }
