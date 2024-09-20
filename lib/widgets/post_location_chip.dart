@@ -96,7 +96,7 @@ class _PostLocationChipState extends State<PostLocationChip> {
                           child: FractionallySizedBox(
                             heightFactor:
                                 MediaQuery.sizeOf(context).height > 640
-                                    ? 0.75
+                                    ? 0.5
                                     : 1,
                             child: Container(
                               padding: EdgeInsets.only(

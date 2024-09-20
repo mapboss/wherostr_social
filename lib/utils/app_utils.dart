@@ -128,7 +128,7 @@ class AppUtils {
       if (base64 == null) throw Exception();
       return Image.memory(base64Decode(base64)).image;
     }
-    if (url.endsWith('.gif')) {
+    if (url.endsWith('.gif') || url.endsWith('.webp')) {
       return Image.network(url).image;
     }
     return CachedNetworkImageProvider(

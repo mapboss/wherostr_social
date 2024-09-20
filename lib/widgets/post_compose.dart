@@ -827,8 +827,16 @@ class ImageEmbedBuilder extends EmbedBuilder {
                             onPressed: readOnly
                                 ? null
                                 : () {
+                                    FocusScope.of(context).unfocus();
+                                    final removedLength = node.length +
+                                        (controller.document
+                                                .getPlainText(
+                                                    node.documentOffset + 1, 1)
+                                                .contains('\n')
+                                            ? 1
+                                            : 0);
                                     controller.document.delete(
-                                        node.documentOffset, node.length);
+                                        node.documentOffset, removedLength);
                                   },
                             color: themeData.colorScheme.error,
                             icon: const Icon(Icons.close),
@@ -940,8 +948,16 @@ class VideoEmbedBuilder extends EmbedBuilder {
                             onPressed: readOnly
                                 ? null
                                 : () {
+                                    FocusScope.of(context).unfocus();
+                                    final removedLength = node.length +
+                                        (controller.document
+                                                .getPlainText(
+                                                    node.documentOffset + 1, 1)
+                                                .contains('\n')
+                                            ? 1
+                                            : 0);
                                     controller.document.delete(
-                                        node.documentOffset, node.length);
+                                        node.documentOffset, removedLength);
                                   },
                             color: themeData.colorScheme.error,
                             icon: const Icon(Icons.close),
