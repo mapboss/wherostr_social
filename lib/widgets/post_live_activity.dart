@@ -1,15 +1,18 @@
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
+import 'package:wherostr_social/widgets/live_activity.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
 
 class PostLiveActivity extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
 
   const PostLiveActivity({
     super.key,
@@ -24,6 +27,12 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
   void _handlePlayTap() {
     launchUrl(
         Uri.parse('https://wherostr.social/${getNostrAddress(widget.event)}'));
+    // final appState = context.read<AppStatesProvider>();
+    // appState.navigatorPush(
+    //   widget: LiveActivity(
+    //     event: widget.event,
+    //   ),
+    // );
   }
 
   @override

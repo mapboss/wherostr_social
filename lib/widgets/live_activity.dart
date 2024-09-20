@@ -1,15 +1,14 @@
-import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
-import 'package:wherostr_social/utils/nostr_event.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/widgets/message_item.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 // import 'package:wherostr_social/widgets/post_compose.dart';
 import 'package:wherostr_social/widgets/video_player.dart';
 
 class LiveActivity extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
 
   const LiveActivity({
     super.key,
@@ -25,14 +24,18 @@ class _LiveActivityState extends State<LiveActivity> {
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     final appState = context.watch<AppStatesProvider>();
+    final url = widget.event.getTagValue('streaming') ??
+        widget.event.getTagValue('recording') ??
+        '';
+    final eventId = widget.event.getAddressId();
     return Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const AspectRatio(
+            AspectRatio(
               aspectRatio: 16 / 9,
-              child: VideoPlayer(url: 'mp4'),
+              child: VideoPlayer(url: url),
             ),
             Expanded(
               child: NostrFeed(
@@ -41,7 +44,7 @@ class _LiveActivityState extends State<LiveActivity> {
                 scrollController: ScrollController(),
                 relays: appState.me.relayList.clone(),
                 kinds: const [9735, 1311],
-                a: [getNostrAddress(widget.event)],
+                a: [eventId!],
                 autoRefresh: true,
                 reverse: true,
                 isDynamicHeight: true,

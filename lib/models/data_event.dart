@@ -128,6 +128,13 @@ class DataEvent extends NostrEvent {
     return id;
   }
 
+  String? getAddressId() {
+    if (kind != null && kind! >= 30000 && kind! < 40000) {
+      return '$kind:$pubkey:${getTagValue('d')}';
+    }
+    return null;
+  }
+
   String? getTagValue(String tagName) {
     _genTagIndex();
     return tagIndex[tagName]?.elementAtOrNull(0)?.elementAtOrNull(1);
