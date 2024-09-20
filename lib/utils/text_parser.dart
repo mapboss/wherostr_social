@@ -87,7 +87,7 @@ class AudioUrlMatcher extends TextMatcher {
 }
 
 class CustomEmojiMatcher extends TextMatcher {
-  const CustomEmojiMatcher() : super(r'\:([\w-]+)\:');
+  const CustomEmojiMatcher() : super(r'\:([\w\t\s-]+)\:');
 }
 
 class YouTubeMatcher extends TextMatcher {
