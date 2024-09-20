@@ -89,12 +89,12 @@ class AppSecret with ChangeNotifier {
     }));
   }
 
-  static Future<void> writeNWC(String privateKey) async {
+  static Future<void> writeNWC(String key) async {
     await secureStorage
-        .write(value: privateKey, key: nwcStorageKey)
+        .write(value: key, key: nwcStorageKey)
         .catchError((err) async {
       await clear();
-      await write(privateKey);
+      await writeNWC(key);
     });
   }
 
