@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
+import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 
@@ -32,16 +33,15 @@ class _EmojiPickerState extends State<EmojiPicker> {
       final me = context.read<AppStatesProvider>().me;
       final [
         userEmojiList as List<List<String>>,
-        wherostrEmojiEvent as DataEvent,
+        defaultEmojiEvent as DataEvent,
       ] = await Future.wait([
         me.fetchEmojiList(),
-        NostrService.fetchEventById(
-            "30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr"),
+        NostrService.fetchEventById(defaultEmoji),
       ]);
       Set<String> seenSecondStrings = {};
       List<List<String>> uniqueLists = [];
       for (List<String> innerList in [
-        ...(wherostrEmojiEvent.tags
+        ...(defaultEmojiEvent.tags
                 ?.where((item) => item.firstOrNull == 'emoji') ??
             []),
         ...userEmojiList,

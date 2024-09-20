@@ -325,6 +325,9 @@ class NostrFeedState extends State<NostrFeed> {
                 _items = _items.take(_limitDisplay).toList();
               });
             }
+            if (_hasMore) {
+              _fetchMoreItems();
+            }
           },
         );
         _loading = false;
