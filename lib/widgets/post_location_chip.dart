@@ -1,14 +1,14 @@
 import 'package:dart_geohash/dart_geohash.dart';
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/map.dart';
-import 'package:wherostr_social/widgets/map_ui.dart';
+import 'package:wherostr_social/widgets/map_geohash_marker.dart';
 
 class PostLocationChip extends StatefulWidget {
-  final NostrEvent? event;
+  final DataEvent? event;
   final String? geohash;
   final bool enableShowMapAction;
 
@@ -92,15 +92,21 @@ class _PostLocationChipState extends State<PostLocationChip> {
                         maxWidth: Constants.largeDisplayContentWidth,
                       ),
                       builder: (BuildContext context) {
-                        return FractionallySizedBox(
-                          heightFactor: 0.75,
-                          child: MapUI(
-                            key: const Key('post_location_chip'),
-                            searchEnabled: false,
-                            crosshairEnabled: true,
-                            cameraPosition: _latLng != null
-                                ? CameraPosition(target: _latLng!, zoom: 16)
-                                : null,
+                        return SafeArea(
+                          child: FractionallySizedBox(
+                            heightFactor:
+                                MediaQuery.sizeOf(context).height > 640
+                                    ? 0.75
+                                    : 1,
+                            child: Container(
+                              padding: EdgeInsets.only(
+                                  bottom:
+                                      MediaQuery.of(context).viewInsets.bottom),
+                              child: MapEventMarker(
+                                key: const Key('post_location_chip'),
+                                event: widget.event,
+                              ),
+                            ),
                           ),
                         );
                       },

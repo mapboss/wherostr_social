@@ -11,6 +11,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
+import 'package:wherostr_social/models/geojson.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/map_ui.dart';
@@ -61,30 +62,6 @@ class MapEventsFilter extends StatefulWidget {
 
   @override
   State createState() => _MapEventsFilterState();
-}
-
-class GeoJson {
-  final String type = 'FeatureCollection';
-  final List<Feature> features = [];
-
-  Map<String, dynamic> toMap() {
-    return {"type": type, "features": features.map((e) => e.toMap()).toList()};
-  }
-}
-
-class Feature {
-  final String type = "Feature";
-  Map<String, dynamic>? properties = {};
-  Map<String, dynamic>? geometry = {};
-
-  Feature({this.properties, this.geometry});
-  factory Feature.fromMap(Map<String, dynamic> data) {
-    return Feature(properties: data['properties'], geometry: data['geometry']);
-  }
-
-  Map<String, dynamic> toMap() {
-    return {"type": type, "properties": properties, "geometry": geometry};
-  }
 }
 
 class GeometryPoint {

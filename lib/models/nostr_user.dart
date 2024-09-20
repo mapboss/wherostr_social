@@ -9,6 +9,9 @@ import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/services/nostr_band.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 
+const defaultEmoji =
+    '30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr';
+
 class NostrUser {
   NostrUser(
       {required this.pubkey,
@@ -117,10 +120,7 @@ class NostrUser {
   Future<void> initEmojiList() async {
     _emojiList = [];
     final event = DataEvent(kind: 10030, tags: const [
-      [
-        'a',
-        '30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr'
-      ]
+      ['a', defaultEmoji]
     ]);
     await event.publish(relays: _relayList);
   }
@@ -322,7 +322,7 @@ class NostrUser {
     ];
     final events = await NostrService.instance.fetchEvents(
       request,
-      timeout: const Duration(seconds: 3),
+      timeout: const Duration(seconds: 1),
       relays: _relayList,
     );
     print('fetchFollowSets.events: ${events.length}');
