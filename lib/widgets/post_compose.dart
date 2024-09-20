@@ -207,7 +207,7 @@ class _PostComposeState extends State<PostCompose> {
     _editorController.readOnly = true;
     try {
       AppUtils.showSnackBar(
-        text: 'Calculating size...',
+        text: 'Picking a file...',
         withProgressBar: true,
         autoHide: false,
       );
@@ -216,7 +216,7 @@ class _PostComposeState extends State<PostCompose> {
         if (AppUtils.isImage(file.path)) {
           AppUtils.hideSnackBar();
           _addPhoto(file);
-        } else {
+        } else if (AppUtils.isVideo(file.path)) {
           final size = await file.length();
           if (size < 7000000) {
             AppUtils.hideSnackBar();
@@ -227,6 +227,11 @@ class _PostComposeState extends State<PostCompose> {
               status: AppStatus.error,
             );
           }
+        } else {
+          AppUtils.showSnackBar(
+            text: 'Image or video file only.',
+            status: AppStatus.error,
+          );
         }
       } else {
         AppUtils.hideSnackBar();
@@ -809,7 +814,10 @@ class ImageEmbedBuilder extends EmbedBuilder {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: Image.file(node.value.data),
+                  child: Image.file(
+                    node.value.data,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 SizedBox(
@@ -927,7 +935,10 @@ class VideoEmbedBuilder extends EmbedBuilder {
                     builder: (BuildContext context,
                         AsyncSnapshot<ImageProvider?> snapshot) {
                       return snapshot.data != null
-                          ? Image(image: snapshot.data!)
+                          ? Image(
+                              image: snapshot.data!,
+                              fit: BoxFit.cover,
+                            )
                           : const Icon(Icons.video_file);
                     },
                   ),

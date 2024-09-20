@@ -103,7 +103,9 @@ class AppUtils {
                       status: status),
                   const SizedBox(width: 8),
                 ],
-                Text(text),
+                Expanded(
+                  child: Text(text),
+                ),
               ],
             ),
           ),
@@ -175,6 +177,9 @@ class AppUtils {
 
   static bool isImage(String path) =>
       lookupMimeType(path)?.startsWith('image/') ?? false;
+
+  static bool isVideo(String path) =>
+      lookupMimeType(path)?.startsWith('video/') ?? false;
 }
 
 class AppImageCacheManager extends CacheManager with ImageCacheManager {
