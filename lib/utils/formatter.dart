@@ -62,3 +62,14 @@ String formatTimeAgo(DateTime? date) {
     return 'on ${DateFormat.yMMMMd('en_US').format(date)}';
   }
 }
+
+String formatDuration(Duration? duration) {
+  if (duration == null) {
+    return '';
+  }
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60).abs();
+  final seconds =
+      duration.inSeconds.remainder(60).abs().toString().padLeft(2, '0');
+  return '${duration.isNegative ? '-' : ''}${hours == 0 ? '' : '$hours:'}$minutes:$seconds';
+}

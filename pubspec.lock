@@ -354,22 +354,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.1"
-  dio:
-    dependency: transitive
-    description:
-      name: dio
-      sha256: e17f6b3097b8c51b72c74c9f071a605c47bcc8893839bd66732457a5ebe73714
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.5.0+1"
-  dio_web_adapter:
-    dependency: transitive
-    description:
-      name: dio_web_adapter
-      sha256: "36c5b2d79eb17cdae41e974b7a8284fec631651d2a6f39a8a2ff22327e90aeac"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   easy_image_viewer:
     dependency: "direct main"
     description:
@@ -490,14 +474,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  flick_video_player:
-    dependency: "direct main"
-    description:
-      name: flick_video_player
-      sha256: f011cc28c6e4932485ac3a9d09ccacd25d9d430c99090480ccad2f5ebca9366e
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.9.0"
   flutter:
     dependency: "direct main"
     description: flutter
