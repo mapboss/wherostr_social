@@ -337,9 +337,6 @@ class DataEvent extends NostrEvent {
     ]);
     final elements = await contentParser.parse(content!, useIsolate: false);
 
-    // add client
-    addTagIfNew(clientTag);
-
     for (final element in elements) {
       switch (element.matcherType) {
         case NostrLinkMatcher:
