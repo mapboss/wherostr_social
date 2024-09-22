@@ -307,6 +307,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
                     allowScrubbing: true,
                     colors: _.VideoProgressColors(
                       playedColor:
+                          themeData.colorScheme.primary.withOpacity(0.87),
+                      bufferedColor:
                           themeData.colorScheme.secondary.withOpacity(0.54),
                     ),
                   ),

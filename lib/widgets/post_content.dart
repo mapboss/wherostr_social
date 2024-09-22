@@ -148,7 +148,10 @@ class _PostContentState extends State<PostContent> {
                       maxHeight: maxMediaHeight,
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
                       child: VideoPlayer(
                         url: element.text,
                         constraints: BoxConstraints(
