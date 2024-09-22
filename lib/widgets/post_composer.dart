@@ -1,9 +1,9 @@
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/formatter.dart';
@@ -13,7 +13,7 @@ import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 
 class PostComposer extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
   final bool enableShowProfileAction;
   final bool enableMenu;
   final Widget? trailing;
@@ -42,7 +42,15 @@ class _PostComposerState extends State<PostComposer> {
 
   void initialize() async {
     try {
-      final user = await NostrService.fetchUser(widget.event.pubkey);
+      late String pubkey;
+      switch (widget.event.kind) {
+        case 30311:
+          pubkey = widget.event.getMatchedTag('p')?.elementAtOrNull(1) ??
+              widget.event.pubkey;
+        default:
+          pubkey = widget.event.pubkey;
+      }
+      final user = await NostrService.fetchUser(pubkey);
       if (mounted) {
         setState(() {
           _author = user;

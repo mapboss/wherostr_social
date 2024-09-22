@@ -1,13 +1,13 @@
 import 'package:bolt11_decoder/bolt11_decoder.dart';
-import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/widgets/activity_item.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 
 class PostActivity extends StatelessWidget {
-  final NostrEvent event;
+  final DataEvent event;
 
   const PostActivity({
     super.key,

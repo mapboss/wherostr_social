@@ -1,4 +1,3 @@
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -132,7 +131,7 @@ class PostItem extends StatelessWidget {
 }
 
 class PostContentWrapper extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
   final Widget child;
   final VoidCallback? onShowMorePressed;
 

@@ -1,6 +1,5 @@
 import 'dart:ui' as ui;
 
-import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +21,7 @@ import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 
 class ActivityItem extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
   final bool enableTap;
   final bool showCreatedAt;
   final bool showFollowButton;

@@ -1,6 +1,6 @@
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -8,7 +8,7 @@ import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 
 class PostMenu extends StatefulWidget {
-  final NostrEvent? event;
+  final DataEvent? event;
   final NostrUser? user;
 
   const PostMenu({super.key, this.event, this.user});

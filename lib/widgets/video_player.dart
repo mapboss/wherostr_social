@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart' as _;
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
 
 class VideoPlayer extends StatefulWidget {
   final String url;
-  const VideoPlayer({super.key, required this.url});
+  final BoxConstraints? constraints;
+
+  const VideoPlayer({
+    super.key,
+    required this.url,
+    this.constraints,
+  });
+
   @override
   State createState() => _VideoPlayerState();
 }
@@ -24,22 +33,43 @@ class _VideoPlayerState extends State<VideoPlayer> {
   @override
   void initState() {
     super.initState();
-    _controller = _.VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
-        setState(() {});
-      });
+    _controller = _.VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    _controller.addListener(controllerListener);
+    _controller.initialize().then((_) => setState(() {}));
+  }
+
+  void controllerListener() {
+    WakelockPlus.enabled.then((enabled) {
+      if (enabled && !_controller.value.isPlaying) {
+        WakelockPlus.disable();
+      } else if (!enabled && _controller.value.isPlaying) {
+        WakelockPlus.enable();
+      }
+    });
+    if (!_showController && _controller.value.isCompleted) {
+      toggleShowController(true);
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(controllerListener);
+    _controller.dispose();
     _removeOverlay();
     WakelockPlus.disable();
     super.dispose();
   }
 
-  void setShowController(bool showController) {
+  void updateOverlayState() {
+    if (_isFullscreen) {
+      Overlay.of(context, rootOverlay: true).setState(() {});
+    }
+  }
+
+  void toggleShowController([bool? value]) {
     setState(() {
-      _showController = showController;
+      _showController = value ?? !_showController;
+      updateOverlayState();
     });
   }
 
@@ -54,27 +84,50 @@ class _VideoPlayerState extends State<VideoPlayer> {
     });
   }
 
-  void togglePlay() {
+  void togglePlay([bool? value]) {
     setState(() {
-      _controller.value.isPlaying
-          ? _controller.pause().then((_) => WakelockPlus.disable())
-          : _controller.play().then((_) => setState(() {
-                WakelockPlus.enable();
+      value ?? !_controller.value.isPlaying
+          ? _controller.play().then((_) => setState(() {
                 _showController = false;
-              }));
+              }))
+          : _controller.pause();
     });
   }
 
   void _showOverlay() {
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned.fill(
-        child: SafeArea(
-          child: RotatedBox(
-            quarterTurns: _controller.value.aspectRatio > 1 ? 1 : 0,
-            child: _buildWidget(),
+      builder: (context) {
+        ThemeData themeData = Theme.of(context);
+        final isLargeDisplay =
+            MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
+        final isLandscape =
+            isLargeDisplay ? false : _controller.value.aspectRatio >= (3 / 2);
+        return Positioned.fill(
+          child: Dismissible(
+            key: const Key('video-full-screen-overlay'),
+            direction: isLandscape
+                ? DismissDirection.endToStart
+                : DismissDirection.down,
+            onDismissed: (_) => setIsFullScreen(false),
+            child: Container(
+              color: themeData.colorScheme.surface,
+              child: SafeArea(
+                child: NativeDeviceOrientationReader(
+                  builder: (context) => RotatedBox(
+                    quarterTurns: isLandscape
+                        ? NativeDeviceOrientationReader.orientation(context) ==
+                                NativeDeviceOrientation.landscapeLeft
+                            ? 3
+                            : 1
+                        : 0,
+                    child: _buildWidget(),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
     Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
   }
@@ -91,30 +144,32 @@ class _VideoPlayerState extends State<VideoPlayer> {
       valueListenable: _controller,
       builder: (context, _.VideoPlayerValue value, child) => GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => setShowController(!_showController),
+        onTap: value.isInitialized ? () => toggleShowController() : null,
         child: Container(
           color: themeData.colorScheme.surface,
           child: Stack(
             children: [
               Positioned.fill(
-                bottom: 4,
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: value.aspectRatio,
-                    child: VisibilityDetector(
-                      key: _visibilityDetectorKey,
-                      onVisibilityChanged: (visibilityInfo) {
-                        if (visibilityInfo.visibleFraction < 0.25) {
-                          _controller.pause().then((_) => setState(() {
-                                WakelockPlus.disable();
-                                _showController = true;
-                              }));
-                        }
-                      },
-                      child: _.VideoPlayer(_controller),
-                    ),
-                  ),
-                ),
+                child: value.errorDescription == null
+                    ? Center(
+                        child: AspectRatio(
+                          aspectRatio: value.aspectRatio,
+                          child: VisibilityDetector(
+                            key: _visibilityDetectorKey,
+                            onVisibilityChanged: (visibilityInfo) {
+                              if (visibilityInfo.visibleFraction < 0.25) {
+                                _controller.pause().then((_) => setState(() {
+                                      _showController = true;
+                                    }));
+                              }
+                            },
+                            child: _.VideoPlayer(_controller),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: themeData.colorScheme.surfaceDim,
+                      ),
               ),
               if (value.isInitialized)
                 Positioned.fill(
@@ -141,7 +196,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                   icon: Icon(
                                     value.isPlaying
                                         ? Icons.pause
-                                        : Icons.play_arrow,
+                                        : value.isCompleted
+                                            ? Icons.replay
+                                            : Icons.play_arrow,
                                   ),
                                 ),
                               ],
@@ -191,46 +248,52 @@ class _VideoPlayerState extends State<VideoPlayer> {
                 )
               else
                 Center(
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AppUtils.statusIcon(
-                                context: context, status: AppStatus.warning),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Unable to load the video',
-                              style: TextStyle(
-                                color: themeExtension.textDimColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        InkWell(
-                          child: Row(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.link),
+                              AppUtils.statusIcon(
+                                  context: context, status: AppStatus.warning),
                               const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  widget.url,
-                                  style: TextStyle(
-                                    color: themeExtension.textDimColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              Text(
+                                'Unable to load the video',
+                                style: TextStyle(
+                                  color: themeExtension.textDimColor,
                                 ),
                               ),
                             ],
                           ),
-                          onTap: () => launchUrl(
-                            Uri.parse(widget.url),
-                          ),
-                        )
-                      ],
+                          const SizedBox(height: 4),
+                          InkWell(
+                            child: IntrinsicWidth(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.link),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      widget.url,
+                                      style: TextStyle(
+                                        color: themeExtension.textDimColor,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onTap: () => launchUrl(
+                              Uri.parse(widget.url),
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -257,6 +320,18 @@ class _VideoPlayerState extends State<VideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return _isFullscreen ? const SizedBox.shrink() : _buildWidget();
+    return Container(
+      constraints: widget.constraints,
+      child: SizedBox(
+        width: double.infinity,
+        child: AspectRatio(
+          aspectRatio: _controller.value.isInitialized &&
+                  _controller.value.errorDescription == null
+              ? _controller.value.aspectRatio
+              : 16 / 9,
+          child: _isFullscreen ? const SizedBox.shrink() : _buildWidget(),
+        ),
+      ),
+    );
   }
 }

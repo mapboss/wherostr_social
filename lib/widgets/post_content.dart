@@ -99,122 +99,10 @@ class _PostContentState extends State<PostContent> {
         MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
     double maxMediaHeight = isLargeDisplay
         ? MediaQuery.sizeOf(context).height * 0.5
-        : (MediaQuery.sizeOf(context).width - 32) * (4 / 3);
+        : (MediaQuery.sizeOf(context).width - 32) * (3 / 2);
     int maxImageCacheSize = MediaQuery.sizeOf(context).height.toInt();
     for (var element in elements) {
       switch (element.matcherType) {
-        case ImageUrlMatcher:
-          final imageProvider =
-              AppUtils.getCachedImageProvider(element.text, maxImageCacheSize);
-          imageProviders.add(imageProvider);
-          if (widget.enableMedia) {
-            widgets.add(
-              WidgetSpan(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          constraints: BoxConstraints(
-                            maxHeight: maxMediaHeight,
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: InkWell(
-                              onTap: widget.enableElementTap
-                                  ? () => _handleImageTap(imageProvider)
-                                  : null,
-                              child: Image(
-                                image: imageProvider,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          } else {
-            widgets.add(TextSpan(
-              text: element.text.length > 28
-                  ? '${element.text.substring(0, 28)}...'
-                  : element.text,
-              style: TextStyle(color: themeData.colorScheme.primary),
-              recognizer: TapGestureRecognizer()
-                ..onTap = widget.enableElementTap
-                    ? () => _handleImageTap(imageProvider)
-                    : null,
-            ));
-          }
-          continue;
-        case VideoUrlMatcher:
-          if (widget.enableMedia) {
-            widgets.add(
-              WidgetSpan(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: VideoPlayer(url: element.text),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          } else {
-            widgets.add(TextSpan(
-              text: element.text.length > 28
-                  ? '${element.text.substring(0, 28)}...'
-                  : element.text,
-              style: TextStyle(color: themeData.colorScheme.primary),
-              recognizer: TapGestureRecognizer()
-                ..onTap = widget.enableElementTap
-                    ? () => launchUrl(Uri.parse(element.text))
-                    : null,
-            ));
-          }
-          continue;
-        case AudioUrlMatcher:
-          if (widget.enableMedia) {
-            widgets.add(
-              WidgetSpan(
-                child: AudioPlayer(url: element.text),
-              ),
-            );
-          } else {
-            widgets.add(TextSpan(
-              text: element.text.length > 28
-                  ? '${element.text.substring(0, 28)}...'
-                  : element.text,
-              style: TextStyle(color: themeData.colorScheme.primary),
-              recognizer: TapGestureRecognizer()
-                ..onTap = widget.enableElementTap
-                    ? () => launchUrl(Uri.parse(element.text))
-                    : null,
-            ));
-          }
-          continue;
-        // case YouTubeMatcher:
-        // case FacebookMatcher:
-        // case TwitchMatcher:
-        // case SoundCloudMatcher:
-        // case StreamableMatcher:
-        // case VimeoMatcher:
-        // case WistiaMatcher:
-        // case MixcloudMatcher:
-        // case DailyMotionMatcher:
-        // case KalturaMatcher:
-        // case TiktokMatcher:
-        // case RumbleMatcher:
         case UrlMatcher:
           if (widget.enableMedia) {
             if (RegExp(const ImageUrlMatcher().pattern)
@@ -225,34 +113,26 @@ class _PostContentState extends State<PostContent> {
               imageProviders.add(imageProvider);
               widgets.add(
                 WidgetSpan(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            constraints: BoxConstraints(
-                              maxHeight: maxMediaHeight,
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: InkWell(
-                                onTap: widget.enableElementTap
-                                    ? () => _handleImageTap(imageProvider)
-                                    : null,
-                                child: Image(
-                                  image: imageProvider,
-                                ),
-                              ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    constraints: BoxConstraints(
+                      maxHeight: maxMediaHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: widget.enableElementTap
+                                ? () => _handleImageTap(imageProvider)
+                                : null,
+                            child: Image(
+                              image: imageProvider,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );
@@ -264,11 +144,16 @@ class _PostContentState extends State<PostContent> {
                 WidgetSpan(
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: VideoPlayer(url: element.text),
+                    constraints: BoxConstraints(
+                      maxHeight: maxMediaHeight,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: VideoPlayer(
+                        url: element.text,
+                        constraints: BoxConstraints(
+                          maxHeight: maxMediaHeight,
+                        ),
                       ),
                     ),
                   ),
@@ -461,7 +346,9 @@ class _PostContentState extends State<PostContent> {
           continue;
         case EmailMatcher:
         default:
-          widgets.add(TextSpan(text: element.text));
+          widgets.add(TextSpan(
+            text: element.text.replaceAll('\n', '\n\u200B'),
+          ));
       }
     }
     setState(() {

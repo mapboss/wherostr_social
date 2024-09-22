@@ -110,7 +110,6 @@ class _MapEventMarkerState extends State<MapEventMarker> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData themeData = Theme.of(context);
     return Stack(
       children: [
         MapUI(

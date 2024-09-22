@@ -22,6 +22,7 @@ class QrScanner extends StatefulWidget {
 class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
   final _controller = MobileScannerController(
     formats: const [BarcodeFormat.qrCode],
+    autoStart: false,
   );
   StreamSubscription<Object?>? _scannerSubscription;
 
@@ -33,18 +34,20 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
     // Start listening to the barcode events.
     _scannerSubscription = _controller.barcodes.listen(_handleScanned);
     // Finally, start the scanner itself.
-    unawaited(_controller.start());
+    _controller.start();
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     // Stop listening to lifecycle changes.
     WidgetsBinding.instance.removeObserver(this);
     // Stop listening to the barcode events.
     unawaited(_scannerSubscription?.cancel());
     _scannerSubscription = null;
-    unawaited(_controller.dispose());
+    // Dispose the widget itself.
     super.dispose();
+    // Finally, dispose of the controller.
+    await _controller.dispose();
   }
 
   @override
@@ -54,7 +57,6 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
     if (!_controller.value.isInitialized) {
       return;
     }
-
     switch (state) {
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
@@ -64,7 +66,6 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
         // Restart the scanner when the app is resumed.
         // Don't forget to resume listening to the barcode events.
         _scannerSubscription = _controller.barcodes.listen(_handleScanned);
-
         unawaited(_controller.start());
       case AppLifecycleState.inactive:
         // Stop the scanner when the app is paused.
@@ -108,7 +109,6 @@ class _QrScannerState extends State<QrScanner> with WidgetsBindingObserver {
         fit: StackFit.expand,
         children: [
           NativeDeviceOrientationReader(
-            useSensor: true,
             builder: (context) {
               final orientation =
                   NativeDeviceOrientationReader.orientation(context);

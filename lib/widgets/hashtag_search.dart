@@ -17,6 +17,7 @@ class HashtagSearch extends StatefulWidget {
 }
 
 class _HashtagSearchState extends State<HashtagSearch> {
+  late String _hashtag;
   bool _isFollowing = false;
 
   @override
@@ -26,12 +27,11 @@ class _HashtagSearchState extends State<HashtagSearch> {
   }
 
   void initialize() async {
+    _hashtag = widget.hashtag.trim();
     final me = context.read<AppStatesProvider>().me;
-    setState(() {
-      _isFollowing = me.interestSets
-          .map((item) => item.toLowerCase())
-          .contains(widget.hashtag.toLowerCase());
-    });
+    _isFollowing = me.interestSets
+        .map((item) => item.toLowerCase())
+        .contains(_hashtag.toLowerCase());
   }
 
   @override
@@ -40,14 +40,14 @@ class _HashtagSearchState extends State<HashtagSearch> {
     final appState = context.watch<AppStatesProvider>();
     return Scaffold(
       appBar: AppBar(
-        title: Text('#${widget.hashtag}'),
+        title: Text('#$_hashtag'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: _isFollowing
                 ? OutlinedButton(
                     onPressed: () async {
-                      await appState.me.unFollowHashtag(widget.hashtag);
+                      await appState.me.unFollowHashtag(_hashtag);
                       setState(() {
                         _isFollowing = false;
                       });
@@ -59,7 +59,7 @@ class _HashtagSearchState extends State<HashtagSearch> {
                   )
                 : OutlinedButton(
                     onPressed: () async {
-                      await appState.me.followHashtag(widget.hashtag);
+                      await appState.me.followHashtag(_hashtag);
                       setState(() {
                         _isFollowing = true;
                       });
@@ -72,7 +72,7 @@ class _HashtagSearchState extends State<HashtagSearch> {
       body: NostrFeed(
         relays: appState.me.relayList.clone(),
         kinds: const [1],
-        t: [widget.hashtag.toLowerCase()],
+        t: [_hashtag.toLowerCase()],
         isDynamicHeight: true,
         itemBuilder: (context, item) => Container(
           margin: const EdgeInsets.only(bottom: 4),

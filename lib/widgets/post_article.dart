@@ -1,15 +1,15 @@
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
 
 class PostArticle extends StatefulWidget {
-  final NostrEvent event;
+  final DataEvent event;
 
   const PostArticle({
     super.key,
