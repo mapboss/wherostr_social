@@ -25,7 +25,6 @@ class PostLocationChip extends StatefulWidget {
 
 class _PostLocationChipState extends State<PostLocationChip> {
   String? _locationName;
-  LatLng? _latLng;
 
   @override
   void didUpdateWidget(covariant PostLocationChip oldWidget) {
@@ -59,12 +58,13 @@ class _PostLocationChipState extends State<PostLocationChip> {
         final result = await MapService.reverse(latlng);
         if (mounted) {
           setState(() {
-            _latLng = latlng;
             if (result.country != null && result.country!.isNotEmpty) {
               _locationName =
                   '${result.administrativeArea ?? result.subAdministrativeArea}, ${result.country}';
             } else if (result.name != null) {
               _locationName = result.name;
+            } else {
+              _locationName = '${latlng.latitude}, ${latlng.longitude}';
             }
           });
         }
