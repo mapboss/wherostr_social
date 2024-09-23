@@ -115,70 +115,80 @@ class NostrFeedState extends State<NostrFeed> {
               : Stack(
                   alignment: AlignmentDirectional.topCenter,
                   children: [
-                    NotificationListener(
-                      onNotification: _handleNotification,
-                      child: ListView.builder(
-                        padding: MediaQuery.maybeOf(context)?.padding.copyWith(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                            ),
-                        controller: widget.scrollController == null
-                            ? _scrollController
-                            : null,
-                        physics: const ClampingScrollPhysics(),
-                        reverse: widget.reverse,
-                        itemCount: !widget.isAscending && _hasMore
-                            ? _items.length + 1
-                            : _items.length,
-                        itemBuilder: (context, index) {
-                          if (_items.length == index) {
-                            return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                child: Center(
-                                  child: SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(),
+                    RefreshIndicator(
+                      onRefresh: () async {
+                        return unsubscribe().whenComplete(() async {
+                          clearState();
+                          return initialize();
+                        });
+                      },
+                      child: NotificationListener(
+                        onNotification: _handleNotification,
+                        child: ListView.builder(
+                          padding:
+                              MediaQuery.maybeOf(context)?.padding.copyWith(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
                                   ),
-                                ));
-                          }
-                          final item = _items[index];
-                          if (widget.isDynamicHeight) {
-                            return AnimatedSize(
-                              key: ValueKey(item.id!),
-                              curve: Curves.easeInOutCubic,
-                              duration: _duration,
-                              child: SizedBox(
-                                height: _heightMap[item.id!],
-                                child: SingleChildScrollView(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  primary: false,
-                                  child: ResizeObserver(
-                                    onResized: (Size? oldSize, Size newSize) {
-                                      if (_heightMap[item.id!] !=
-                                          newSize.height) {
-                                        _debouncer.debounce(
-                                          duration: _duration,
-                                          onDebounce: () {
-                                            setState(() {});
-                                          },
-                                        );
-                                      }
-                                      _heightMap[item.id!] = newSize.height;
-                                    },
-                                    child: widget.itemBuilder(context, item),
+                          controller: widget.scrollController == null
+                              ? _scrollController
+                              : null,
+                          physics: const ClampingScrollPhysics(),
+                          reverse: widget.reverse,
+                          itemCount: !widget.isAscending && _hasMore
+                              ? _items.length + 1
+                              : _items.length,
+                          itemBuilder: (context, index) {
+                            if (_items.length == index) {
+                              return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Center(
+                                    child: SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ));
+                            }
+                            final item = _items[index];
+                            if (widget.isDynamicHeight) {
+                              return AnimatedSize(
+                                key: ValueKey(item.id!),
+                                curve: Curves.easeInOutCubic,
+                                duration: _duration,
+                                child: SizedBox(
+                                  height: _heightMap[item.id!],
+                                  child: SingleChildScrollView(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    primary: false,
+                                    child: ResizeObserver(
+                                      onResized: (Size? oldSize, Size newSize) {
+                                        if (_heightMap[item.id!] !=
+                                            newSize.height) {
+                                          _debouncer.debounce(
+                                            duration: _duration,
+                                            onDebounce: () {
+                                              setState(() {});
+                                            },
+                                          );
+                                        }
+                                        _heightMap[item.id!] = newSize.height;
+                                      },
+                                      child: widget.itemBuilder(context, item),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          } else {
-                            return Container(
-                              key: ValueKey(item.id!),
-                              child: widget.itemBuilder(context, item),
-                            );
-                          }
-                        },
+                              );
+                            } else {
+                              return Container(
+                                key: ValueKey(item.id!),
+                                child: widget.itemBuilder(context, item),
+                              );
+                            }
+                          },
+                        ),
                       ),
                     ),
                     AnimatedSize(
