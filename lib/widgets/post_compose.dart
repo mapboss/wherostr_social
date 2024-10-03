@@ -295,12 +295,7 @@ class _PostComposeState extends State<PostCompose> {
               actions: [
                 TextButton(
                   onPressed: () async {
-                    try {
-                      _powCompleter?.completeError('cancel');
-                      print('canceled: $_bestHash');
-                    } catch (err) {
-                      print(err);
-                    }
+                    _powCompleter?.completeError('cancel');
                   },
                   child: const Text('Cancel'),
                 ),
@@ -408,7 +403,6 @@ class _PostComposeState extends State<PostCompose> {
             } else if (currentDiff > bestDiff) {
               bestDiff = currentDiff;
               _bestHashController.add(hash);
-              print('best hash: $hash, index: $index');
             }
           });
           _showDialog();
@@ -429,7 +423,9 @@ class _PostComposeState extends State<PostCompose> {
             streamListener.cancel();
             throw const FormatException('Canceled.');
           }).whenComplete(() {
-            context.read<AppStatesProvider>().navigatorPop();
+            if (mounted) {
+              context.read<AppStatesProvider>().navigatorPop();
+            }
           });
         } else {
           AppUtils.showSnackBar(
@@ -456,7 +452,6 @@ class _PostComposeState extends State<PostCompose> {
     } on FormatException catch (e) {
       AppUtils.showSnackBar(text: e.message, status: AppStatus.error);
     } catch (error) {
-      print(error);
       AppUtils.hideSnackBar();
       AppUtils.handleError();
     } finally {
@@ -515,11 +510,13 @@ class _PostComposeState extends State<PostCompose> {
                         Expanded(
                           child: QuillEditor.basic(
                             focusNode: _editorFocusNode,
+                            controller: _editorController,
                             configurations: QuillEditorConfigurations(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               customStyles: DefaultStyles(
                                 paragraph: DefaultTextBlockStyle(
                                   themeData.textTheme.bodyLarge!,
+                                  const HorizontalSpacing(0, 0),
                                   const VerticalSpacing(0, 0),
                                   const VerticalSpacing(0, 0),
                                   null,
@@ -528,12 +525,12 @@ class _PostComposeState extends State<PostCompose> {
                                   themeData.textTheme.bodyLarge!.apply(
                                     color: themeExtension.textDimColor,
                                   ),
+                                  const HorizontalSpacing(0, 0),
                                   const VerticalSpacing(0, 0),
                                   const VerticalSpacing(0, 0),
                                   null,
                                 ),
                               ),
-                              controller: _editorController,
                               placeholder: widget.isReply
                                   ? 'Add a reply'
                                   : 'What\'s happening?',

@@ -200,173 +200,185 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     flex: 1,
-                    child: Drawer(
-                      elevation: 24,
-                      child: Column(
-                        children: [
-                          Material(
-                            color: themeData.colorScheme.primary,
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                        16,
-                                        MediaQuery.of(context).padding.top + 8,
-                                        16,
-                                        8),
-                                    child: const Image(
-                                      image: AssetImage(
-                                          'assets/app/app-bar-icon.png'),
-                                      width: 44,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.only(
-                                        bottomLeft: Radius.elliptical(24, 32),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: ConstrainedBox(
+                        constraints:
+                            const BoxConstraints(minWidth: 192, maxWidth: 240),
+                        child: Drawer(
+                          elevation: 24,
+                          child: Column(
+                            children: [
+                              Material(
+                                color: themeData.colorScheme.primary,
+                                child: IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.fromLTRB(
+                                            16,
+                                            MediaQuery.of(context).padding.top +
+                                                8,
+                                            16,
+                                            8),
+                                        child: const Image(
+                                          image: AssetImage(
+                                              'assets/app/app-bar-icon.png'),
+                                          width: 44,
+                                        ),
                                       ),
-                                      child: Container(
-                                        color: themeData.colorScheme.surface,
-                                        child: Padding(
-                                          padding: EdgeInsets.fromLTRB(
-                                              16,
-                                              MediaQuery.of(context)
-                                                      .padding
-                                                      .top +
-                                                  8,
-                                              16,
-                                              8),
-                                          child: Image(
-                                            image: AssetImage(
-                                                'assets/app/app-bar-name-${isDarkMode ? 'dark' : 'light'}.png'),
-                                            height: 40,
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            bottomLeft:
+                                                Radius.elliptical(24, 32),
+                                          ),
+                                          child: Container(
+                                            color:
+                                                themeData.colorScheme.surface,
+                                            child: Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                  16,
+                                                  MediaQuery.of(context)
+                                                          .padding
+                                                          .top +
+                                                      8,
+                                                  16,
+                                                  8),
+                                              child: Image(
+                                                image: AssetImage(
+                                                    'assets/app/app-bar-name-${isDarkMode ? 'dark' : 'light'}.png'),
+                                                height: 40,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                          Expanded(
-                            child: ListView(
-                              padding: const EdgeInsets.only(top: 8),
-                              children: [
-                                ListTile(
-                                  onTap: () => handleDestinationSelected(0),
-                                  leading: const SizedBox(
-                                    width: 36,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: Icon(Icons.home),
-                                    ),
-                                  ),
-                                  title: const Text("Home"),
-                                  selected: _selectedIndex == 0,
-                                ),
-                                ListTile(
-                                  onTap: () => handleDestinationSelected(1),
-                                  leading: const SizedBox(
-                                    width: 36,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: Icon(Icons.search),
-                                    ),
-                                  ),
-                                  title: const Text("Search"),
-                                  selected: _selectedIndex == 1,
-                                ),
-                                ListTile(
-                                  onTap: () => handleDestinationSelected(3),
-                                  leading: const SizedBox(
-                                    width: 36,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: Icon(Icons.map),
-                                    ),
-                                  ),
-                                  title: const Text("Map"),
-                                  selected: _selectedIndex == 3,
-                                ),
-                                ListTile(
-                                  onTap: () => handleDestinationSelected(5),
-                                  leading: const SizedBox(
-                                    width: 36,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: Icon(Icons.notifications),
-                                    ),
-                                  ),
-                                  title: const Text("Notifications"),
-                                  selected: _selectedIndex == 5,
-                                ),
-                                ListTile(
-                                  onTap: () => handleDestinationSelected(4),
-                                  leading: const SizedBox(
-                                    width: 36,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: 8),
-                                      child: Icon(Icons.settings),
-                                    ),
-                                  ),
-                                  title: const Text("Settings"),
-                                  selected: _selectedIndex == 4,
-                                ),
-                                ListTile(
-                                  onTap: () => appState.navigatorPush(
-                                    widget: const PostCompose(),
-                                    rootNavigator: true,
-                                  ),
-                                  horizontalTitleGap: 8,
-                                  leading: SizedBox(
-                                    width: 44,
-                                    height: 44,
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.all(
-                                        Radius.circular(12),
-                                      ),
-                                      child: Container(
-                                        color: themeData.colorScheme.primary
-                                            .withOpacity(0.38),
-                                        child: Icon(
-                                          Icons.add,
-                                          color: themeData
-                                              .textTheme.bodyMedium!.color,
+                              Expanded(
+                                child: ListView(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  children: [
+                                    ListTile(
+                                      onTap: () => handleDestinationSelected(0),
+                                      leading: const SizedBox(
+                                        width: 36,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.home),
                                         ),
                                       ),
+                                      title: const Text("Home"),
+                                      selected: _selectedIndex == 0,
                                     ),
-                                  ),
-                                  title: const Text("Post"),
+                                    ListTile(
+                                      onTap: () => handleDestinationSelected(1),
+                                      leading: const SizedBox(
+                                        width: 36,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.search),
+                                        ),
+                                      ),
+                                      title: const Text("Search"),
+                                      selected: _selectedIndex == 1,
+                                    ),
+                                    ListTile(
+                                      onTap: () => handleDestinationSelected(3),
+                                      leading: const SizedBox(
+                                        width: 36,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.map),
+                                        ),
+                                      ),
+                                      title: const Text("Map"),
+                                      selected: _selectedIndex == 3,
+                                    ),
+                                    ListTile(
+                                      onTap: () => handleDestinationSelected(5),
+                                      leading: const SizedBox(
+                                        width: 36,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.notifications),
+                                        ),
+                                      ),
+                                      title: const Text("Notifications"),
+                                      selected: _selectedIndex == 5,
+                                    ),
+                                    ListTile(
+                                      onTap: () => handleDestinationSelected(4),
+                                      leading: const SizedBox(
+                                        width: 36,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.settings),
+                                        ),
+                                      ),
+                                      title: const Text("Settings"),
+                                      selected: _selectedIndex == 4,
+                                    ),
+                                    ListTile(
+                                      onTap: () => appState.navigatorPush(
+                                        widget: const PostCompose(),
+                                        rootNavigator: true,
+                                      ),
+                                      horizontalTitleGap: 8,
+                                      leading: SizedBox(
+                                        width: 44,
+                                        height: 44,
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(12),
+                                          ),
+                                          child: Container(
+                                            color: themeData.colorScheme.primary
+                                                .withOpacity(0.38),
+                                            child: Icon(
+                                              Icons.add,
+                                              color: themeData
+                                                  .textTheme.bodyMedium!.color,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      title: const Text("Post"),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          ListTile(
-                            horizontalTitleGap: 8,
-                            leading: ProfileAvatar(url: appState.me.picture),
-                            title: Text(
-                              "Hello!",
-                              style: themeData.textTheme.bodySmall!
-                                  .apply(color: themeExtension.textDimColor),
-                            ),
-                            subtitle: ProfileDisplayName(
-                              user: appState.me,
-                              textStyle: themeData.textTheme.bodyMedium,
-                              withBadge: true,
-                            ),
-                            onTap: () => appState.navigatorPush(
-                              widget: Profile(
-                                user: appState.me,
                               ),
-                            ),
+                              ListTile(
+                                horizontalTitleGap: 8,
+                                leading:
+                                    ProfileAvatar(url: appState.me.picture),
+                                title: Text(
+                                  "Hello!",
+                                  style: themeData.textTheme.bodySmall!.apply(
+                                      color: themeExtension.textDimColor),
+                                ),
+                                subtitle: ProfileDisplayName(
+                                  user: appState.me,
+                                  textStyle: themeData.textTheme.bodyMedium,
+                                  withBadge: true,
+                                ),
+                                onTap: () => appState.navigatorPush(
+                                  widget: Profile(
+                                    user: appState.me,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: MediaQuery.of(context).padding.bottom,
+                              ),
+                            ],
                           ),
-                          SizedBox(
-                            height: MediaQuery.of(context).padding.bottom,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

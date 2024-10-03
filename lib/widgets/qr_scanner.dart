@@ -7,9 +7,9 @@ import 'package:wherostr_social/constant.dart';
 
 class QrScanner extends StatefulWidget {
   final FutureOr<bool> Function(BarcodeCapture data) onScan;
-  String text;
+  final String text;
 
-  QrScanner({
+  const QrScanner({
     super.key,
     required this.onScan,
     this.text = "Scan Nostr public key (npub) QR code.",
