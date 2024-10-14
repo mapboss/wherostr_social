@@ -24,7 +24,7 @@ import 'package:wherostr_social/widgets/video_player.dart';
 
 class PostContent extends StatefulWidget {
   final String content;
-  final List<String>? tags;
+  final List<List<String>>? customEmojiTags;
   final bool enableElementTap;
   final bool enablePreview;
   final bool enableMedia;
@@ -35,7 +35,7 @@ class PostContent extends StatefulWidget {
   const PostContent({
     super.key,
     required this.content,
-    this.tags,
+    this.customEmojiTags,
     this.enableElementTap = true,
     this.enablePreview = true,
     this.enableMedia = true,
@@ -103,6 +103,24 @@ class _PostContentState extends State<PostContent> {
     int maxImageCacheSize = MediaQuery.sizeOf(context).height.toInt();
     for (var element in elements) {
       switch (element.matcherType) {
+        case CustomEmojiMatcher:
+          final url = widget.customEmojiTags
+              ?.where((e) => ':${e.elementAtOrNull(1)}:' == element.text)
+              .map((e) => e.elementAtOrNull(2))
+              .singleOrNull;
+          if (url == null) continue;
+          final imageProvider =
+              AppUtils.getCachedImageProvider(url, maxImageCacheSize);
+          widgets.add(
+            WidgetSpan(
+              child: Image(
+                width: 24,
+                height: 24,
+                image: imageProvider,
+              ),
+            ),
+          );
+          continue;
         case UrlMatcher:
           if (widget.enableMedia) {
             if (RegExp(const ImageUrlMatcher().pattern)
@@ -216,11 +234,10 @@ class _PostContentState extends State<PostContent> {
               ? element.text.substring(6)
               : element.text.startsWith('@')
                   ? element.text.substring(1)
-                  : null;
-          if (nostrUrl == null) continue;
+                  : element.text;
           String? eventId;
           List<String>? relays;
-          if (nostrUrl.startsWith('npub')) {
+          if (nostrUrl.startsWith('npub1')) {
             String pubkey =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
             widgets.add(
@@ -237,7 +254,7 @@ class _PostContentState extends State<PostContent> {
               ),
             );
             continue;
-          } else if (nostrUrl.startsWith('nprofile')) {
+          } else if (nostrUrl.startsWith('nprofile1')) {
             var data = NostrService.instance.utilsService
                 .decodeNprofileToMap(nostrUrl);
             widgets.add(
@@ -254,11 +271,11 @@ class _PostContentState extends State<PostContent> {
               ),
             );
             continue;
-          } else if (nostrUrl.startsWith('note')) {
+          } else if (nostrUrl.startsWith('note1')) {
             eventId =
                 NostrService.instance.utilsService.decodeBech32(nostrUrl)[0];
-          } else if (nostrUrl.startsWith('naddr') ||
-              nostrUrl.startsWith('nevent')) {
+          } else if (nostrUrl.startsWith('naddr1') ||
+              nostrUrl.startsWith('nevent1')) {
             final data = DataBech32.fromString(nostrUrl);
             eventId = data.getId();
             relays = data.relays;
@@ -326,11 +343,6 @@ class _PostContentState extends State<PostContent> {
             style: TextStyle(color: themeData.colorScheme.primary),
             recognizer: TapGestureRecognizer()
               ..onTap = () => print(element.text),
-          ));
-          continue;
-        case CustomEmojiMatcher:
-          widgets.add(TextSpan(
-            text: element.text,
           ));
           continue;
         case HashTagMatcher:

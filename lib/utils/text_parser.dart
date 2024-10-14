@@ -66,7 +66,7 @@ class NostrNAddressMatcher extends TextMatcher {
 class NostrLinkMatcher extends TextMatcher {
   const NostrLinkMatcher()
       : super(
-            r'(@|nostr:n)(pub|profile|event|ote|addr)1([acdefghjklmnpqrstuvwxyz023456789]+)');
+            r'(@|nostr:n|n)(pub|profile|event|ote|addr)1([acdefghjklmnpqrstuvwxyz023456789]+)');
 }
 
 class ImageUrlMatcher extends TextMatcher {
@@ -87,7 +87,7 @@ class AudioUrlMatcher extends TextMatcher {
 }
 
 class CustomEmojiMatcher extends TextMatcher {
-  const CustomEmojiMatcher() : super(r'^\:([\w\t\s-]+)\:$');
+  const CustomEmojiMatcher() : super(r'(:[\w\t\s-]+:)');
 }
 
 class YouTubeMatcher extends TextMatcher {
