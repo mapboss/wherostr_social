@@ -91,6 +91,10 @@ dependencies:
   mime: ^1.0.6
   video_thumbnail: ^0.5.3
   url_launcher: ^6.3.0
+  cryptography: ^2.7.0
+  kepler: ^1.0.3
+  pointycastle: ^3.9.1
+  crypto: ^3.0.5
 
 dev_dependencies:
   flutter_test:
