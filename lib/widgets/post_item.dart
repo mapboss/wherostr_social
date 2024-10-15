@@ -234,6 +234,7 @@ class ShortTextNote extends PostItem {
       padding: contentPadding ?? const EdgeInsets.all(0),
       child: PostContent(
         content: event.content?.trim() ?? '',
+        customEmojiTags: event.getMatchedTags('emoji'),
         enableElementTap: enableElementTap,
         enablePreview: enablePreview,
         enableMedia: enableMedia,

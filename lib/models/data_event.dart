@@ -45,6 +45,7 @@ class DataEvent extends NostrEvent {
 
   Map<String, List<List<String>>>? _tagIndex;
   Map<String, List<List<String>>> get tagIndex => _tagIndex ?? {};
+  DataEvent? innerEvent;
 
   DataEvent({
     this.pubkey = '',

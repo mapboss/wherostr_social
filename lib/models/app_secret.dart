@@ -27,8 +27,12 @@ class AppSecret with ChangeNotifier {
   static final LocalAuthentication auth = LocalAuthentication();
   static FlutterSecureStorage secureStorage = FlutterSecureStorage(
       iOptions: _getIOSOptions(), aOptions: _getAndroidOptions());
+  static NostrKeyPairs? _keyPairs;
 
   static Future<NostrKeyPairs?> read() async {
+    if (_keyPairs != null) {
+      return _keyPairs;
+    }
     String? privateKey = await secureStorage.read(key: secretStorageKey);
     if (privateKey == null) {
       String? oldPrivateKey = await secureStorage.read(
@@ -42,11 +46,13 @@ class AppSecret with ChangeNotifier {
     final sec = splitKeys.elementAt(0);
     final pub = splitKeys.elementAtOrNull(1);
     if (pub?.isEmpty ?? true) {
-      return Nostr.instance.keysService
-          .generateKeyPairFromExistingPrivateKey(sec);
+      _keyPairs =
+          Nostr.instance.keysService.generateKeyPairFromExistingPrivateKey(sec);
+      return _keyPairs;
     } else {
       final keyPairs = CustomKeyPairs(private: sec, public: pub!);
-      return keyPairs;
+      _keyPairs = keyPairs;
+      return _keyPairs;
     }
   }
 
