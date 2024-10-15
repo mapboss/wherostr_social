@@ -174,7 +174,7 @@ class Nip17 {
 
   static DateTime randomTimeUpTo2DaysInThePast() {
     final intValue = Random().nextInt(24 * 60 * 60 * 2);
-    return DateTime.now().subtract(Duration(milliseconds: intValue));
+    return DateTime.now().subtract(Duration(seconds: intValue));
   }
 }
 

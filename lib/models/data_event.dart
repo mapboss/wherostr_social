@@ -94,7 +94,8 @@ class DataEvent extends NostrEvent {
             .whereType<String>()
             .toList())
         .toList();
-    final createdAtToUse = SafeParser.parseDateTime(data['createdAt']);
+    final createdAt = SafeParser.parseInt(data['created_at']) ?? 0;
+    final createdAtToUse = SafeParser.parseDateTime(createdAt * 1000);
     final contentToUse = SafeParser.parseString(data['content']);
     final kindToUse = SafeParser.parseInt(data['kind']);
     final pubkeyToUse = SafeParser.parseString(data['pubkey']);
