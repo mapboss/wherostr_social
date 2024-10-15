@@ -21,11 +21,11 @@ import 'package:appcheck/appcheck.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 
 final appCheck = AppCheck();
-Future<(NostrEvent?, String?)> createInvoice({
+Future<(DataEvent?, String?)> createInvoice({
   required int amount,
   required NostrUser targetUser,
   required DataRelayList relays,
-  NostrEvent? targetEvent,
+  DataEvent? targetEvent,
   String? content,
 }) async {
   final keyPairs = await AppSecret.read();
@@ -38,7 +38,7 @@ Future<(NostrEvent?, String?)> createInvoice({
       relays: relays,
       pubkey: targetUser.pubkey,
       lnurl: lnurl,
-      eventId: targetEvent?.id,
+      eventId: targetEvent?.getAddressId() ?? targetEvent?.id,
       amount: millisats,
       content: content ?? '',
     );
