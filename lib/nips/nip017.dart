@@ -86,18 +86,13 @@ class Nip17 {
     return event;
   }
 
-  static Future<DataEvent?> decode(DataEvent event, String privkey,
+  static Future<DataEvent> decode(DataEvent event, String privkey,
       {String? sealedPrivkey}) async {
-    try {
-      DataEvent sealedGossipEvent =
-          await Nip59.decode(event, sealedPrivkey ?? privkey);
-      DataEvent decodeEvent = await _decodeSealedGossip(
-          sealedGossipEvent, sealedPrivkey ?? privkey);
-      return decodeEvent;
-    } catch (e) {
-      print('decode error: ${e.toString()}');
-      return null;
-    }
+    DataEvent sealedGossipEvent =
+        await Nip59.decode(event, sealedPrivkey ?? privkey);
+    DataEvent decodeEvent =
+        await _decodeSealedGossip(sealedGossipEvent, sealedPrivkey ?? privkey);
+    return decodeEvent;
   }
 
   static Future<DataEvent> _decodeSealedGossip(
