@@ -11,11 +11,11 @@ flutter_native_splash:
     color_dark: "#121212"
 
 flutter_launcher_icons:
-  image_path: "assets/icon/1024.png"
+  image_path: "assets/icon/halloween/1024.png"
   android: true
-  adaptive_icon_background: "assets/icon/android/ic_launcher_background.png" # only available for Android 8.0 devices and above
-  adaptive_icon_foreground: "assets/icon/android/ic_launcher_foreground.png" # only available for Android 8.0 devices and above
-  image_path_android: "assets/icon/android/ic_launcher.png" # only available for Android 13 devices and above
+  adaptive_icon_background: "assets/icon/halloween/android/ic_launcher_background.png" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground: "assets/icon/halloween/android/ic_launcher_foreground.png" # only available for Android 8.0 devices and above
+  image_path_android: "assets/icon/halloween/android/ic_launcher.png" # only available for Android 13 devices and above
   ios: true
   remove_alpha_ios: true
   windows:
