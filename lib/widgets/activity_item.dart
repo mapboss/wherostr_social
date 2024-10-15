@@ -81,6 +81,7 @@ class _ActivityItemState extends State<ActivityItem> {
       case 1:
         return const Icon(Icons.comment);
       case 6:
+      case 16:
         return Icon(
           Icons.repeat,
           color: themeData.colorScheme.secondary,

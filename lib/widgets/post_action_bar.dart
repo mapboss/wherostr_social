@@ -33,6 +33,7 @@ class PostActionBar extends StatefulWidget {
 class _PostActionBarState extends State<PostActionBar> {
   NostrEventsStream? _newEventStream;
   StreamSubscription<NostrEvent>? _newEventListener;
+  late String _pubkey;
   NostrUser? _user;
   PoWfilter? _powFilter;
   int _repostCount = 0;
@@ -88,8 +89,14 @@ class _PostActionBarState extends State<PostActionBar> {
     _powFilter = PoWfilter.fromString(powFilter.toString());
     _muteList.addAll(me.muteList.toList());
     subscribe();
-    NostrService.fetchUser(widget.event.pubkey, relays: me.relayList)
-        .then((user) {
+    switch (widget.event.kind) {
+      case 30311:
+        _pubkey = widget.event.getMatchedTag('p')?.elementAtOrNull(1) ??
+            widget.event.pubkey;
+      default:
+        _pubkey = widget.event.pubkey;
+    }
+    NostrService.fetchUser(_pubkey, relays: me.relayList).then((user) {
       if (mounted) {
         setState(() {
           _user = user;
@@ -105,17 +112,22 @@ class _PostActionBarState extends State<PostActionBar> {
     final ids = (_powFilter?.enabled ?? false) && (_powFilter?.value ?? 0) > 0
         ? [difficultyToHex(_powFilter!.value, true)]
         : null;
+    final kind = widget.event.kind!;
     _newEventStream = NostrService.subscribe(
       [
         NostrFilter(
-          kinds: const [6, 7, 9735],
-          e: [widget.event.id!],
+          kinds: [kind == 1 ? 6 : 16, 7, 9735],
+          e: kind >= 30000 && kind < 40000 ? null : [widget.event.id!],
+          a: kind >= 30000 && kind < 40000
+              ? [widget.event.getAddressId()!]
+              : null,
         ),
-        NostrFilter(
-          kinds: const [1],
-          e: [widget.event.id!],
-          ids: ids,
-        ),
+        if (kind == 1)
+          NostrFilter(
+            kinds: const [1],
+            e: [widget.event.id!],
+            ids: ids,
+          ),
       ],
       relays: relayList,
     );
@@ -182,6 +194,7 @@ class _PostActionBarState extends State<PostActionBar> {
           }
           continue;
         case 6:
+        case 16:
           if (!isReposted && event.pubkey == me.pubkey) {
             isReposted = true;
           }
@@ -234,12 +247,20 @@ class _PostActionBarState extends State<PostActionBar> {
         withProgressBar: true,
         autoHide: false,
       );
+      final kind = widget.event.kind!;
       final event = DataEvent(
-        kind: 6,
+        kind: kind == 1 ? 6 : 16,
         content: jsonEncode(widget.event.toMap()),
       );
-      event.addTagIfNew(['e', widget.event.id!, '', 'mention']);
-      event.addTagIfNew(['p', widget.event.pubkey]);
+      if (kind != 1) {
+        event.addTagIfNew(['k', '$kind']);
+      }
+      if (kind >= 30000 && kind < 40000) {
+        event.addTagIfNew(['a', widget.event.getAddressId()!, '', 'mention']);
+      } else {
+        event.addTagIfNew(['e', widget.event.id!, '', 'mention']);
+      }
+      event.addTagIfNew(['p', _pubkey]);
       await event.publish(autoGenerateTags: false);
       setState(() {
         _isReposted = true;
@@ -264,8 +285,13 @@ class _PostActionBarState extends State<PostActionBar> {
       kind: 7,
       content: customEmoji == null ? '+' : ':$customEmoji:',
     );
-    event.addTagIfNew(['e', widget.event.id!]);
-    event.addTagIfNew(['p', widget.event.pubkey]);
+    final kind = widget.event.kind!;
+    if (kind >= 30000 && kind < 40000) {
+      event.addTagIfNew(['a', widget.event.getAddressId()!]);
+    } else {
+      event.addTagIfNew(['e', widget.event.id!]);
+    }
+    event.addTagIfNew(['p', _pubkey]);
     if (emojiTag != null) {
       event.addTagIfNew(emojiTag);
     }
@@ -331,34 +357,35 @@ class _PostActionBarState extends State<PostActionBar> {
             ],
           ),
         ),
-        Expanded(
-          child: TextButton.icon(
-            onPressed: () => appState.navigatorPush(
-              widget: PostCompose(
-                referencedEvent: widget.event,
-                isReply: true,
+        if (widget.event.kind == 1)
+          Expanded(
+            child: TextButton.icon(
+              onPressed: () => appState.navigatorPush(
+                widget: PostCompose(
+                  referencedEvent: widget.event,
+                  isReply: true,
+                ),
+                rootNavigator: true,
               ),
-              rootNavigator: true,
+              icon: Icon(
+                Icons.comment_outlined,
+                color: themeExtension.textDimColor,
+              ),
+              style: const ButtonStyle(
+                padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(vertical: 4, horizontal: 8)),
+                alignment: Alignment.centerLeft,
+              ),
+              label: _commentCount > 0
+                  ? Text(
+                      NumberFormat.compact().format(_commentCount),
+                      maxLines: 1,
+                      style: themeData.textTheme.labelMedium
+                          ?.copyWith(color: themeExtension.textDimColor),
+                    )
+                  : const SizedBox.shrink(),
             ),
-            icon: Icon(
-              Icons.comment_outlined,
-              color: themeExtension.textDimColor,
-            ),
-            style: const ButtonStyle(
-              padding: WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(vertical: 4, horizontal: 8)),
-              alignment: Alignment.centerLeft,
-            ),
-            label: _commentCount > 0
-                ? Text(
-                    NumberFormat.compact().format(_commentCount),
-                    maxLines: 1,
-                    style: themeData.textTheme.labelMedium
-                        ?.copyWith(color: themeExtension.textDimColor),
-                  )
-                : const SizedBox.shrink(),
           ),
-        ),
         Expanded(
           child: TextButton.icon(
             onPressed: _isReacted ? () {} : () => _handleReactPressed(),

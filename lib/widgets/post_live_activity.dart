@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transparent_image/transparent_image.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
-import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/live_activity.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
 
@@ -24,21 +22,11 @@ class PostLiveActivity extends StatefulWidget {
 }
 
 class _PostLiveActivityState extends State<PostLiveActivity> {
-  void _handlePlayTap() {
-    launchUrl(
-        Uri.parse('https://wherostr.social/${getNostrAddress(widget.event)}'));
-    // final appState = context.read<AppStatesProvider>();
-    // appState.navigatorPush(
-    //   widget: LiveActivity(
-    //     event: widget.event,
-    //   ),
-    // );
-  }
-
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
+    final appState = context.watch<AppStatesProvider>();
     final image = widget.event.tags
         ?.where((tag) => tag.firstOrNull == 'image')
         .firstOrNull
@@ -139,10 +127,14 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 FilledButton.icon(
-                  onPressed: _handlePlayTap,
+                  onPressed: () => appState.navigatorPush(
+                    widget: LiveActivity(
+                      event: widget.event,
+                    ),
+                  ),
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: const Text('Watch'),
-                )
+                ),
               ],
             ),
           ),

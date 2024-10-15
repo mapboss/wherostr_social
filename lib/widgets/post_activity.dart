@@ -17,6 +17,7 @@ class PostActivity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final relayList = context.read<AppStatesProvider>().me.relayList.clone();
+    final kind = event.kind!;
     return DefaultTabController(
       initialIndex: 1,
       length: 3,
@@ -36,8 +37,9 @@ class PostActivity extends StatelessWidget {
           children: [
             NostrFeed(
               relays: relayList,
-              kinds: const [6],
-              e: [event.id!],
+              kinds: [kind == 1 ? 6 : 16],
+              e: kind >= 30000 && kind < 40000 ? null : [event.id!],
+              a: kind >= 30000 && kind < 40000 ? [event.getAddressId()!] : null,
               autoRefresh: true,
               itemBuilder: (context, event) => Material(
                 child: Padding(
@@ -54,7 +56,8 @@ class PostActivity extends StatelessWidget {
             NostrFeed(
               relays: relayList,
               kinds: const [7],
-              e: [event.id!],
+              e: kind >= 30000 && kind < 40000 ? null : [event.id!],
+              a: kind >= 30000 && kind < 40000 ? [event.getAddressId()!] : null,
               autoRefresh: true,
               itemBuilder: (context, event) => Material(
                 child: Padding(
@@ -71,7 +74,8 @@ class PostActivity extends StatelessWidget {
             NostrFeed(
               relays: relayList,
               kinds: const [9735],
-              e: [event.id!],
+              e: kind >= 30000 && kind < 40000 ? null : [event.id!],
+              a: kind >= 30000 && kind < 40000 ? [event.getAddressId()!] : null,
               autoRefresh: true,
               isDynamicHeight: true,
               disableLimit: true,

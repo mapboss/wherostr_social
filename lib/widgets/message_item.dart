@@ -16,13 +16,12 @@ import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
-// import 'package:wherostr_social/widgets/emoji_picker.dart';
 import 'package:wherostr_social/widgets/post_content.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 import 'package:wherostr_social/widgets/speech_bubble.dart';
-// import 'package:wherostr_social/widgets/zap_form.dart';
+import 'package:wherostr_social/widgets/zap_form.dart';
 
 const actionableKinds = [1311];
 
@@ -30,12 +29,14 @@ class MessageItem extends StatefulWidget {
   final DataEvent event;
   final bool enableActionBar;
   final bool isCompact;
+  final Function()? onReplyTap;
 
   const MessageItem({
     super.key,
     required this.event,
     this.enableActionBar = true,
     this.isCompact = false,
+    this.onReplyTap,
   });
 
   @override
@@ -70,16 +71,16 @@ class _MessageItemState extends State<MessageItem> {
     _isActionable = widget.enableActionBar
         ? actionableKinds.contains(widget.event.kind)
         : false;
-    String userPubkey;
+    late String pubkey;
     switch (widget.event.kind) {
       case 9735:
-        userPubkey = getZappee(event: widget.event) ?? widget.event.pubkey;
+        pubkey = getZappee(event: widget.event) ?? widget.event.pubkey;
         break;
       default:
-        userPubkey = widget.event.pubkey;
+        pubkey = widget.event.pubkey;
         break;
     }
-    NostrService.fetchUser(userPubkey).then((user) {
+    NostrService.fetchUser(pubkey).then((user) {
       if (mounted) {
         setState(() {
           _user = user;
@@ -198,10 +199,109 @@ class _MessageItemState extends State<MessageItem> {
     event.publish(autoGenerateTags: false);
   }
 
+  void _handleTap() {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      enableDrag: true,
+      showDragHandle: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) {
+        ThemeData themeData = Theme.of(context);
+        MyThemeExtension themeExtension =
+            themeData.extension<MyThemeExtension>()!;
+        final appState = context.watch<AppStatesProvider>();
+        final contentWidget = _contentWidget();
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: ProfileAvatar(
+                          url: _user?.picture,
+                          borderSize: 1,
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: contentWidget,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Divider(height: 1),
+                  Row(
+                    children: [
+                      if (widget.onReplyTap != null)
+                        Expanded(
+                          child: IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              widget.onReplyTap!();
+                            },
+                            icon: Icon(
+                              Icons.reply_outlined,
+                              color: themeExtension.textDimColor,
+                            ),
+                          ),
+                        ),
+                      Expanded(
+                        child: IconButton(
+                          onPressed:
+                              _isReacted ? () {} : () => _handleReactPressed(),
+                          icon: Icon(
+                            _isReacted
+                                ? Icons.thumb_up
+                                : Icons.thumb_up_outlined,
+                            color: _isReacted
+                                ? themeData.colorScheme.secondary
+                                : themeExtension.textDimColor,
+                          ),
+                        ),
+                      ),
+                      if (_user?.lud06 != null || _user?.lud16 != null)
+                        Expanded(
+                          child: IconButton(
+                            onPressed: () => appState.navigatorPush(
+                              widget: ZapForm(
+                                user: _user!,
+                                event: widget.event,
+                              ),
+                              rootNavigator: true,
+                            ),
+                            icon: Icon(
+                              Icons.electric_bolt,
+                              color: _isZapped
+                                  ? Colors.orange
+                                  : themeExtension.textDimColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _contentWidget() {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    final contentLeading = widget.isCompact && _user != null
+    final contentLeading = widget.isCompact
         ? Padding(
             padding: const EdgeInsets.only(right: 4),
             child: ProfileDisplayName(
@@ -220,6 +320,8 @@ class _MessageItemState extends State<MessageItem> {
             if (contentLeading != null)
               PostContent(
                 content: widget.event.content ?? '',
+                enablePreview: false,
+                enableMedia: false,
                 depth: 1,
                 contentLeading: contentLeading,
               ),
@@ -271,6 +373,8 @@ class _MessageItemState extends State<MessageItem> {
             if (!widget.isCompact && (widget.event.content ?? '') != '')
               PostContent(
                 content: widget.event.content!,
+                enablePreview: !widget.isCompact,
+                enableMedia: !widget.isCompact,
                 depth: 1,
                 contentLeading: contentLeading,
               ),
@@ -279,7 +383,8 @@ class _MessageItemState extends State<MessageItem> {
       default:
         return PostContent(
           content: widget.event.content ?? '',
-          enablePreview: false,
+          enablePreview: !widget.isCompact,
+          enableMedia: !widget.isCompact,
           contentLeading: contentLeading,
         );
     }
@@ -341,249 +446,90 @@ class _MessageItemState extends State<MessageItem> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData themeData = Theme.of(context);
-    MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    // final appState = context.watch<AppStatesProvider>();
-    final contentWidget = _contentWidget();
-    final activityWidget = _activityWidget();
-    if (widget.isCompact) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: InkWell(
-              onTap: () => context.read<AppStatesProvider>().navigatorPush(
-                    widget: Profile(
-                      heroTag: _profileHeroTag,
-                      user: _user!,
-                    ),
-                  ),
-              child: Hero(
-                tag: _profileHeroTag,
-                child: ProfileAvatar(
-                  url: _user?.picture,
-                  borderSize: 1,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  contentWidget,
-                  if (activityWidget != null) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 2),
-                      child: activityWidget,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
+    if (_user == null) {
+      return SizedBox(height: widget.isCompact ? 24 : 32);
     } else {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 32,
-            height: 32,
-            child: InkWell(
-              onTap: () => context.read<AppStatesProvider>().navigatorPush(
-                    widget: Profile(
-                      heroTag: _profileHeroTag,
-                      user: _user!,
-                    ),
+      ThemeData themeData = Theme.of(context);
+      MyThemeExtension themeExtension =
+          themeData.extension<MyThemeExtension>()!;
+      final appState = context.watch<AppStatesProvider>();
+      final contentWidget = _contentWidget();
+      final activityWidget = _activityWidget();
+      return InkWell(
+        onTap: widget.event.kind == 1311 ? _handleTap : null,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: widget.isCompact ? 24 : 32,
+              height: widget.isCompact ? 24 : 32,
+              child: InkWell(
+                onTap: () => appState.navigatorPush(
+                  widget: Profile(
+                    heroTag: _profileHeroTag,
+                    user: _user!,
                   ),
-              child: Hero(
-                tag: _profileHeroTag,
-                child: ProfileAvatar(
-                  url: _user?.picture,
-                  borderSize: 1,
+                ),
+                child: Hero(
+                  tag: _profileHeroTag,
+                  child: ProfileAvatar(
+                    url: _user?.picture,
+                    borderSize: 1,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_user != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: ProfileDisplayName(
-                      user: _user,
-                      withBadge: true,
-                      textStyle: themeData.textTheme.bodySmall!
-                          .apply(color: themeExtension.textDimColor),
+            Expanded(
+              child: widget.isCompact
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          contentWidget,
+                          if (activityWidget != null) ...[
+                            const SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 2),
+                              child: activityWidget,
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: ProfileDisplayName(
+                            user: _user,
+                            withBadge: true,
+                            textStyle: themeData.textTheme.bodySmall!
+                                .apply(color: themeExtension.textDimColor),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SpeechBubble(
+                          padding: widget.event.kind == 9735
+                              ? const EdgeInsets.symmetric(horizontal: 16)
+                              : null,
+                          color:
+                              widget.event.kind == 9735 ? Colors.orange : null,
+                          child: contentWidget,
+                        ),
+                        if (activityWidget != null) ...[
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 24),
+                            child: activityWidget,
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
-                const SizedBox(height: 4),
-                SpeechBubble(
-                  padding: widget.event.kind == 9735
-                      ? const EdgeInsets.symmetric(horizontal: 16)
-                      : null,
-                  color: widget.event.kind == 9735 ? Colors.orange : null,
-                  child: contentWidget,
-                ),
-                if (activityWidget != null) ...[
-                  const SizedBox(height: 4),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: activityWidget,
-                  ),
-                  // Padding(
-                  //   padding: const EdgeInsets.only(left: 24),
-                  //   child: Row(
-                  //     children: [
-                  //       if (_reactionCount > 0) ...[
-                  //         _emojiUrl == null
-                  //             ? Icon(
-                  //                 _isReacted
-                  //                     ? Icons.thumb_up
-                  //                     : Icons.thumb_up_outlined,
-                  //                 color: _isReacted
-                  //                     ? themeData.colorScheme.secondary
-                  //                     : themeExtension.textDimColor,
-                  //                 size: 16,
-                  //               )
-                  //             : SizedBox(
-                  //                 width: 16,
-                  //                 height: 16,
-                  //                 child: Image(
-                  //                   width: 16,
-                  //                   height: 16,
-                  //                   image:
-                  //                       AppUtils.getCachedImageProvider(_emojiUrl!, 80),
-                  //                 ),
-                  //               ),
-                  //         const SizedBox(width: 4),
-                  //         Text(
-                  //           NumberFormat.compact().format(_reactionCount),
-                  //           maxLines: 1,
-                  //           style: themeData.textTheme.labelMedium
-                  //               ?.copyWith(color: themeExtension.textDimColor),
-                  //         ),
-                  //       ],
-                  //       if (_zapCount > 0) ...[
-                  //         if (_reactionCount > 0) const SizedBox(width: 16),
-                  //         Icon(
-                  //           Icons.electric_bolt,
-                  //           color: _isZapped
-                  //               ? Colors.orange
-                  //               : themeExtension.textDimColor,
-                  //           size: 16,
-                  //         ),
-                  //         const SizedBox(width: 4),
-                  //         Text(
-                  //           NumberFormat.compact().format(_zapCount),
-                  //           maxLines: 1,
-                  //           style: themeData.textTheme.labelMedium
-                  //               ?.copyWith(color: themeExtension.textDimColor),
-                  //         ),
-                  //       ],
-                  //       // TextButton.icon(
-                  //       //   onPressed:
-                  //       //       _isReacted ? () {} : () => _handleReactPressed(),
-                  //       //   onLongPress: _isReacted
-                  //       //       ? null
-                  //       //       : () {
-                  //       //           showModalBottomSheet(
-                  //       //             isScrollControlled: true,
-                  //       //             useRootNavigator: true,
-                  //       //             enableDrag: false,
-                  //       //             showDragHandle: true,
-                  //       //             useSafeArea: true,
-                  //       //             context: context,
-                  //       //             builder: (context) {
-                  //       //               return EmojiPicker(
-                  //       //                 onChanged: (value) {
-                  //       //                   Navigator.pop(context);
-                  //       //                   _handleReactPressed(value);
-                  //       //                 },
-                  //       //               );
-                  //       //             },
-                  //       //           );
-                  //       //         },
-                  //       //   icon: _emojiUrl == null
-                  //       //       ? Icon(
-                  //       //           _isReacted
-                  //       //               ? Icons.thumb_up
-                  //       //               : Icons.thumb_up_outlined,
-                  //       //           color: _isReacted
-                  //       //               ? themeData.colorScheme.secondary
-                  //       //               : themeExtension.textDimColor,
-                  //       //         )
-                  //       //       : SizedBox(
-                  //       //           width: 24,
-                  //       //           height: 24,
-                  //       //           child: Image(
-                  //       //             width: 24,
-                  //       //             height: 24,
-                  //       //             image: AppUtils.getCachedImageProvider(_emojiUrl!, 80),
-                  //       //           ),
-                  //       //         ),
-                  //       //   style: const ButtonStyle(
-                  //       //     padding: WidgetStatePropertyAll(
-                  //       //         EdgeInsets.symmetric(vertical: 4, horizontal: 8)),
-                  //       //     alignment: Alignment.centerLeft,
-                  //       //   ),
-                  //       //   label: _reactionCount > 0
-                  //       //       ? Text(
-                  //       //           NumberFormat.compact().format(_reactionCount),
-                  //       //           maxLines: 1,
-                  //       //           style: themeData.textTheme.labelMedium
-                  //       //               ?.copyWith(
-                  //       //                   color: themeExtension.textDimColor),
-                  //       //         )
-                  //       //       : const SizedBox.shrink(),
-                  //       // ),
-                  //       // TextButton.icon(
-                  //       //   onPressed: () => appState.navigatorPush(
-                  //       //     widget: ZapForm(
-                  //       //       user: _user!,
-                  //       //       event: widget.event,
-                  //       //     ),
-                  //       //     rootNavigator: true,
-                  //       //   ),
-                  //       //   icon: Icon(
-                  //       //     Icons.electric_bolt,
-                  //       //     color: _isZapped
-                  //       //         ? Colors.orange
-                  //       //         : themeExtension.textDimColor,
-                  //       //   ),
-                  //       //   style: const ButtonStyle(
-                  //       //     padding: WidgetStatePropertyAll(
-                  //       //         EdgeInsets.symmetric(
-                  //       //             vertical: 4, horizontal: 8)),
-                  //       //     alignment: Alignment.centerLeft,
-                  //       //   ),
-                  //       //   label: _zapCount > 0
-                  //       //       ? Text(
-                  //       //           NumberFormat.compact().format(_zapCount),
-                  //       //           maxLines: 1,
-                  //       //           style: themeData.textTheme.labelMedium
-                  //       //               ?.copyWith(
-                  //       //                   color: themeExtension.textDimColor),
-                  //       //         )
-                  //       //       : const SizedBox.shrink(),
-                  //       // ),
-                  //     ],
-                  //   ),
-                  // ),
-                ],
-              ],
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
   }

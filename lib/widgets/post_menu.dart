@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
+import 'package:wherostr_social/utils/nostr_event.dart';
 
 class PostMenu extends StatefulWidget {
   final DataEvent? event;
@@ -40,6 +41,7 @@ class _PostMenuState extends State<PostMenu> {
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
+    final kind = widget.event?.kind;
     return MenuAnchor(
       builder:
           (BuildContext context, MenuController controller, Widget? child) {
@@ -61,10 +63,10 @@ class _PostMenuState extends State<PostMenu> {
               Clipboard.setData(
                 ClipboardData(
                   text:
-                      'nostr:${NostrService.instance.utilsService.encodeNevent(
-                    eventId: widget.event!.id!,
-                    pubkey: widget.event!.pubkey,
-                  )}',
+                      'nostr:${(kind != null && kind >= 30000 && kind < 40000) ? getNostrAddress(widget.event!) : NostrService.instance.utilsService.encodeNevent(
+                          eventId: widget.event!.id!,
+                          pubkey: widget.event!.pubkey,
+                        )}',
                 ),
               );
               AppUtils.showSnackBar(

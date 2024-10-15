@@ -71,5 +71,5 @@ String formatDuration(Duration? duration) {
   final minutes = duration.inMinutes.remainder(60).abs();
   final seconds =
       duration.inSeconds.remainder(60).abs().toString().padLeft(2, '0');
-  return '${duration.isNegative ? '-' : ''}${hours == 0 ? '' : '$hours:'}$minutes:$seconds';
+  return '${duration.isNegative ? '-' : ''}${hours == 0 ? '' : '$hours:'}${hours == 0 ? minutes : minutes.toString().padLeft(2, '0')}:$seconds';
 }
