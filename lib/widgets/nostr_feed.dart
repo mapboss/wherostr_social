@@ -24,6 +24,7 @@ class NostrFeed extends StatefulWidget {
   final int limit;
   final int Function(DataEvent a, DataEvent b)? itemSorting;
   final bool Function(DataEvent event)? itemFilter;
+  final FutureOr<DataEvent> Function(DataEvent event)? itemMapper;
   final bool reverse;
   final bool isAscending;
   final bool autoRefresh;
@@ -50,6 +51,7 @@ class NostrFeed extends StatefulWidget {
     this.limit = 30,
     this.itemSorting,
     this.itemFilter,
+    this.itemMapper,
     this.reverse = false,
     this.isAscending = false,
     this.autoRefresh = false,
@@ -353,9 +355,11 @@ class NostrFeedState extends State<NostrFeed> {
     );
 
     _newEventListener = _newEventStream!.stream.listen(
-      (event) {
+      (event) async {
         if (event.createdAt == null) return;
-        final dataEvent = DataEvent.fromEvent(event);
+        final dataEvent = widget.itemMapper != null
+            ? await widget.itemMapper!(DataEvent.fromEvent(event))
+            : DataEvent.fromEvent(event);
         if (_allItems.contains(dataEvent)) return;
         _allItems.add(dataEvent);
         if (_since == null || _since!.compareTo(dataEvent.createdAt!) >= 0) {
@@ -490,9 +494,11 @@ class NostrFeedState extends State<NostrFeed> {
       },
     );
     _initEventListener = _initEventStream!.stream.listen(
-      (event) {
+      (event) async {
         hasMore += 1;
-        final dataEvent = DataEvent.fromEvent(event);
+        final dataEvent = widget.itemMapper != null
+            ? await widget.itemMapper!(DataEvent.fromEvent(event))
+            : DataEvent.fromEvent(event);
         if (!_allItems.contains(dataEvent)) {
           _allItems.add(dataEvent);
         }
