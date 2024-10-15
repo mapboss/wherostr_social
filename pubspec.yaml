@@ -96,6 +96,9 @@ dependencies:
   pointycastle: ^3.9.1
   crypto: ^3.0.5
   dismissible_page: ^1.0.2
+  permission_handler: ^11.3.1
+  image_gallery_saver: ^2.0.3
+  dio: ^5.7.0
 
 dev_dependencies:
   flutter_test:

@@ -7,6 +7,7 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
+import 'package:wherostr_social/extension/multi_image_savable_provider.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
@@ -129,10 +130,16 @@ class _ProfileState extends State<Profile> {
                           child: InkWell(
                             onTap: widget.user.picture == null
                                 ? () {}
-                                : () => showImageViewer(
+                                : () => showImageViewerPager(
                                       context,
-                                      AppUtils.getCachedImageProvider(
-                                          widget.user.picture!, 480),
+                                      MultiImageSavableProvider(
+                                        [
+                                          AppUtils.getCachedImageProvider(
+                                              widget.user.picture!, 480)
+                                        ],
+                                        imageUrl: widget.user.picture,
+                                        initialIndex: 0,
+                                      ),
                                       useSafeArea: true,
                                       swipeDismissible: true,
                                       doubleTapZoomable: true,
@@ -156,9 +163,13 @@ class _ProfileState extends State<Profile> {
               background: widget.user.banner == null
                   ? const DecoratedBox(decoration: wherostrBackgroundDecoration)
                   : InkWell(
-                      onTap: () => showImageViewer(
+                      onTap: () => showImageViewerPager(
                         context,
-                        AppUtils.getImageProvider(widget.user.banner!),
+                        MultiImageSavableProvider(
+                          [AppUtils.getImageProvider(widget.user.banner!)],
+                          imageUrl: widget.user.banner,
+                          initialIndex: 0,
+                        ),
                         useSafeArea: true,
                         swipeDismissible: true,
                         doubleTapZoomable: true,

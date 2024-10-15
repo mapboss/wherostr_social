@@ -46,6 +46,8 @@
 		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Wherostr requires access to your photo library to save images.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Wherostr requires access to your camera so you can take photos and share them with people, scan QR codes.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

@@ -8,6 +8,7 @@ import 'package:text_parser/text_parser.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/constant.dart';
+import 'package:wherostr_social/extension/multi_image_savable_provider.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -81,11 +82,12 @@ class _PostContentState extends State<PostContent> {
     }
   }
 
-  void _handleImageTap(ImageProvider imageProvider) {
+  void _handleImageTap(ImageProvider imageProvider, String url) {
     showImageViewerPager(
       context,
-      MultiImageProvider(
+      MultiImageSavableProvider(
         _imageProviders,
+        imageUrl: url,
         initialIndex: _imageProviders.indexOf(imageProvider),
       ),
       useSafeArea: true,
@@ -148,7 +150,8 @@ class _PostContentState extends State<PostContent> {
                           borderRadius: BorderRadius.circular(12),
                           child: InkWell(
                             onTap: widget.enableElementTap
-                                ? () => _handleImageTap(imageProvider)
+                                ? () =>
+                                    _handleImageTap(imageProvider, element.text)
                                 : null,
                             child: Image(
                               image: imageProvider,
