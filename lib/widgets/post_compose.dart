@@ -17,6 +17,7 @@ import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/file.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
+import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/gradient_decorated_box.dart';
 import 'package:wherostr_social/widgets/map_geohash_picker.dart';
 import 'package:wherostr_social/widgets/post_item.dart';
@@ -356,11 +357,12 @@ class _PostComposeState extends State<PostCompose> {
         }
       }
       if (widget.quotedEvent != null) {
+        final kind = widget.quotedEvent!.kind;
         content =
-            '$content\nnostr:${NostrService.instance.utilsService.encodeNevent(
-          eventId: widget.quotedEvent!.id!,
-          pubkey: widget.quotedEvent!.pubkey,
-        )}';
+            '$content\nnostr:${(kind != null && kind >= 30000 && kind < 40000) ? getNostrAddress(widget.quotedEvent!) : NostrService.instance.utilsService.encodeNevent(
+                eventId: widget.quotedEvent!.id!,
+                pubkey: widget.quotedEvent!.pubkey,
+              )}';
       }
       event.content = content.trim();
       if (mounted) {
@@ -603,6 +605,8 @@ class _PostComposeState extends State<PostCompose> {
                               enableLocation: false,
                               enableProofOfWork: false,
                               enableShowProfileAction: false,
+                              enablePreview: false,
+                              enableMedia: false,
                               depth: 1,
                             ),
                           ),

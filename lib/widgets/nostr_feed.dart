@@ -34,6 +34,7 @@ class NostrFeed extends StatefulWidget {
   final bool disableLimit;
   final bool isDynamicHeight;
   final ScrollController? scrollController;
+  final Axis scrollDirection;
   final Color? backgroundColor;
 
   const NostrFeed({
@@ -61,6 +62,7 @@ class NostrFeed extends StatefulWidget {
     this.disableSubscribe = false,
     this.isDynamicHeight = false,
     this.scrollController,
+    this.scrollDirection = Axis.vertical,
     this.backgroundColor,
   });
   @override
@@ -136,6 +138,7 @@ class NostrFeedState extends State<NostrFeed> {
                           controller: widget.scrollController == null
                               ? _scrollController
                               : null,
+                          scrollDirection: widget.scrollDirection,
                           physics: const ClampingScrollPhysics(),
                           reverse: widget.reverse,
                           itemCount: !widget.isAscending && _hasMore

@@ -58,17 +58,26 @@ class _PostContentState extends State<PostContent> {
     initialize();
   }
 
-  void initialize() async {
+  void initialize() {
     _elementWidgets = [TextSpan(text: widget.content)];
+    List<InlineSpan> elementWidgets = [];
+    if (widget.contentLeading != null) {
+      elementWidgets.add(WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: widget.contentLeading!,
+      ));
+    }
     if (widget.content != '') {
       textParser(widget.content).then((textElements) {
         if (mounted) {
-          final elementWidgets = getElementWidgets(textElements);
+          elementWidgets.addAll(getElementWidgets(textElements));
           setState(() {
             _elementWidgets = elementWidgets;
           });
         }
       });
+    } else if (elementWidgets.isNotEmpty) {
+      _elementWidgets = elementWidgets;
     }
   }
 
@@ -85,15 +94,11 @@ class _PostContentState extends State<PostContent> {
     );
   }
 
+  void removeLastLineBreak;
+
   List<InlineSpan> getElementWidgets(List<TextElement> elements) {
     ThemeData themeData = Theme.of(context);
     List<InlineSpan> widgets = [];
-    if (widget.contentLeading != null) {
-      widgets.add(WidgetSpan(
-        alignment: PlaceholderAlignment.middle,
-        child: widget.contentLeading!,
-      ));
-    }
     List<ImageProvider> imageProviders = [];
     final isLargeDisplay =
         MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth;
@@ -101,7 +106,8 @@ class _PostContentState extends State<PostContent> {
         ? MediaQuery.sizeOf(context).height * 0.5
         : (MediaQuery.sizeOf(context).width - 32) * (3 / 2);
     int maxImageCacheSize = MediaQuery.sizeOf(context).height.toInt();
-    for (var element in elements) {
+    for (int index = 0; index < elements.length; index++) {
+      final element = elements[index];
       switch (element.matcherType) {
         case CustomEmojiMatcher:
           final url = widget.customEmojiTags
@@ -309,6 +315,8 @@ class _PostContentState extends State<PostContent> {
                             enableActionBar: false,
                             enableLocation: false,
                             enableProofOfWork: false,
+                            enablePreview: false,
+                            enableMedia: false,
                             depth: widget.depth + 1,
                             maxHeight: maxHeight,
                           ),
@@ -361,8 +369,12 @@ class _PostContentState extends State<PostContent> {
           continue;
         case EmailMatcher:
         default:
+          String modifiedText = element.text.replaceAll('\n', '\n\u200B');
+          if (element.text.endsWith('\n')) {
+            modifiedText = modifiedText.substring(0, modifiedText.length - 1);
+          }
           widgets.add(TextSpan(
-            text: element.text.replaceAll('\n', '\n\u200B'),
+            text: modifiedText,
           ));
       }
     }

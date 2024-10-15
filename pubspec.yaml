@@ -95,6 +95,7 @@ dependencies:
   kepler: ^1.0.3
   pointycastle: ^3.9.1
   crypto: ^3.0.5
+  dismissible_page: ^1.0.2
 
 dev_dependencies:
   flutter_test:

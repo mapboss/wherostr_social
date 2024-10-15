@@ -4,6 +4,7 @@ import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:convert/convert.dart';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:dart_nostr/nostr/model/tlv.dart';
+import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/services/nostr.dart';
 
 bool isReply({
@@ -76,11 +77,18 @@ String? getParentEventId({
   return null;
 }
 
-String getNostrAddress(NostrEvent event) {
+String getNostrAddress(DataEvent event) {
   final dTag = event.tags
       ?.where((item) => item.firstOrNull == 'd')
       .firstOrNull
       ?.elementAtOrNull(1);
+  late String pubkey;
+  switch (event.kind) {
+    case 30311:
+      pubkey = event.getMatchedTag('p')?.elementAtOrNull(1) ?? event.pubkey;
+    default:
+      pubkey = event.pubkey;
+  }
   return NostrService.instance.utilsService.encodeBech32(
       hex.encode(NostrService.instance.utilsService.tlv.encode([
         ...(dTag == null
@@ -95,7 +103,7 @@ String getNostrAddress(NostrEvent event) {
         TLV(
           type: 2,
           length: 32,
-          value: Uint8List.fromList(hex.decode(event.pubkey)),
+          value: Uint8List.fromList(hex.decode(pubkey)),
         ),
         TLV(
           type: 3,

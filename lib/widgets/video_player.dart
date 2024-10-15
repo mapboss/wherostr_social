@@ -11,11 +11,13 @@ import 'package:wherostr_social/utils/formatter.dart';
 
 class VideoPlayer extends StatefulWidget {
   final String url;
+  final bool autoPlay;
   final BoxConstraints? constraints;
 
   const VideoPlayer({
     super.key,
     required this.url,
+    this.autoPlay = false,
     this.constraints,
   });
 
@@ -33,9 +35,16 @@ class _VideoPlayerState extends State<VideoPlayer> {
   @override
   void initState() {
     super.initState();
-    _controller = _.VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    final uri = Uri.parse(widget.url);
+    _controller = _.VideoPlayerController.networkUrl(uri);
     _controller.addListener(controllerListener);
-    _controller.initialize().then((_) => setState(() {}));
+    _controller.initialize().then((_) {
+      if (widget.autoPlay) {
+        _controller.play();
+        toggleShowController(false);
+      }
+      setState(() {});
+    });
   }
 
   void controllerListener() {
@@ -46,7 +55,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
         WakelockPlus.enable();
       }
     });
-    if (!_showController && _controller.value.isCompleted) {
+    if (_controller.value.duration >= Duration(seconds: 1) &&
+        !_showController &&
+        _controller.value.isCompleted) {
       toggleShowController(true);
     }
   }
@@ -219,10 +230,11 @@ class _VideoPlayerState extends State<VideoPlayer> {
                             child: Row(
                               children: [
                                 const SizedBox(width: 16),
-                                Text(
-                                  '${formatDuration(value.position)} / ${formatDuration(value.duration)}',
-                                  style: themeData.textTheme.bodySmall,
-                                ),
+                                if (value.duration >= Duration(seconds: 1))
+                                  Text(
+                                    '${formatDuration(value.position)} / ${formatDuration(value.duration)}',
+                                    style: themeData.textTheme.bodySmall,
+                                  ),
                                 const Spacer(),
                                 IconButton(
                                   onPressed: () => _showController
