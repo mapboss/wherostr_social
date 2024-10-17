@@ -243,6 +243,7 @@ class _LiveActivityState extends State<LiveActivity> {
                                               scrollDirection: Axis.horizontal,
                                               kinds: const [9735],
                                               a: [eventId!],
+                                              disablePullToRefresh: true,
                                               autoRefresh: true,
                                               disableLimit: true,
                                               itemSorting: (a, b) {
@@ -273,6 +274,7 @@ class _LiveActivityState extends State<LiveActivity> {
                                       relays: relayList,
                                       kinds: const [9735, 1311],
                                       a: [eventId!],
+                                      disablePullToRefresh: true,
                                       autoRefresh: true,
                                       reverse: true,
                                       isDynamicHeight: true,

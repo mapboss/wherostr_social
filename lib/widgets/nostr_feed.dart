@@ -32,6 +32,7 @@ class NostrFeed extends StatefulWidget {
   final bool includeMuted;
   final bool disableSubscribe;
   final bool disableLimit;
+  final bool disablePullToRefresh;
   final bool isDynamicHeight;
   final ScrollController? scrollController;
   final Axis scrollDirection;
@@ -59,6 +60,7 @@ class NostrFeed extends StatefulWidget {
     this.includeReplies = false,
     this.includeMuted = false,
     this.disableLimit = false,
+    this.disablePullToRefresh = false,
     this.disableSubscribe = false,
     this.isDynamicHeight = false,
     this.scrollController,
@@ -120,6 +122,10 @@ class NostrFeedState extends State<NostrFeed> {
                   alignment: AlignmentDirectional.topCenter,
                   children: [
                     RefreshIndicator(
+                      displacement: 20,
+                      notificationPredicate: (notification) {
+                        return !widget.disablePullToRefresh;
+                      },
                       onRefresh: () async {
                         return unsubscribe().whenComplete(() async {
                           clearState();
@@ -294,10 +300,12 @@ class NostrFeedState extends State<NostrFeed> {
     if (widget.itemSorting != null) {
       return widget.itemSorting!(a, b);
     }
+    final aDate = a.getDate();
+    final bDate = b.getDate();
     if (!widget.isAscending) {
-      return b.createdAt!.compareTo(a.createdAt!);
+      return bDate!.compareTo(aDate!);
     } else {
-      return a.createdAt!.compareTo(b.createdAt!);
+      return aDate!.compareTo(bDate!);
     }
   }
 
@@ -540,16 +548,20 @@ class NostrFeedState extends State<NostrFeed> {
 
   Future<void> _showNewItems() async {
     final newItems = _newItems.toList();
-    newItems.sort(sorting);
+    if (widget.itemSorting == null) {
+      newItems.sort(sorting);
+      if (widget.isAscending == false) {
+        _items.insertAll(0, newItems);
+      } else {
+        _items.addAll(newItems);
+      }
+    } else {
+      _items.addAll(newItems);
+      _items.sort(sorting);
+    }
     if (mounted) {
       setState(() {
-        if (widget.isAscending == false) {
-          _since = DateTime.now();
-          _items.insertAll(0, newItems);
-        } else {
-          _since = DateTime.now();
-          _items.addAll(newItems);
-        }
+        _since = DateTime.now();
         _newItems.clear();
       });
     }
@@ -557,6 +569,7 @@ class NostrFeedState extends State<NostrFeed> {
 
   bool _handleNotification(ScrollNotification scrollNotification) {
     if (_loading ||
+        widget.reverse == true ||
         widget.isAscending ||
         !_hasMore ||
         !scrollNotification.metrics.atEdge) {

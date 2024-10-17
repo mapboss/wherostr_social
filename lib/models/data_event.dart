@@ -121,6 +121,17 @@ class DataEvent extends NostrEvent {
       tags: tagsToUse,
     );
   }
+  DateTime? getDate() {
+    if (kind != null && kind! >= 30000 && kind! < 40000) {
+      final unix = SafeParser.parseInt(
+          getTagValue('starts') ?? getTagValue('published_at'));
+      if (unix == null) {
+        return createdAt;
+      }
+      return DateTime.fromMillisecondsSinceEpoch(unix);
+    }
+    return createdAt;
+  }
 
   String? getId() {
     if (kind != null && kind! >= 30000 && kind! < 40000) {

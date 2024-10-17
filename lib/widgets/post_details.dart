@@ -290,6 +290,7 @@ class _PostDetailsState extends State<PostDetails> {
                       ids: difficulty != null && difficulty > 0
                           ? [difficultyToHex(difficulty, true)]
                           : null,
+                      disablePullToRefresh: true,
                       includeReplies: true,
                       autoRefresh: true,
                       isAscending: true,

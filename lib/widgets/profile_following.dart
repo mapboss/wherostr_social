@@ -112,6 +112,7 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                         ),
                       )
                     : NostrFeed(
+                        disablePullToRefresh: true,
                         disableSubscribe: true,
                         kinds: const [0],
                         authors: _following,
@@ -156,6 +157,7 @@ class _ProfileFollowingState extends State<ProfileFollowing> {
                         ),
                       )
                     : NostrFeed(
+                        disablePullToRefresh: true,
                         disableSubscribe: true,
                         kinds: const [3],
                         p: [widget.user.pubkey],
