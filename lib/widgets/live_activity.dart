@@ -163,6 +163,9 @@ class _LiveActivityState extends State<LiveActivity> {
           Navigator.of(context).pop();
         },
         direction: DismissiblePageDismissDirection.down,
+        dismissThresholds: {
+          DismissiblePageDismissDirection.down: .4,
+        },
         startingOpacity: 0,
         child: SafeArea(
           child: Column(

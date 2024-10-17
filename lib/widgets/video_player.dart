@@ -174,49 +174,64 @@ class _VideoPlayerState extends State<VideoPlayer> {
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return ValueListenableBuilder(
       valueListenable: _controller,
-      builder: (context, _.VideoPlayerValue value, child) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: value.isInitialized ? () => toggleShowController() : null,
-        child: Container(
-          color: themeData.colorScheme.surface,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: value.errorDescription == null
-                    ? Center(
-                        child: AspectRatio(
-                          aspectRatio: value.aspectRatio,
-                          child: VisibilityDetector(
-                            key: _visibilityDetectorKey,
-                            onVisibilityChanged: (visibilityInfo) {
-                              if (visibilityInfo.visibleFraction < 0.25) {
-                                _controller.pause().then((_) => setState(() {
-                                      _showController = true;
-                                    }));
-                              }
-                            },
-                            child: _.VideoPlayer(_controller),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        color: themeData.colorScheme.surfaceDim,
-                      ),
-              ),
-              if (value.isInitialized)
+      builder: (context, _.VideoPlayerValue value, child) {
+        final isStreaming =
+            value.isInitialized && value.duration >= Duration(seconds: 1);
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: value.isInitialized ? () => toggleShowController() : null,
+          child: Container(
+            color: themeData.colorScheme.surface,
+            child: Stack(
+              children: [
                 Positioned.fill(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _showController ? 1 : 0,
-                    child: Container(
-                      color: Colors.black.withOpacity(0.38),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (value.duration >= Duration(seconds: 1))
+                  child: value.errorDescription == null
+                      ? Center(
+                          child: AspectRatio(
+                            aspectRatio: value.aspectRatio,
+                            child: VisibilityDetector(
+                              key: _visibilityDetectorKey,
+                              onVisibilityChanged: (visibilityInfo) {
+                                if (visibilityInfo.visibleFraction < 0.25) {
+                                  _controller.pause().then((_) => setState(() {
+                                        _showController = true;
+                                      }));
+                                }
+                              },
+                              child: _.VideoPlayer(_controller),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: themeData.colorScheme.surfaceDim,
+                        ),
+                ),
+                if (value.isInitialized)
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _showController ? 1 : 0,
+                      child: Container(
+                        color: Colors.black.withOpacity(0.38),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (isStreaming)
+                                    IconButton(
+                                      color: Colors.white,
+                                      style: IconButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.black.withOpacity(0.38),
+                                      ),
+                                      onPressed: _showController
+                                          ? () => seekBackward()
+                                          : null,
+                                      icon: const Icon(Icons.replay_10),
+                                    ),
+                                  const SizedBox(width: 16),
                                   IconButton(
                                     color: Colors.white,
                                     style: IconButton.styleFrom(
@@ -224,178 +239,170 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                           Colors.black.withOpacity(0.38),
                                     ),
                                     onPressed: _showController
-                                        ? () => seekBackward()
+                                        ? () => togglePlay()
                                         : null,
-                                    icon: const Icon(Icons.replay_10),
-                                  ),
-                                const SizedBox(width: 16),
-                                IconButton(
-                                  color: Colors.white,
-                                  style: IconButton.styleFrom(
-                                    backgroundColor:
-                                        Colors.black.withOpacity(0.38),
-                                  ),
-                                  onPressed: _showController
-                                      ? () => togglePlay()
-                                      : null,
-                                  icon: Icon(
-                                    value.isPlaying
-                                        ? Icons.pause
-                                        : value.isCompleted
-                                            ? Icons.replay
-                                            : Icons.play_arrow,
-                                  ),
-                                  iconSize: 40,
-                                ),
-                                const SizedBox(width: 16),
-                                if (value.duration >= Duration(seconds: 1))
-                                  IconButton(
-                                    color: Colors.white,
-                                    style: IconButton.styleFrom(
-                                      backgroundColor:
-                                          Colors.black.withOpacity(0.38),
+                                    icon: Icon(
+                                      value.isPlaying
+                                          ? Icons.pause
+                                          : value.isCompleted
+                                              ? Icons.replay
+                                              : Icons.play_arrow,
                                     ),
-                                    onPressed: _showController
-                                        ? () => seekForward()
-                                        : null,
-                                    icon: const Icon(Icons.forward_10),
+                                    iconSize: 40,
                                   ),
-                              ],
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: IconButton(
-                              onPressed: () => launchUrl(Uri.parse(widget.url)),
-                              icon: const Icon(Icons.open_in_new),
-                            ),
-                          ),
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 8,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 16),
-                                if (value.duration >= Duration(seconds: 1))
-                                  Text(
-                                    '${formatDuration(value.position)} / ${formatDuration(value.duration)}',
-                                    style: themeData.textTheme.bodySmall,
-                                  ),
-                                const Spacer(),
-                                IconButton(
-                                  onPressed: () => _showController
-                                      ? setIsFullScreen(!_isFullscreen)
-                                      : null,
-                                  icon: Icon(
-                                    _isFullscreen
-                                        ? Icons.fullscreen_exit
-                                        : Icons.fullscreen,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else if (value.errorDescription == null)
-                const Center(
-                  child: CircularProgressIndicator(),
-                )
-              else
-                Center(
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              AppUtils.statusIcon(
-                                  context: context, status: AppStatus.warning),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Unable to load the video',
-                                style: TextStyle(
-                                  color: themeExtension.textDimColor,
-                                ),
+                                  const SizedBox(width: 16),
+                                  if (isStreaming)
+                                    IconButton(
+                                      color: Colors.white,
+                                      style: IconButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.black.withOpacity(0.38),
+                                      ),
+                                      onPressed: _showController
+                                          ? () => seekForward()
+                                          : null,
+                                      icon: const Icon(Icons.forward_10),
+                                    ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          InkWell(
-                            child: IntrinsicWidth(
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                onPressed: () =>
+                                    launchUrl(Uri.parse(widget.url)),
+                                icon: const Icon(Icons.open_in_new),
+                              ),
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 8,
                               child: Row(
                                 children: [
-                                  const Icon(Icons.link),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      widget.url,
-                                      style: TextStyle(
-                                        color: themeExtension.textDimColor,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                  const SizedBox(width: 16),
+                                  if (isStreaming)
+                                    Text(
+                                      '${formatDuration(value.position)} / ${formatDuration(value.duration)}',
+                                      style: themeData.textTheme.bodySmall,
+                                    ),
+                                  const Spacer(),
+                                  IconButton(
+                                    onPressed: () => _showController
+                                        ? setIsFullScreen(!_isFullscreen)
+                                        : null,
+                                    icon: Icon(
+                                      _isFullscreen
+                                          ? Icons.fullscreen_exit
+                                          : Icons.fullscreen,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            onTap: () => launchUrl(
-                              Uri.parse(widget.url),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else if (value.errorDescription == null)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                else
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 8),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AppUtils.statusIcon(
+                                    context: context,
+                                    status: AppStatus.warning),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Unable to load the video',
+                                  style: TextStyle(
+                                    color: themeExtension.textDimColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                          )
-                        ],
+                            const SizedBox(height: 4),
+                            InkWell(
+                              child: IntrinsicWidth(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.link),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        widget.url,
+                                        style: TextStyle(
+                                          color: themeExtension.textDimColor,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              onTap: () => launchUrl(
+                                Uri.parse(widget.url),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              if (value.errorDescription == null) ...[
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  left: _showController ? 12 : 0,
-                  right: _showController ? 12 : 0,
-                  bottom: _showController ? 10 : 0,
-                  child: AnimatedOpacity(
+                if (value.errorDescription == null) ...[
+                  AnimatedPositioned(
                     duration: const Duration(milliseconds: 300),
-                    opacity: _showController ? 1 : 0.54,
-                    child: _.VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: false,
-                      colors: _.VideoProgressColors(
-                        playedColor:
-                            themeData.colorScheme.primary.withOpacity(0.87),
-                        bufferedColor:
-                            themeData.colorScheme.secondary.withOpacity(0.54),
+                    left: _showController ? 12 : 0,
+                    right: _showController ? 12 : 0,
+                    bottom: _showController ? 10 : 0,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _showController ? 1 : 0.54,
+                      child: _.VideoProgressIndicator(
+                        _controller,
+                        allowScrubbing: false,
+                        colors: _.VideoProgressColors(
+                          playedColor:
+                              themeData.colorScheme.primary.withOpacity(0.87),
+                          bufferedColor:
+                              themeData.colorScheme.secondary.withOpacity(0.54),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  left: _showController ? 4 : -8,
-                  right: _showController ? 4 : -8,
-                  bottom: _showController ? 4 : -8,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _showController ? 1 : 0,
-                    child: CustomVideoProgressIndicator(
-                      controller: _controller,
+                  if (isStreaming)
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      left: _showController ? 4 : -8,
+                      right: _showController ? 4 : -8,
+                      bottom: _showController ? 4 : -8,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: _showController ? 1 : 0,
+                        child: CustomVideoProgressIndicator(
+                          controller: _controller,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
