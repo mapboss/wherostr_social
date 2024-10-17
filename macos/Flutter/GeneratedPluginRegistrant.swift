@@ -15,7 +15,7 @@ import package_info_plus
 import path_provider_foundation
 import quill_native_bridge_macos
 import shared_preferences_foundation
-import sqflite
+import sqflite_darwin
 import url_launcher_macos
 import video_player_avfoundation
 import wakelock_plus

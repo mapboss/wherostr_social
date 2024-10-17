@@ -105,6 +105,8 @@ dependencies:
   flutter_hls_parser: ^2.0.1
   flutter_markdown: ^0.7.4+1
   markdown: ^7.2.2
+  sqflite: ^2.4.0
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

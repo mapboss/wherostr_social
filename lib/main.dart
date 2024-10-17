@@ -13,6 +13,7 @@ import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
+import 'package:wherostr_social/models/encrypted_message.dart';
 import 'package:wherostr_social/screens/app_relay_settings.dart';
 import 'package:wherostr_social/screens/create_account.dart';
 import 'package:wherostr_social/screens/home.dart';
@@ -22,8 +23,9 @@ import 'package:wherostr_social/screens/test.dart';
 import 'package:wherostr_social/screens/welcome.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init('app');
-  await AppRelays.init();
+  await Future.wait([AppRelays.init(), EncryptedMessage.init()]);
   runApp(const MainApp());
 }
 
