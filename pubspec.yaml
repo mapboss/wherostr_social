@@ -97,7 +97,10 @@ dependencies:
   crypto: ^3.0.5
   dismissible_page: ^1.0.2
   permission_handler: ^11.3.1
-  image_gallery_saver: ^2.0.3
+  image_gallery_saver:
+    git:
+      url: https://github.com/hui-z/image_gallery_saver.git
+      ref: f8393c60c5e6b0d8985b2a3359668b7351ce6abd
   dio: ^5.7.0
 
 dev_dependencies:
