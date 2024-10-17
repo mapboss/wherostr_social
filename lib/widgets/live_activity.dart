@@ -90,6 +90,7 @@ class _LiveActivityState extends State<LiveActivity> {
       _isLoading = true;
     });
     try {
+      _focusNode.unfocus();
       String content = _messageController.text;
       final event = DataEvent(kind: 1311);
       if (_quotedEvent != null) {
@@ -102,11 +103,6 @@ class _LiveActivityState extends State<LiveActivity> {
       }
       event.content = content.trim();
       event.addTagIfNew(['a', widget.event.getAddressId()!]);
-      AppUtils.showSnackBar(
-        text: 'Sending...',
-        withProgressBar: true,
-        autoHide: false,
-      );
       final me = context.read<AppStatesProvider>().me;
       await event.publish(
         autoGenerateTags: true,
@@ -116,9 +112,7 @@ class _LiveActivityState extends State<LiveActivity> {
         _quotedEvent = null;
       });
       _messageController.clear();
-      AppUtils.hideSnackBar();
     } catch (error) {
-      AppUtils.hideSnackBar();
       AppUtils.handleError();
     } finally {
       if (mounted) {
@@ -315,15 +309,28 @@ class _LiveActivityState extends State<LiveActivity> {
                                           ),
                                         ),
                                         SizedBox(width: 8),
-                                        IconButton(
-                                          onPressed: _isEmpty || _isLoading
-                                              ? null
-                                              : _handleSendPressed,
-                                          icon: Icon(Icons.send),
-                                          color: _isEmpty || _isLoading
-                                              ? null
-                                              : themeData.colorScheme.primary,
-                                        ),
+                                        _isLoading
+                                            ? Padding(
+                                                padding:
+                                                    const EdgeInsets.all(12),
+                                                child: Center(
+                                                  child: SizedBox(
+                                                    height: 24,
+                                                    width: 24,
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  ),
+                                                ))
+                                            : IconButton(
+                                                onPressed: _isEmpty
+                                                    ? null
+                                                    : _handleSendPressed,
+                                                icon: Icon(Icons.send),
+                                                color: _isEmpty
+                                                    ? null
+                                                    : themeData
+                                                        .colorScheme.primary,
+                                              ),
                                       ],
                                     ),
                                   ),

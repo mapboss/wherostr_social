@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:wherostr_social/models/data_event.dart';
 
 class PostUnsupportedType extends StatelessWidget {
-  const PostUnsupportedType({super.key});
+  final DataEvent event;
+
+  const PostUnsupportedType({
+    super.key,
+    required this.event,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.all(16),
-      child: Center(
-        child: Text('Sorry, we currently do not support this post type.'),
+      child: Column(
+        children: [
+          const Text('Sorry, we currently do not support this post type.'),
+          Text('Kind: ${event.kind}'),
+        ],
       ),
     );
   }

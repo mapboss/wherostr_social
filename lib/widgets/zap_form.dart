@@ -92,6 +92,7 @@ class _ZapFormState extends State<ZapForm> {
       }
 
       zapCompleter = waitZapReceipt(zapRequest, invoice!);
+      bool useNWC = false;
       if (useQr) {
         AppUtils.hideSnackBar();
         showQRInvoiceModal(context, invoice).whenComplete(() {
@@ -104,7 +105,7 @@ class _ZapFormState extends State<ZapForm> {
         });
       } else {
         final nwcString = await appState.conectNWC();
-        bool useNWC = nwcString?.isNotEmpty ?? false;
+        useNWC = nwcString?.isNotEmpty ?? false;
         if (useNWC) {
           AppUtils.showSnackBar(
             text: 'Zapping...',
@@ -149,7 +150,9 @@ class _ZapFormState extends State<ZapForm> {
         status: AppStatus.success,
       );
       if (mounted) {
-        appState.navigatorPop();
+        if (!useNWC) {
+          appState.navigatorPop();
+        }
         appState.navigatorPop();
       }
     } on FormatException catch (error) {

@@ -22,11 +22,18 @@ class PostLiveActivity extends StatefulWidget {
 }
 
 class _PostLiveActivityState extends State<PostLiveActivity> {
+  void openLiveActivity() {
+    context.read<AppStatesProvider>().navigatorPush(
+          widget: LiveActivity(
+            event: widget.event,
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    final appState = context.watch<AppStatesProvider>();
     final image = widget.event.tags
         ?.where((tag) => tag.firstOrNull == 'image')
         .firstOrNull
@@ -58,20 +65,26 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (image != null)
-          FadeInImage(
-            placeholder: MemoryImage(kTransparentImage),
-            image: AppUtils.getImageProvider(image),
-            fadeInDuration: const Duration(milliseconds: 300),
-            fadeInCurve: Curves.easeInOutCubic,
-            fit: BoxFit.cover,
+          InkWell(
+            onTap: openLiveActivity,
+            child: FadeInImage(
+              placeholder: MemoryImage(kTransparentImage),
+              image: AppUtils.getImageProvider(image),
+              fadeInDuration: const Duration(milliseconds: 300),
+              fadeInCurve: Curves.easeInOutCubic,
+              fit: BoxFit.cover,
+            ),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         if (title != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              title,
-              style: themeData.textTheme.titleMedium,
+          InkWell(
+            onTap: openLiveActivity,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                title,
+                style: themeData.textTheme.titleMedium,
+              ),
             ),
           ),
         const SizedBox(height: 4),
@@ -127,11 +140,7 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 FilledButton.icon(
-                  onPressed: () => appState.navigatorPush(
-                    widget: LiveActivity(
-                      event: widget.event,
-                    ),
-                  ),
+                  onPressed: openLiveActivity,
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: const Text('Watch'),
                 ),

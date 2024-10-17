@@ -81,6 +81,7 @@ class PostItem extends StatelessWidget {
           );
         }
       case 6:
+      case 16:
         widget = Repost(
           event: event,
           enableShowProfileAction: enableShowProfileAction,
@@ -122,7 +123,7 @@ class PostItem extends StatelessWidget {
           ),
         );
       default:
-        widget = const PostUnsupportedType();
+        widget = PostUnsupportedType(event: event);
     }
     return Material(
       child: widget,
@@ -335,7 +336,8 @@ class Repost extends PostItem {
         : Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding:
+                    EdgeInsets.fromLTRB(16, 8, 16, event.kind == 16 ? 4 : 0),
                 child: Row(
                   children: [
                     Icon(

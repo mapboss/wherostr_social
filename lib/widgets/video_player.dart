@@ -95,6 +95,27 @@ class _VideoPlayerState extends State<VideoPlayer> {
     });
   }
 
+  void seekBackward() {
+    final currentPosition = _controller.value.position;
+    final newPosition = currentPosition - const Duration(seconds: 10);
+    if (newPosition >= Duration.zero) {
+      _controller.seekTo(newPosition);
+    } else {
+      _controller.seekTo(Duration.zero);
+    }
+  }
+
+  void seekForward() {
+    final currentPosition = _controller.value.position;
+    final videoDuration = _controller.value.duration;
+    final newPosition = currentPosition + const Duration(seconds: 10);
+    if (newPosition <= videoDuration) {
+      _controller.seekTo(newPosition);
+    } else {
+      _controller.seekTo(videoDuration);
+    }
+  }
+
   void togglePlay([bool? value]) {
     setState(() {
       value ?? !_controller.value.isPlaying
@@ -195,6 +216,19 @@ class _VideoPlayerState extends State<VideoPlayer> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                if (value.duration >= Duration(seconds: 1))
+                                  IconButton(
+                                    color: Colors.white,
+                                    style: IconButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.black.withOpacity(0.38),
+                                    ),
+                                    onPressed: _showController
+                                        ? () => seekBackward()
+                                        : null,
+                                    icon: const Icon(Icons.replay_10),
+                                  ),
+                                const SizedBox(width: 16),
                                 IconButton(
                                   color: Colors.white,
                                   style: IconButton.styleFrom(
@@ -211,7 +245,21 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                             ? Icons.replay
                                             : Icons.play_arrow,
                                   ),
+                                  iconSize: 40,
                                 ),
+                                const SizedBox(width: 16),
+                                if (value.duration >= Duration(seconds: 1))
+                                  IconButton(
+                                    color: Colors.white,
+                                    style: IconButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.black.withOpacity(0.38),
+                                    ),
+                                    onPressed: _showController
+                                        ? () => seekForward()
+                                        : null,
+                                    icon: const Icon(Icons.forward_10),
+                                  ),
                               ],
                             ),
                           ),
@@ -226,7 +274,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                           Positioned(
                             left: 0,
                             right: 0,
-                            bottom: 0,
+                            bottom: 8,
                             child: Row(
                               children: [
                                 const SizedBox(width: 16),
@@ -309,22 +357,41 @@ class _VideoPlayerState extends State<VideoPlayer> {
                     ),
                   ),
                 ),
-              if (value.errorDescription == null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _.VideoProgressIndicator(
-                    _controller,
-                    allowScrubbing: true,
-                    colors: _.VideoProgressColors(
-                      playedColor:
-                          themeData.colorScheme.primary.withOpacity(0.87),
-                      bufferedColor:
-                          themeData.colorScheme.secondary.withOpacity(0.54),
+              if (value.errorDescription == null) ...[
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  left: _showController ? 12 : 0,
+                  right: _showController ? 12 : 0,
+                  bottom: _showController ? 10 : 0,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _showController ? 1 : 0.54,
+                    child: _.VideoProgressIndicator(
+                      _controller,
+                      allowScrubbing: false,
+                      colors: _.VideoProgressColors(
+                        playedColor:
+                            themeData.colorScheme.primary.withOpacity(0.87),
+                        bufferedColor:
+                            themeData.colorScheme.secondary.withOpacity(0.54),
+                      ),
                     ),
                   ),
                 ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  left: _showController ? 4 : -8,
+                  right: _showController ? 4 : -8,
+                  bottom: _showController ? 4 : -8,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _showController ? 1 : 0,
+                    child: CustomVideoProgressIndicator(
+                      controller: _controller,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -346,6 +413,76 @@ class _VideoPlayerState extends State<VideoPlayer> {
           child: _isFullscreen ? const SizedBox.shrink() : _buildWidget(),
         ),
       ),
+    );
+  }
+}
+
+class CustomVideoProgressIndicator extends StatefulWidget {
+  final _.VideoPlayerController controller;
+
+  const CustomVideoProgressIndicator({super.key, required this.controller});
+
+  @override
+  State createState() => _CustomVideoProgressIndicatorState();
+}
+
+class _CustomVideoProgressIndicatorState
+    extends State<CustomVideoProgressIndicator> {
+  double _currentPosition = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPosition =
+        widget.controller.value.position.inMilliseconds.toDouble();
+    widget.controller.addListener(controllerListener);
+  }
+
+  void controllerListener() {
+    setState(() {
+      _currentPosition =
+          widget.controller.value.position.inMilliseconds.toDouble();
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(controllerListener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ThemeData themeData = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: widget.controller.value.isInitialized
+          ? SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                thumbShape:
+                    const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+                thumbColor: themeData.colorScheme.primary,
+                overlayShape: SliderComponentShape.noOverlay,
+                activeTrackColor: Colors.transparent,
+                inactiveTrackColor: Colors.transparent,
+                overlayColor: Colors.transparent,
+              ),
+              child: Slider(
+                value: _currentPosition,
+                min: 0,
+                max: widget.controller.value.duration.inMilliseconds.toDouble(),
+                onChanged: (value) {
+                  setState(() {
+                    _currentPosition = value;
+                  });
+                },
+                onChangeEnd: (value) {
+                  widget.controller
+                      .seekTo(Duration(milliseconds: value.toInt()));
+                },
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

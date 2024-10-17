@@ -576,7 +576,7 @@ class _ProfileState extends State<Profile> {
             return NostrFeed(
               relays: appState.me.relayList.clone(),
               scrollController: scrollController,
-              kinds: const [1, 6],
+              kinds: const [1, 6, 16],
               authors: [
                 widget.user.pubkey,
               ],

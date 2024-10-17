@@ -56,7 +56,7 @@ class _PostArticleState extends State<PostArticle> {
             fadeInCurve: Curves.easeInOutCubic,
             fit: BoxFit.cover,
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         if (title != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

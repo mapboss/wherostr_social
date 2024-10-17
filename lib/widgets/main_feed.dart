@@ -89,7 +89,7 @@ class MainFeedState extends State<MainFeed> {
           return NostrFeed(
             key: nostrFeedKey,
             scrollController: scrollController,
-            kinds: const [1, 6],
+            kinds: const [1, 6, 16],
             authors: _authors,
             relays: relayList,
             ids: difficulty != null && difficulty > 0
