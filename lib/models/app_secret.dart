@@ -28,6 +28,7 @@ class AppSecret with ChangeNotifier {
   static FlutterSecureStorage secureStorage = FlutterSecureStorage(
       iOptions: _getIOSOptions(), aOptions: _getAndroidOptions());
   static NostrKeyPairs? _keyPairs;
+  static String? _nwc;
 
   static Future<NostrKeyPairs?> read() async {
     if (_keyPairs != null) {
@@ -57,6 +58,7 @@ class AppSecret with ChangeNotifier {
   }
 
   static Future<void> write(String privateKey) async {
+    _keyPairs = null;
     await secureStorage
         .write(value: privateKey, key: secretStorageKey)
         .catchError((err) async {
@@ -66,6 +68,7 @@ class AppSecret with ChangeNotifier {
   }
 
   static Future<void> writeCustomKeyPairs(NostrKeyPairs customKeyPairs) async {
+    _keyPairs = null;
     print(
         'writeCustomKeyPairs: ${customKeyPairs.private}|${customKeyPairs.public}');
     await secureStorage
@@ -76,12 +79,14 @@ class AppSecret with ChangeNotifier {
   }
 
   static Future<void> delete() async {
+    _keyPairs = null;
     return secureStorage
         .delete(key: secretStorageKey)
         .catchError((err) => print('deletePrivateKey: $err'));
   }
 
   static Future<void> clear() async {
+    _keyPairs = null;
     await Future.wait(KeychainAccessibility.values.map((e) {
       return secureStorage
           .delete(
@@ -96,6 +101,7 @@ class AppSecret with ChangeNotifier {
   }
 
   static Future<void> writeNWC(String key) async {
+    _nwc = null;
     await secureStorage
         .write(value: key, key: nwcStorageKey)
         .catchError((err) async {
@@ -105,6 +111,9 @@ class AppSecret with ChangeNotifier {
   }
 
   static Future<String?> readNWC() async {
+    if (_nwc != null) {
+      return _nwc;
+    }
     String? key = await secureStorage.read(key: nwcStorageKey);
     if (key == null) {
       String? oldKey = await secureStorage.read(
@@ -117,12 +126,14 @@ class AppSecret with ChangeNotifier {
   }
 
   static Future<void> deleteNWC() async {
+    _nwc = null;
     return secureStorage
         .delete(key: nwcStorageKey)
         .catchError((err) => print('deleteNWC: $err'));
   }
 
   static Future<void> clearNWC() async {
+    _nwc = null;
     await Future.wait(KeychainAccessibility.values.map((e) {
       return secureStorage
           .delete(
