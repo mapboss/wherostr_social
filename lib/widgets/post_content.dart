@@ -328,7 +328,9 @@ class _PostContentState extends State<PostContent> {
               );
             } else {
               widgets.add(TextSpan(
-                text: element.text,
+                text: element.text.length > 28
+                    ? '${element.text.substring(0, 28)}...'
+                    : element.text,
                 style: TextStyle(color: themeData.colorScheme.primary),
                 recognizer: TapGestureRecognizer()
                   ..onTap = widget.enableElementTap

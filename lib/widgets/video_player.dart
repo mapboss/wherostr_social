@@ -1,4 +1,6 @@
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:flutter_hls_parser/flutter_hls_parser.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart' as _;
@@ -31,11 +33,19 @@ class _VideoPlayerState extends State<VideoPlayer> {
   final _visibilityDetectorKey = UniqueKey();
   bool _showController = true;
   bool _isFullscreen = false;
+  late bool _isLiveStream;
 
   @override
   void initState() {
     super.initState();
+    initVideo();
+  }
+
+  void initVideo() {
     final uri = Uri.parse(widget.url);
+    setState(() {
+      _isLiveStream = uri.path.toLowerCase().endsWith('.m3u8');
+    });
     _controller = _.VideoPlayerController.networkUrl(uri);
     _controller.addListener(controllerListener);
     _controller.initialize().then((_) {
@@ -45,6 +55,29 @@ class _VideoPlayerState extends State<VideoPlayer> {
       }
       setState(() {});
     });
+    if (_isLiveStream) {
+      checkIsEnded(uri);
+    }
+  }
+
+  void checkIsEnded(Uri uri, [bool recursive = true]) async {
+    try {
+      final response = await http.get(uri);
+      final playList =
+          await HlsPlaylistParser.create().parseString(uri, response.body);
+      if (playList is HlsMasterPlaylist) {
+        final mediaUri = playList.mediaPlaylistUrls.lastOrNull;
+        if (mediaUri != null && recursive) {
+          checkIsEnded(mediaUri, false);
+        }
+      } else if (playList is HlsMediaPlaylist) {
+        if (playList.hasEndTag) {
+          setState(() {
+            _isLiveStream = false;
+          });
+        }
+      }
+    } catch (error) {}
   }
 
   void controllerListener() {
@@ -55,8 +88,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
         WakelockPlus.enable();
       }
     });
-    if (_controller.value.duration >= Duration(seconds: 1) &&
-        !_showController &&
+    if (!_controller.value.isPlaying &&
+        !_controller.value.isBuffering &&
         _controller.value.isCompleted) {
       toggleShowController(true);
     }
@@ -118,11 +151,19 @@ class _VideoPlayerState extends State<VideoPlayer> {
 
   void togglePlay([bool? value]) {
     setState(() {
-      value ?? !_controller.value.isPlaying
-          ? _controller.play().then((_) => setState(() {
+      if (value ?? !_controller.value.isPlaying) {
+        if (_isLiveStream) {
+          _controller.removeListener(controllerListener);
+          _controller.dispose();
+          initVideo();
+        } else {
+          _controller.play().then((_) => setState(() {
                 _showController = false;
-              }))
-          : _controller.pause();
+              }));
+        }
+      } else {
+        _controller.pause();
+      }
     });
   }
 
@@ -175,8 +216,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
     return ValueListenableBuilder(
       valueListenable: _controller,
       builder: (context, _.VideoPlayerValue value, child) {
-        final isStreaming =
-            value.isInitialized && value.duration >= Duration(seconds: 1);
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: value.isInitialized ? () => toggleShowController() : null,
@@ -219,7 +258,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  if (isStreaming)
+                                  if (!_isLiveStream)
                                     IconButton(
                                       color: Colors.white,
                                       style: IconButton.styleFrom(
@@ -244,14 +283,14 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                     icon: Icon(
                                       value.isPlaying
                                           ? Icons.pause
-                                          : value.isCompleted
+                                          : value.isCompleted && !_isLiveStream
                                               ? Icons.replay
                                               : Icons.play_arrow,
                                     ),
                                     iconSize: 40,
                                   ),
                                   const SizedBox(width: 16),
-                                  if (isStreaming)
+                                  if (!_isLiveStream)
                                     IconButton(
                                       color: Colors.white,
                                       style: IconButton.styleFrom(
@@ -282,7 +321,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                               child: Row(
                                 children: [
                                   const SizedBox(width: 16),
-                                  if (isStreaming)
+                                  if (!_isLiveStream)
                                     Text(
                                       '${formatDuration(value.position)} / ${formatDuration(value.duration)}',
                                       style: themeData.textTheme.bodySmall,
@@ -383,7 +422,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                       ),
                     ),
                   ),
-                  if (isStreaming)
+                  if (!_isLiveStream)
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 300),
                       left: _showController ? 4 : -8,
