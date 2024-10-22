@@ -1,7 +1,7 @@
 name: wherostr_social
 description: "Wherostr social"
 publish_to: "none"
-version: 1.2.4+12
+version: 1.2.5+13
 
 flutter_native_splash:
   color: "#ffffff"
