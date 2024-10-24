@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -11,6 +12,7 @@ import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/utils/pow.dart';
+import 'package:wherostr_social/widgets/article.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_activity.dart';
 import 'package:wherostr_social/widgets/post_compose.dart';
@@ -34,6 +36,8 @@ class PostDetails extends StatefulWidget {
 class _PostDetailsState extends State<PostDetails> {
   DataEvent? _event;
   DataEvent? _parentEvent;
+  late ScrollController _scrollController;
+  bool _isScrollReverse = false;
   final _debouncer = Debouncer();
 
   @override
@@ -72,7 +76,33 @@ class _PostDetailsState extends State<PostDetails> {
           _parentEvent = parentEvent;
         });
       }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _scrollController = PrimaryScrollController.of(context);
+          _scrollController.addListener(scrollControllerListener);
+        });
+      });
     } catch (error) {}
+  }
+
+  void scrollControllerListener() {
+    if (_scrollController.position.atEdge) {
+      setState(() {
+        _isScrollReverse = false;
+      });
+    } else if (_scrollController.position.userScrollDirection !=
+        ScrollDirection.idle) {
+      setState(() {
+        _isScrollReverse = _scrollController.position.userScrollDirection ==
+            ScrollDirection.reverse;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(scrollControllerListener);
+    super.dispose();
   }
 
   @override
@@ -85,45 +115,80 @@ class _PostDetailsState extends State<PostDetails> {
     final difficulty = powFilter.enabled == true ? powFilter.value : null;
     final appState = context.watch<AppStatesProvider>();
     final scrollController = PrimaryScrollController.of(context);
+    Widget? postWidget;
+    if (_event != null) {
+      switch (_event!.kind) {
+        case 30023:
+          postWidget = Material(
+            child: Article(
+              event: _event!,
+            ),
+          );
+        default:
+          postWidget = PostItem(
+            event: _event!,
+            enableTap: false,
+          );
+      }
+    }
+    final homeScaffoldKey = AppStatesProvider.homeScaffoldKey;
+    final topPadding =
+        MediaQuery.of(homeScaffoldKey.currentContext!).viewPadding.top;
+    final eventId = widget.event?.getAddressId();
     return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: GestureDetector(
-          onTap: () => AppUtils.scrollToTop(context),
-        ),
-        title: GestureDetector(
-          onTap: () => AppUtils.scrollToTop(context),
-          child: const Text('Post'),
+      appBar: PreferredSize(
+        preferredSize: Size(double.infinity, topPadding + kToolbarHeight),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: topPadding + (_isScrollReverse ? 0 : kToolbarHeight),
+          child: AppBar(
+            flexibleSpace: GestureDetector(
+              onTap: () => AppUtils.scrollToTop(context),
+            ),
+            title: GestureDetector(
+              onTap: () => AppUtils.scrollToTop(context),
+              child: const Text('Post'),
+            ),
+          ),
         ),
       ),
       bottomNavigationBar: _event == null
           ? null
-          : Material(
-              borderRadius: isLargeDisplay
-                  ? const BorderRadiusDirectional.vertical(
-                      top: Radius.circular(12),
-                    )
-                  : null,
-              elevation: 1,
-              child: SafeArea(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      filled: true,
-                      fillColor: themeData.colorScheme.surfaceDim,
-                      prefixIcon: const Icon(Icons.comment_outlined),
-                      hintText: 'Add a reply',
-                    ),
-                    readOnly: true,
-                    onTap: () => appState.navigatorPush(
-                      widget: PostCompose(
-                        referencedEvent: _event,
-                        isReply: true,
+          : AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: _isScrollReverse ? 0 : 64,
+              child: SingleChildScrollView(
+                controller: ScrollController(),
+                physics: const NeverScrollableScrollPhysics(),
+                child: Material(
+                  borderRadius: isLargeDisplay
+                      ? const BorderRadiusDirectional.vertical(
+                          top: Radius.circular(12),
+                        )
+                      : null,
+                  elevation: 1,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          filled: true,
+                          fillColor: themeData.colorScheme.surfaceDim,
+                          prefixIcon: const Icon(Icons.comment_outlined),
+                          hintText: 'Add a reply',
+                        ),
+                        readOnly: true,
+                        onTap: () => appState.navigatorPush(
+                          widget: PostCompose(
+                            referencedEvent: _event,
+                            isReply: true,
+                          ),
+                          rootNavigator: true,
+                        ),
                       ),
-                      rootNavigator: true,
                     ),
                   ),
                 ),
@@ -245,10 +310,7 @@ class _PostDetailsState extends State<PostDetails> {
                               ),
                             ),
                           ),
-                        PostItem(
-                          event: _event!,
-                          enableTap: false,
-                        ),
+                        postWidget!,
                       ],
                     ),
                   ),
@@ -286,7 +348,8 @@ class _PostDetailsState extends State<PostDetails> {
                       relays: appState.me.relayList.clone(),
                       scrollController: scrollController,
                       kinds: const [1],
-                      e: [_event!.id!],
+                      e: eventId == null ? [_event!.id!] : null,
+                      a: eventId == null ? null : [eventId],
                       ids: difficulty != null && difficulty > 0
                           ? [difficultyToHex(difficulty, true)]
                           : null,
@@ -298,7 +361,7 @@ class _PostDetailsState extends State<PostDetails> {
                       itemFilter: (itemEvent) {
                         return isReply(
                           event: itemEvent,
-                          referenceEventId: _event!.id,
+                          referenceEventId: eventId ?? _event!.id,
                           isDirectOnly: true,
                         );
                       },

@@ -373,13 +373,22 @@ class _PostComposeState extends State<PostCompose> {
         }
         if (widget.isReply && widget.referencedEvent != null) {
           final rEvent = widget.referencedEvent!;
-          List<String>? rootETags = rEvent.tags
-              ?.where(
-                  (tag) => tag.firstOrNull == 'e' && tag.lastOrNull == 'root')
+          final eventId = widget.referencedEvent!.getAddressId();
+          List<String>? rootTags = rEvent.tags
+              ?.where((tag) =>
+                  (tag.firstOrNull == 'a' || tag.firstOrNull == 'e') &&
+                  tag.lastOrNull == 'root')
               .firstOrNull;
-          event.addTagIfNew(rootETags ?? ['e', rEvent.id!, '', 'root']);
-          if (rootETags != null) {
-            event.addTagEvent(rEvent.id!, 'reply');
+          if (eventId != null) {
+            event.addTagIfNew(rootTags ?? ['a', eventId, '', 'root']);
+            if (rootTags != null) {
+              event.addTagReference(eventId, 'reply');
+            }
+          } else {
+            event.addTagIfNew(rootTags ?? ['e', rEvent.id!, '', 'root']);
+            if (rootTags != null) {
+              event.addTagEvent(rEvent.id!, 'reply');
+            }
           }
           event.addTagUser(rEvent.pubkey);
           rEvent.tags?.where((tag) => tag.firstOrNull == 'p').forEach((tag) {

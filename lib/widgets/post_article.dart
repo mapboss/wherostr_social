@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:transparent_image/transparent_image.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
-import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
+import 'package:wherostr_social/widgets/post_details.dart';
 
 class PostArticle extends StatefulWidget {
   final DataEvent event;
@@ -21,6 +22,14 @@ class PostArticle extends StatefulWidget {
 }
 
 class _PostArticleState extends State<PostArticle> {
+  void openArticle() {
+    context.read<AppStatesProvider>().navigatorPush(
+          widget: PostDetails(
+            event: widget.event,
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
@@ -44,25 +53,32 @@ class _PostArticleState extends State<PostArticle> {
         ?.where((tag) => tag.firstOrNull == 'summary')
         .firstOrNull
         ?.elementAtOrNull(1);
-    final postNostrAddress = getNostrAddress(widget.event);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (image != null)
-          FadeInImage(
-            placeholder: MemoryImage(kTransparentImage),
-            image: AppUtils.getImageProvider(image),
-            fadeInDuration: const Duration(milliseconds: 300),
-            fadeInCurve: Curves.easeInOutCubic,
-            fit: BoxFit.cover,
+          InkWell(
+            onTap: openArticle,
+            child: FadeInImage(
+              placeholder: MemoryImage(kTransparentImage),
+              image: AppUtils.getImageProvider(image),
+              fadeInDuration: const Duration(milliseconds: 300),
+              fadeInCurve: Curves.easeInOutCubic,
+              fit: BoxFit.cover,
+            ),
           ),
         const SizedBox(height: 4),
         if (title != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              title,
-              style: themeData.textTheme.titleMedium,
+          InkWell(
+            onTap: openArticle,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                title,
+                style: themeData.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 4),
@@ -106,53 +122,10 @@ class _PostArticleState extends State<PostArticle> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                MenuAnchor(
-                  builder: (BuildContext context, MenuController controller,
-                      Widget? child) {
-                    return FilledButton.icon(
-                      onPressed: () {
-                        if (controller.isOpen) {
-                          controller.close();
-                        } else {
-                          controller.open();
-                        }
-                      },
-                      icon: const Icon(Icons.menu_book),
-                      label: const Text('Read'),
-                    );
-                  },
-                  menuChildren: [
-                    MenuItemButton(
-                      onPressed: () => launchUrl(
-                          Uri.parse('https://habla.news/a/$postNostrAddress')),
-                      leadingIcon: FadeInImage(
-                        width: 40,
-                        height: 40,
-                        placeholder: MemoryImage(kTransparentImage),
-                        image: AppUtils.getCachedImageProvider(
-                            'https://habla.news/favicon.png', 120),
-                        fadeInDuration: const Duration(milliseconds: 300),
-                        fadeInCurve: Curves.easeInOutCubic,
-                        fit: BoxFit.contain,
-                      ),
-                      child: const Text('Habla'),
-                    ),
-                    MenuItemButton(
-                      onPressed: () => launchUrl(Uri.parse(
-                          'https://yakihonne.com/article/$postNostrAddress')),
-                      leadingIcon: FadeInImage(
-                        width: 40,
-                        height: 40,
-                        placeholder: MemoryImage(kTransparentImage),
-                        image: AppUtils.getCachedImageProvider(
-                            'https://yakihonne.com/favicon.ico', 120),
-                        fadeInDuration: const Duration(milliseconds: 300),
-                        fadeInCurve: Curves.easeInOutCubic,
-                        fit: BoxFit.contain,
-                      ),
-                      child: const Text('Yakihonne'),
-                    ),
-                  ],
+                FilledButton.icon(
+                  onPressed: openArticle,
+                  icon: const Icon(Icons.menu_book),
+                  label: const Text('Read'),
                 ),
               ],
             ),

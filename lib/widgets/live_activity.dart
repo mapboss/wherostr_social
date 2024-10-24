@@ -270,7 +270,6 @@ class _LiveActivityState extends State<LiveActivity> {
                                       backgroundColor: themeData
                                           .colorScheme.primary
                                           .withOpacity(0.054),
-                                      scrollController: ScrollController(),
                                       relays: relayList,
                                       kinds: const [9735, 1311],
                                       a: [eventId!],
@@ -429,7 +428,10 @@ class _LiveActivityState extends State<LiveActivity> {
                                           horizontal: 16),
                                       child: Text(
                                         title,
-                                        style: themeData.textTheme.titleMedium,
+                                        style: themeData.textTheme.titleLarge
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ],

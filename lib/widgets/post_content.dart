@@ -96,8 +96,6 @@ class _PostContentState extends State<PostContent> {
     );
   }
 
-  void removeLastLineBreak;
-
   List<InlineSpan> getElementWidgets(List<TextElement> elements) {
     ThemeData themeData = Theme.of(context);
     List<InlineSpan> widgets = [];

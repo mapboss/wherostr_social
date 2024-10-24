@@ -16,16 +16,11 @@ bool isReply({
     return false;
   }
   try {
-    Iterable<List<String>> eTags =
-        event.tags!.where((tag) => tag.firstOrNull == 'e');
-    Iterable<List<String>> aTags =
-        event.tags!.where((tag) => tag.firstOrNull == 'a');
+    Iterable<List<String>> eTags = event.tags!
+        .where((tag) => tag.firstOrNull == 'e' || tag.firstOrNull == 'a');
 
     bool isReply =
         eTags.where((tag) => tag.elementAtOrNull(3) != 'mention').firstOrNull !=
-            null;
-    isReply = isReply ||
-        aTags.where((tag) => tag.elementAtOrNull(3) != 'mention').firstOrNull !=
             null;
 
     bool isDirect = false;

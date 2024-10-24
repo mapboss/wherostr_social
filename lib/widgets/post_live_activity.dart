@@ -83,7 +83,9 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 title,
-                style: themeData.textTheme.titleMedium,
+                style: themeData.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
