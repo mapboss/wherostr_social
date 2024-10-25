@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_locale.dart';
+import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -79,6 +80,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppLocaleProvider()),
         ChangeNotifierProvider(create: (_) => AppThemeProvider()),
         ChangeNotifierProvider(create: (_) => AppSettingsProvider()),
+        ChangeNotifierProvider(create: (_) => AppNotificationProvider()),
         ChangeNotifierProvider(create: (_) => AppStatesProvider()),
       ],
       child: Consumer2<AppLocaleProvider, AppThemeProvider>(

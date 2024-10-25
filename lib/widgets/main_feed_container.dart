@@ -4,6 +4,7 @@ import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
+import 'package:wherostr_social/widgets/notification_badge_button.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -84,13 +85,9 @@ class MainFeedContainer extends StatelessWidget {
                           //     widget: const MessagesContainer(),
                           //   ),
                           // ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.notifications,
-                              color: themeData.colorScheme.primary,
-                            ),
+                          NotificationBadgeButton(
                             onPressed: () => onNotificationCenterTap(),
-                          ),
+                          )
                         ],
                       ),
                     ),

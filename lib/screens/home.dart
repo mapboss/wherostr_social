@@ -5,6 +5,7 @@ import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed_container.dart';
+import 'package:wherostr_social/widgets/notification_badge_list_tile.dart';
 import 'package:wherostr_social/widgets/notification_center_container.dart';
 import 'package:wherostr_social/widgets/post_compose.dart';
 import 'package:wherostr_social/widgets/profile.dart';
@@ -300,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       title: const Text("Map"),
                                       selected: _selectedIndex == 3,
                                     ),
-                                    ListTile(
+                                    NotificationBadgeListTile(
                                       onTap: () => handleDestinationSelected(5),
                                       leading: const SizedBox(
                                         width: 36,

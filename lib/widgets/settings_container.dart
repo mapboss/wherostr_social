@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
@@ -10,6 +11,7 @@ import 'package:wherostr_social/widgets/appearance_settings.dart';
 import 'package:wherostr_social/widgets/following_hashtag_settings.dart';
 import 'package:wherostr_social/widgets/muted_account_settings.dart';
 import 'package:wherostr_social/widgets/nostr_key_settings.dart';
+import 'package:wherostr_social/widgets/notification_settings.dart';
 import 'package:wherostr_social/widgets/nwc_settings.dart';
 import 'package:wherostr_social/widgets/pow_filter_settings.dart';
 import 'package:wherostr_social/widgets/relay_settings.dart';
@@ -41,6 +43,7 @@ class _SettingsContainerState extends State<SettingsContainer> {
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
+    final appNotifications = context.watch<AppNotificationProvider>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -116,6 +119,25 @@ class _SettingsContainerState extends State<SettingsContainer> {
                         widget: const PowFilterSettings(),
                       ),
                 ),
+                // ListTile(
+                //   leading: appNotifications.notificationOn
+                //       ? Icon(Icons.notifications)
+                //       : Icon(Icons.notifications_off),
+                //   title: const Text('Notifications'),
+                //   trailing: Row(
+                //     mainAxisSize: MainAxisSize.min,
+                //     children: [
+                //       appNotifications.notificationOn
+                //           ? Text("On")
+                //           : Text("Off"),
+                //       Padding(padding: EdgeInsets.only(right: 8)),
+                //       Icon(Icons.arrow_forward_ios),
+                //     ],
+                //   ),
+                //   onTap: () => context.read<AppStatesProvider>().navigatorPush(
+                //         widget: const NotificationSettings(),
+                //       ),
+                // ),
                 ListTile(
                   leading: const Icon(Icons.electric_bolt),
                   title: const Text('NWC'),
