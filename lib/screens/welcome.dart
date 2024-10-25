@@ -37,7 +37,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'A decentralized geo-social app built on the Nostr protocol',
                     textAlign: TextAlign.center,
-                    style: themeData.textTheme.bodyLarge?.apply(
+                    style: themeData.textTheme.bodyLarge?.copyWith(
                       color: themeExtension.textDimColor,
                     ),
                   ),
@@ -50,7 +50,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'Nostr is a decentralized protocol for social networking, allowing users to interact without relying on a central authority.',
                     textAlign: TextAlign.center,
-                    style: themeData.textTheme.bodyLarge?.apply(
+                    style: themeData.textTheme.bodyLarge?.copyWith(
                       color: themeExtension.textDimColor,
                     ),
                   ),
@@ -63,7 +63,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'Nostr provides a secure and private way to connect with others, ensuring data ownership and freedom from censorship.',
                     textAlign: TextAlign.center,
-                    style: themeData.textTheme.bodyLarge?.apply(
+                    style: themeData.textTheme.bodyLarge?.copyWith(
                       color: themeExtension.textDimColor,
                     ),
                   ),

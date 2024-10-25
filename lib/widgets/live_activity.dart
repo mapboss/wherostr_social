@@ -11,6 +11,7 @@ import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
+import 'package:wherostr_social/widgets/hashtag_search.dart';
 import 'package:wherostr_social/widgets/message_item.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_action_bar.dart';
@@ -133,6 +134,7 @@ class _LiveActivityState extends State<LiveActivity> {
         widget.event.getTagValue('recording') ??
         '';
     final eventId = widget.event.getAddressId();
+    final tags = widget.event.getTagValues('t');
     final title = widget.event.tags
         ?.where((tag) => tag.firstOrNull == 'title')
         .firstOrNull
@@ -475,7 +477,7 @@ class _LiveActivityState extends State<LiveActivity> {
                                                 formatTimeAgo(startDateTime),
                                                 style: themeData
                                                     .textTheme.bodySmall!
-                                                    .apply(
+                                                    .copyWith(
                                                         color: themeExtension
                                                             .textDimColor),
                                               ),
@@ -485,11 +487,59 @@ class _LiveActivityState extends State<LiveActivity> {
                                             '${isLive ? null : 'Streamed '}${formatTimeAgo(endDateTime)}',
                                             style: themeData
                                                 .textTheme.bodySmall!
-                                                .apply(
+                                                .copyWith(
                                                     color: themeExtension
                                                         .textDimColor),
                                           ),
                                   ),
+                                  if (tags != null && tags.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Wrap(
+                                        spacing: 4,
+                                        children: tags
+                                            .map(
+                                              (item) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 4),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  child: InkWell(
+                                                    onTap: () => context
+                                                        .read<
+                                                            AppStatesProvider>()
+                                                        .navigatorPush(
+                                                          widget: HashtagSearch(
+                                                            hashtag: item,
+                                                          ),
+                                                        ),
+                                                    child: Container(
+                                                      color: themeData
+                                                          .colorScheme
+                                                          .surfaceDim,
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 4,
+                                                          horizontal: 8),
+                                                      child: Text(
+                                                        '#$item',
+                                                        style: TextStyle(
+                                                            color: themeData
+                                                                .colorScheme
+                                                                .primary),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ),
+                                  ],
                                   const SizedBox(height: 8),
                                   const Divider(height: 1),
                                   Padding(
@@ -607,7 +657,7 @@ class _ZapChipState extends State<ZapChip> {
                 TextSpan(
                   text: ' ${NumberFormat.compact().format(zapAmount)} ',
                   style: themeData.textTheme.titleMedium!
-                      .apply(color: Colors.white),
+                      .copyWith(color: Colors.white),
                 ),
                 const TextSpan(
                   text: 'sats',

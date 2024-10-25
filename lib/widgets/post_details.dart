@@ -36,7 +36,7 @@ class PostDetails extends StatefulWidget {
 class _PostDetailsState extends State<PostDetails> {
   DataEvent? _event;
   DataEvent? _parentEvent;
-  late ScrollController _scrollController;
+  ScrollController? _scrollController;
   bool _isScrollReverse = false;
   final _debouncer = Debouncer();
 
@@ -58,6 +58,14 @@ class _PostDetailsState extends State<PostDetails> {
           relays: me.relayList,
         );
       }
+      if (event?.kind == 30023) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _scrollController = PrimaryScrollController.of(context);
+            _scrollController!.addListener(scrollControllerListener);
+          });
+        });
+      }
       DataEvent? parentEvent;
       if (event != null) {
         final parentEventId = getParentEventId(event: event);
@@ -76,24 +84,18 @@ class _PostDetailsState extends State<PostDetails> {
           _parentEvent = parentEvent;
         });
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _scrollController = PrimaryScrollController.of(context);
-          _scrollController.addListener(scrollControllerListener);
-        });
-      });
     } catch (error) {}
   }
 
   void scrollControllerListener() {
-    if (_scrollController.position.atEdge) {
+    if (_scrollController!.position.atEdge) {
       setState(() {
         _isScrollReverse = false;
       });
-    } else if (_scrollController.position.userScrollDirection !=
+    } else if (_scrollController!.position.userScrollDirection !=
         ScrollDirection.idle) {
       setState(() {
-        _isScrollReverse = _scrollController.position.userScrollDirection ==
+        _isScrollReverse = _scrollController!.position.userScrollDirection ==
             ScrollDirection.reverse;
       });
     }
@@ -101,7 +103,7 @@ class _PostDetailsState extends State<PostDetails> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(scrollControllerListener);
+    _scrollController?.removeListener(scrollControllerListener);
     super.dispose();
   }
 

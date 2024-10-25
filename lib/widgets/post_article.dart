@@ -87,7 +87,7 @@ class _PostArticleState extends State<PostArticle> {
           child: Text(
             'Published ${formatTimeAgo(publishedAtDateTime)}',
             style: themeData.textTheme.bodySmall!
-                .apply(color: themeExtension.textDimColor),
+                .copyWith(color: themeExtension.textDimColor),
           ),
         ),
         if (summary != null) ...[

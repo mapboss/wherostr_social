@@ -359,8 +359,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ProfileAvatar(url: appState.me.picture),
                                 title: Text(
                                   "Hello!",
-                                  style: themeData.textTheme.bodySmall!.apply(
-                                      color: themeExtension.textDimColor),
+                                  style:
+                                      themeData.textTheme.bodySmall!.copyWith(
+                                    color: themeExtension.textDimColor,
+                                  ),
                                 ),
                                 subtitle: ProfileDisplayName(
                                   user: appState.me,

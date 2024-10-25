@@ -124,14 +124,14 @@ class _PostLiveActivityState extends State<PostLiveActivity> {
                     Text(
                       formatTimeAgo(startDateTime),
                       style: themeData.textTheme.bodySmall!
-                          .apply(color: themeExtension.textDimColor),
+                          .copyWith(color: themeExtension.textDimColor),
                     ),
                   ],
                 )
               : Text(
                   '${isLive ? null : 'Streamed '}${formatTimeAgo(endDateTime)}',
                   style: themeData.textTheme.bodySmall!
-                      .apply(color: themeExtension.textDimColor),
+                      .copyWith(color: themeExtension.textDimColor),
                 ),
         ),
         Padding(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:wherostr_social/extension/multi_image_savable_provider.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -30,6 +31,7 @@ class _ArticleState extends State<Article> {
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
+    final appSettings = context.watch<AppSettingsProvider>();
     final tags = widget.event.getTagValues('t');
     final image = widget.event.tags
         ?.where((tag) => tag.firstOrNull == 'image')
@@ -97,7 +99,7 @@ class _ArticleState extends State<Article> {
           child: Text(
             'Published ${formatTimeAgo(publishedAtDateTime)}',
             style: themeData.textTheme.bodySmall!
-                .apply(color: themeExtension.textDimColor),
+                .copyWith(color: themeExtension.textDimColor),
           ),
         ),
         if (summary != null) ...[
@@ -115,13 +117,20 @@ class _ArticleState extends State<Article> {
                     children: [
                       TextSpan(
                         text: 'Summary: ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: themeExtension.textDimColor,
-                        ),
+                        style: themeData.textTheme.bodyMedium!
+                            .copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: themeExtension.textDimColor,
+                            )
+                            .apply(
+                              fontSizeDelta: appSettings.contentFontSizeDelta,
+                            ),
                       ),
                       TextSpan(
                         text: summary,
+                        style: themeData.textTheme.bodyMedium!.apply(
+                          fontSizeDelta: appSettings.contentFontSizeDelta,
+                        ),
                       ),
                     ],
                   ),

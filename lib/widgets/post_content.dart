@@ -9,6 +9,7 @@ import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/extension/multi_image_savable_provider.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_bech32.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
@@ -50,7 +51,7 @@ class PostContent extends StatefulWidget {
 }
 
 class _PostContentState extends State<PostContent> {
-  List<InlineSpan> _elementWidgets = [];
+  List<TextElement> _textElements = [];
   List<ImageProvider> _imageProviders = [];
 
   @override
@@ -60,25 +61,28 @@ class _PostContentState extends State<PostContent> {
   }
 
   void initialize() {
-    _elementWidgets = [TextSpan(text: widget.content)];
-    List<InlineSpan> elementWidgets = [];
-    if (widget.contentLeading != null) {
-      elementWidgets.add(WidgetSpan(
-        alignment: PlaceholderAlignment.middle,
-        child: widget.contentLeading!,
-      ));
-    }
+    // _elementWidgets = [TextSpan(text: widget.content)];
+    // List<InlineSpan> elementWidgets = [];
+    // if (widget.contentLeading != null) {
+    //   elementWidgets.add(WidgetSpan(
+    //     alignment: PlaceholderAlignment.middle,
+    //     child: widget.contentLeading!,
+    //   ));
+    // }
     if (widget.content != '') {
       textParser(widget.content).then((textElements) {
         if (mounted) {
-          elementWidgets.addAll(getElementWidgets(textElements));
           setState(() {
-            _elementWidgets = elementWidgets;
+            _textElements = textElements;
           });
+          // elementWidgets.addAll(getElementWidgets(textElements));
+          // setState(() {
+          //   _elementWidgets = elementWidgets;
+          // });
         }
       });
-    } else if (elementWidgets.isNotEmpty) {
-      _elementWidgets = elementWidgets;
+      // } else if (elementWidgets.isNotEmpty) {
+      //   _elementWidgets = elementWidgets;
     }
   }
 
@@ -98,6 +102,7 @@ class _PostContentState extends State<PostContent> {
 
   List<InlineSpan> getElementWidgets(List<TextElement> elements) {
     ThemeData themeData = Theme.of(context);
+    final appSettings = context.watch<AppSettingsProvider>();
     List<InlineSpan> widgets = [];
     List<ImageProvider> imageProviders = [];
     final isLargeDisplay =
@@ -249,9 +254,13 @@ class _PostContentState extends State<PostContent> {
                 alignment: PlaceholderAlignment.middle,
                 child: ProfileDisplayName(
                   pubkey: pubkey,
-                  textStyle: themeData.textTheme.bodyMedium!.apply(
-                    color: themeData.colorScheme.primary,
-                  ),
+                  textStyle: themeData.textTheme.bodyMedium!
+                      .copyWith(
+                        color: themeData.colorScheme.primary,
+                      )
+                      .apply(
+                        fontSizeDelta: appSettings.contentFontSizeDelta,
+                      ),
                   withAtSign: true,
                   enableShowProfileAction: true,
                 ),
@@ -266,9 +275,13 @@ class _PostContentState extends State<PostContent> {
                 alignment: PlaceholderAlignment.middle,
                 child: ProfileDisplayName(
                   pubkey: data['pubkey'],
-                  textStyle: themeData.textTheme.bodyMedium!.apply(
-                    color: themeData.colorScheme.primary,
-                  ),
+                  textStyle: themeData.textTheme.bodyMedium!
+                      .copyWith(
+                        color: themeData.colorScheme.primary,
+                      )
+                      .apply(
+                        fontSizeDelta: appSettings.contentFontSizeDelta,
+                      ),
                   withAtSign: true,
                   enableShowProfileAction: true,
                 ),
@@ -386,17 +399,36 @@ class _PostContentState extends State<PostContent> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.enableTextSelection
-        ? SelectableText.rich(
-            TextSpan(
-              children: _elementWidgets,
+    ThemeData themeData = Theme.of(context);
+    final appSettings = context.watch<AppSettingsProvider>();
+    final List<InlineSpan> elementWidgets = [
+      if (widget.contentLeading != null)
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: widget.contentLeading!,
+        ),
+      ...(_textElements.isNotEmpty ? getElementWidgets(_textElements) : []),
+    ];
+    return SizedBox(
+      width: double.infinity,
+      child: widget.enableTextSelection
+          ? SelectableText.rich(
+              TextSpan(
+                children: elementWidgets,
+              ),
+              style: themeData.textTheme.bodyMedium!.apply(
+                fontSizeDelta: appSettings.contentFontSizeDelta,
+              ),
+            )
+          : Text.rich(
+              TextSpan(
+                children: elementWidgets,
+              ),
+              style: themeData.textTheme.bodyMedium!.apply(
+                fontSizeDelta: appSettings.contentFontSizeDelta,
+              ),
             ),
-          )
-        : Text.rich(
-            TextSpan(
-              children: _elementWidgets,
-            ),
-          );
+    );
   }
 }
 
@@ -468,7 +500,7 @@ class _LinkPreviewState extends State<LinkPreview> {
                 Expanded(
                   child: Text(
                     widget.url,
-                    style: TextStyle(
+                    style: themeData.textTheme.bodyMedium!.copyWith(
                       color: themeExtension.textDimColor,
                     ),
                     maxLines: 1,
@@ -493,7 +525,7 @@ class _LinkPreviewState extends State<LinkPreview> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 desc,
-                style: TextStyle(
+                style: themeData.textTheme.bodyMedium!.copyWith(
                   color: themeExtension.textDimColor,
                 ),
                 maxLines: 3,

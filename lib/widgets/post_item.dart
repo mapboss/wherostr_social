@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -230,6 +231,7 @@ class ShortTextNote extends PostItem {
 
   @override
   Widget build(BuildContext context) {
+    final appSettings = context.watch<AppSettingsProvider>();
     final appState = context.watch<AppStatesProvider>();
     final postContentWidget = Padding(
       padding: contentPadding ?? const EdgeInsets.all(0),
@@ -261,7 +263,7 @@ class ShortTextNote extends PostItem {
               enableShowProfileAction: enableShowProfileAction,
               enableMenu: enableMenu,
             ),
-            enableTap == true
+            enableTap == true && appSettings.collapseLongPost
                 ? PostContentWrapper(
                     event: event,
                     onShowMorePressed: () => appState.navigatorPush(

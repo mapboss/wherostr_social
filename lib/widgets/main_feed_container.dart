@@ -54,7 +54,7 @@ class MainFeedContainer extends StatelessWidget {
                   Text(
                     "Hello!",
                     style: themeData.textTheme.bodySmall!
-                        .apply(color: themeExtension.textDimColor),
+                        .copyWith(color: themeExtension.textDimColor),
                   ),
                   ProfileDisplayName(
                     user: appState.me,

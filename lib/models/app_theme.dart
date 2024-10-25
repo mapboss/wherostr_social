@@ -169,28 +169,20 @@ class AppThemeProvider with ChangeNotifier {
   AppThemeProvider() {
     _init();
   }
-  var _themeMode = ThemeMode.system;
+
+  ThemeMode _themeMode = ThemeMode.dark;
 
   ThemeMode get themeMode => _themeMode;
 
   Future<void> _init() async {
-    var storage = GetStorage('app');
-    if (storage.hasData('app_theme_mode')) {
-      switch (storage.read('app_theme_mode')) {
-        case 'light':
-          _themeMode = ThemeMode.light;
-          break;
-        default:
-          _themeMode = ThemeMode.dark;
-          break;
-      }
-    } else {
-      _themeMode = ThemeMode.dark;
-    }
+    final storage = GetStorage('app');
+    _themeMode = (storage.read('app_theme_mode') ?? 'dark') == 'light'
+        ? ThemeMode.light
+        : ThemeMode.dark;
   }
 
   Future<void> setThemeMode(ThemeMode themeMode) async {
-    var storage = GetStorage('app');
+    final storage = GetStorage('app');
     String themeModeValue;
     switch (themeMode) {
       case ThemeMode.light:

@@ -305,10 +305,10 @@ class _MessageItemState extends State<MessageItem> {
         ? Padding(
             padding: const EdgeInsets.only(right: 4),
             child: ProfileDisplayName(
-              user: _user,
-              withBadge: true,
-              textStyle: TextStyle(color: themeExtension.textDimColor),
-            ),
+                user: _user,
+                withBadge: true,
+                textStyle: themeData.textTheme.bodyMedium!
+                    .copyWith(color: themeExtension.textDimColor)),
           )
         : null;
     switch (widget.event.kind) {
@@ -361,7 +361,7 @@ class _MessageItemState extends State<MessageItem> {
                     TextSpan(
                       text: ' ${NumberFormat.compact().format(zapAmount)} ',
                       style: themeData.textTheme.titleMedium!
-                          .apply(color: Colors.white),
+                          .copyWith(color: Colors.white),
                     ),
                     const TextSpan(
                       text: 'sats',
@@ -506,7 +506,7 @@ class _MessageItemState extends State<MessageItem> {
                             user: _user,
                             withBadge: true,
                             textStyle: themeData.textTheme.bodySmall!
-                                .apply(color: themeExtension.textDimColor),
+                                .copyWith(color: themeExtension.textDimColor),
                           ),
                         ),
                         const SizedBox(height: 4),

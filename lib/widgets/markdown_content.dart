@@ -1,8 +1,10 @@
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wherostr_social/extension/multi_image_savable_provider.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 
 class MarkdownContent extends StatefulWidget {
@@ -25,6 +27,10 @@ class _MarkdownContentState extends State<MarkdownContent> {
   @override
   Widget build(BuildContext context) {
     ThemeData themeData = Theme.of(context);
+    final appSettings = context.watch<AppSettingsProvider>();
+    final defaultFontSize = themeData.textTheme.bodyMedium!.fontSize!;
+    final textScaleFactor =
+        (defaultFontSize + appSettings.contentFontSizeDelta) / defaultFontSize;
     return Markdown(
       padding: const EdgeInsets.all(0),
       shrinkWrap: true,
@@ -53,6 +59,7 @@ class _MarkdownContentState extends State<MarkdownContent> {
         );
       },
       styleSheet: MarkdownStyleSheet(
+        textScaler: TextScaler.linear(textScaleFactor),
         a: TextStyle(color: themeData.colorScheme.primary),
         codeblockPadding:
             const EdgeInsets.symmetric(vertical: 16, horizontal: 16),

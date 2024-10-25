@@ -1,10 +1,7 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -19,6 +16,7 @@ import 'package:wherostr_social/widgets/post_details.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
+import 'package:wherostr_social/widgets/resize_observer.dart';
 
 class ActivityItem extends StatefulWidget {
   final DataEvent event;
@@ -141,67 +139,27 @@ class _ActivityItemState extends State<ActivityItem> {
     return null;
   }
 
-  String getEllipsisText({
-    required String text,
-    required double maxWidth,
-    required int maxLines,
-    TextStyle? style,
-    String? ellipsisText = '...',
-  }) {
-    TextPainter textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: style,
-      ),
-      maxLines: maxLines,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textPainter.layout(maxWidth: maxWidth);
-    if (!textPainter.didExceedMaxLines) {
-      return text;
-    }
-    final textSize = textPainter.size;
-    final ellipsisTextPainter = TextPainter(
-      text: TextSpan(
-        text: ellipsisText,
-        style: style,
-      ),
-      maxLines: maxLines,
-      textDirection: ui.TextDirection.ltr,
-    );
-    ellipsisTextPainter.layout(maxWidth: maxWidth);
-    final ellipsisWidth = ellipsisTextPainter.size.width;
-    if (textPainter.didExceedMaxLines &&
-        textSize.width + ellipsisWidth > maxWidth) {
-      final textOffsetPosition = textPainter.getOffsetBefore(textPainter
-              .getPositionForOffset(
-                  Offset(textSize.width - ellipsisWidth, textSize.height))
-              .offset) ??
-          0;
-      return '${text.substring(0, textOffsetPosition)}$ellipsisText';
-    } else {
-      return text;
-    }
-  }
-
   Widget? _activityContentWidget() {
     switch (widget.event.kind) {
       case 1:
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(60, 0, 0, 16),
+          child: ContentWrapper(
+            child: PostContent(
+              content: widget.event.content!,
+              enableMedia: false,
+              enablePreview: false,
+              enableElementTap: false,
+              depth: 1,
+            ),
+          ),
+        );
       case 9735:
         if ((widget.event.content ?? '') != '') {
-          final content = getEllipsisText(
-            text: widget.event.content!,
-            maxWidth:
-                (MediaQuery.sizeOf(context).width >= Constants.largeDisplayWidth
-                        ? Constants.largeDisplayContentWidth
-                        : MediaQuery.sizeOf(context).width) -
-                    76,
-            maxLines: 3,
-          );
           return Padding(
             padding: const EdgeInsets.fromLTRB(60, 0, 0, 16),
             child: PostContent(
-              content: content,
+              content: widget.event.content!,
               enableMedia: false,
               enablePreview: false,
               enableElementTap: false,
@@ -209,7 +167,6 @@ class _ActivityItemState extends State<ActivityItem> {
             ),
           );
         }
-        break;
     }
     return null;
   }
@@ -433,23 +390,9 @@ class _ActivityItemState extends State<ActivityItem> {
                                                 enableElementTap: false,
                                                 enablePreview: false,
                                                 enableMedia: false,
-                                                content: getEllipsisText(
-                                                  text:
-                                                      snapshot.data?.content ??
-                                                          '',
-                                                  maxWidth: (MediaQuery.sizeOf(
-                                                                      context)
-                                                                  .width >=
-                                                              Constants
-                                                                  .largeDisplayWidth
-                                                          ? Constants
-                                                              .largeDisplayContentWidth
-                                                          : MediaQuery.sizeOf(
-                                                                  context)
-                                                              .width) -
-                                                      108,
-                                                  maxLines: 3,
-                                                ),
+                                                content:
+                                                    snapshot.data?.content ??
+                                                        '',
                                                 contentLeading: snapshot
                                                             .data?.pubkey !=
                                                         null
@@ -462,9 +405,12 @@ class _ActivityItemState extends State<ActivityItem> {
                                                           pubkey: snapshot
                                                               .data!.pubkey,
                                                           withBadge: true,
-                                                          textStyle: TextStyle(
-                                                              color: themeExtension
-                                                                  .textDimColor),
+                                                          textStyle: themeData
+                                                              .textTheme
+                                                              .bodyMedium!
+                                                              .copyWith(
+                                                                  color: themeExtension
+                                                                      .textDimColor),
                                                         ),
                                                       )
                                                     : null,
@@ -505,6 +451,71 @@ class _ActivityItemState extends State<ActivityItem> {
                   ),
               ],
             ),
+          );
+  }
+}
+
+class ContentWrapper extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onShowMorePressed;
+
+  const ContentWrapper({
+    super.key,
+    required this.child,
+    this.onShowMorePressed,
+  });
+
+  @override
+  State<ContentWrapper> createState() => _ContentWrapperState();
+}
+
+class _ContentWrapperState extends State<ContentWrapper> {
+  bool _exceededMaxHeight = false;
+
+  @override
+  Widget build(BuildContext context) {
+    ThemeData themeData = Theme.of(context);
+    double maxHeight = MediaQuery.sizeOf(context).height * 0.25;
+    if (maxHeight < 200) {
+      maxHeight = 200;
+    }
+    return _exceededMaxHeight
+        ? Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              LimitedBox(
+                maxHeight: maxHeight,
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  primary: false,
+                  child: widget.child,
+                ),
+              ),
+              Container(
+                height: 160,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      themeData.colorScheme.surface,
+                      themeData.colorScheme.surface.withOpacity(0),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )
+        : ResizeObserver(
+            onResized: (Size? oldSize, Size newSize) {
+              if (!_exceededMaxHeight && newSize.height > maxHeight) {
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => setState(() {
+                          _exceededMaxHeight = true;
+                        }));
+              }
+            },
+            child: widget.child,
           );
   }
 }

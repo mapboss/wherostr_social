@@ -7,21 +7,18 @@ class AppLocaleProvider with ChangeNotifier {
   AppLocaleProvider() {
     _init();
   }
-  var _locale = const Locale('en');
+
+  Locale _locale = const Locale('en');
 
   Locale get locale => _locale;
 
   Future<void> _init() async {
-    var storage = GetStorage('app');
-    if (storage.hasData('app_locale')) {
-      _locale = Locale(storage.read('app_locale'));
-    } else {
-      _locale = const Locale('en');
-    }
+    final storage = GetStorage('app');
+    _locale = Locale(storage.read('app_locale') ?? 'en');
   }
 
   Future<void> setLocale(Locale locale) async {
-    var storage = GetStorage('app');
+    final storage = GetStorage('app');
     await storage.write('app_locale', locale.languageCode);
     _locale = locale;
     notifyListeners();

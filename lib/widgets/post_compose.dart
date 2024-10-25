@@ -533,7 +533,7 @@ class _PostComposeState extends State<PostCompose> {
                                   null,
                                 ),
                                 placeHolder: DefaultTextBlockStyle(
-                                  themeData.textTheme.bodyLarge!.apply(
+                                  themeData.textTheme.bodyLarge!.copyWith(
                                     color: themeExtension.textDimColor,
                                   ),
                                   const HorizontalSpacing(0, 0),
@@ -1028,7 +1028,7 @@ class ProfileMentionEmbedBuilder extends EmbedBuilder {
         offset: const Offset(0, 2.5),
         child: ProfileDisplayName(
           pubkey: pubkey,
-          textStyle: textStyle.apply(color: themeData.colorScheme.primary),
+          textStyle: textStyle.copyWith(color: themeData.colorScheme.primary),
           withAtSign: true,
         ),
       ),
