@@ -410,7 +410,7 @@ class _PostComposeState extends State<PostCompose> {
                 NostrService.instance.utilsService.countDifficultyOfHex(hash);
             if (currentDiff >= _difficulty!) {
               streamListener.cancel();
-              if (_powCompleter?.isCompleted ?? false) {
+              if (_powCompleter?.isCompleted != true) {
                 _powCompleter?.complete(text);
               }
             } else if (currentDiff > bestDiff) {
