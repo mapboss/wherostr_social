@@ -103,7 +103,7 @@ class _LiveActivityState extends State<LiveActivity> {
         event.addTagIfNew(['p', _quotedEvent!.pubkey]);
       }
       event.content = content.trim();
-      event.addTagIfNew(['a', widget.event.getAddressId()!]);
+      event.addTagIfNew(['a', widget.event.getAddressId()!, '', 'root']);
       final me = context.read<AppStatesProvider>().me;
       await event.publish(
         autoGenerateTags: true,
