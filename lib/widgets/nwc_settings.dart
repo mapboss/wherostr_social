@@ -139,14 +139,15 @@ class _NWCSettingsState extends State<NWCSettings> {
                                 TextStyle(color: themeExtension.textDimColor),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            _nwcParsed!.lud16!,
-                            style:
-                                TextStyle(color: themeExtension.textDimColor),
+                        if (_nwcParsed?.lud16 != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              _nwcParsed!.lud16!,
+                              style:
+                                  TextStyle(color: themeExtension.textDimColor),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -273,14 +274,15 @@ class _NWCSettingsState extends State<NWCSettings> {
                                 TextStyle(color: themeExtension.textDimColor),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            _nwcParsed!.lud16!,
-                            style:
-                                TextStyle(color: themeExtension.textDimColor),
+                        if (_nwcParsed?.lud16 != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              _nwcParsed!.lud16!,
+                              style:
+                                  TextStyle(color: themeExtension.textDimColor),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
