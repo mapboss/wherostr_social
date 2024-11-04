@@ -1,91 +1,55 @@
-import 'dart:convert';
 import 'dart:ui' as ui;
 
-import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wherostr_social/constant.dart';
-import 'package:wherostr_social/extension/nostr_instance.dart';
-import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
-import 'package:wherostr_social/nips/nip004.dart';
-import 'package:wherostr_social/nips/nip017.dart';
-import 'package:wherostr_social/nips/nip044.dart';
-import 'package:wherostr_social/services/nostr.dart';
+import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/widgets/message_item.dart';
-import 'package:wherostr_social/widgets/nostr_feed.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
 import 'package:wherostr_social/widgets/post_content.dart';
 
 class MessagesContainer extends StatelessWidget {
   const MessagesContainer({super.key});
 
-  // Future<List<DataEvent>> initialize(BuildContext context) async {
-  //   final appState = context.read<AppStatesProvider>();
-  //   return NostrService.instance.fetchEvents(
-  //     [
-  //       NostrFilter(
-  //         kinds: [4, 1059],
-  //         p: [appState.me.pubkey],
-  //       )
-  //     ],
-  //     eoseRatio: 1,
-  //     timeout: Duration(seconds: 120),
-  //   );
-  // }
+  Future<List<DataEvent>> getAllMessages() async {
+    final rows = await DataMessage.database.query(DataMessage.tableName,
+        groupBy: 'sender', orderBy: 'created_at DESC');
+    return rows.map((e) => DataMessage.fromMap(e).toEvent()).toList();
+  }
+
+  Future<List<DataEvent>> getDirectMessages(String sender) async {
+    final rows = await DataMessage.database.query(DataMessage.tableName,
+        orderBy: 'created_at DESC',
+        where: "sender = '$sender' or reciever = '$sender'");
+    return rows.map((e) {
+      return DataMessage.fromMap(e).toEvent();
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    Map<String, bool> events = {};
-    ThemeData themeData = Theme.of(context);
-    final appState = context.read<AppStatesProvider>();
     return FutureBuilder(
-      // future: initialize(context),
-      future: Future.wait([]),
+      future: getAllMessages(),
       builder: (context, snapshot) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Messages'),
           ),
-          // body: snapshot.connectionState != ConnectionState.done
-          //     ? CircularProgressIndicator()
-          //     : Text(snapshot.data?.length.toString() ?? ''),
-          body: NostrFeed(
-            backgroundColor: themeData.colorScheme.primary.withOpacity(0.054),
-            scrollController: ScrollController(),
-            relays: appState.me.relayList.clone(),
-            kinds: const [4, 1059],
-            p: [appState.me.pubkey],
-            disableLimit: true,
-            itemMapper: (e) async {
-              final keyPairs = await AppSecret.read();
-              if (e.kind == 1059) {
-                final json = await Nip44.decrypt(
-                    e.content!, Nip44.shareSecret(keyPairs!.private, e.pubkey));
-                final newEvent = DataEvent.fromJson(jsonDecode(json));
-                newEvent.addTagIfNew(['p', e.pubkey]);
-                return newEvent;
+          body: ListView.builder(
+            itemCount: snapshot.data?.length,
+            itemBuilder: (context, index) {
+              if (snapshot.data == null) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('No items'),
+                    ],
+                  ),
+                );
               }
-              return e;
-            },
-            itemFilter: (e) {
-              if (e.kind != 4 && e.kind != 13) return false;
-              if (events.containsKey(e.pubkey)) return false;
-              if (e.pubkey == appState.me.pubkey) return false;
-              events[e.pubkey] = true;
-              return true;
-            },
-            itemBuilder: (context, event) {
-              final content = getEllipsisText(
-                text: event.content!,
-                maxWidth: (MediaQuery.sizeOf(context).width >=
-                            Constants.largeDisplayWidth
-                        ? Constants.largeDisplayContentWidth
-                        : MediaQuery.sizeOf(context).width) -
-                    76,
-                maxLines: 3,
-              );
+              final event = snapshot.data![index];
               return Material(
                 child: Column(
                   children: [
@@ -93,55 +57,42 @@ class MessagesContainer extends StatelessWidget {
                       onTap: () {
                         final appState = context.read<AppStatesProvider>();
                         appState.navigatorPush(
-                          widget: Scaffold(
-                            appBar: AppBar(
-                              title: const Text('Chat'),
-                            ),
-                            body: NostrFeed(
-                              backgroundColor: themeData.colorScheme.primary
-                                  .withOpacity(0.054),
-                              scrollController: ScrollController(),
-                              relays: appState.me.relayList.clone(),
-                              kinds: const [4, 1059],
-                              authors: [event.pubkey, appState.me.pubkey],
-                              p: [appState.me.pubkey],
-                              autoRefresh: true,
-                              reverse: true,
-                              isDynamicHeight: true,
-                              itemMapper: (e) async {
-                                final keyPairs = await AppSecret.read();
-                                if (e.kind == 1059) {
-                                  return Nip17.decode(e, keyPairs!.private);
-                                }
-                                final msg = await Nip4.decode(
-                                    e, keyPairs!.public, keyPairs.private);
-                                e.content = msg?.content;
-                                return e;
-                              },
-                              itemFilter: (e) {
-                                if (e.kind != 4 && e.kind != 14) return false;
-                                if (e.pubkey != event.pubkey &&
-                                    e.pubkey != appState.me.pubkey) {
-                                  return false;
-                                }
-                                if (e.pubkey == appState.me.pubkey &&
-                                    e.getTagValue('p') != event.pubkey) {
-                                  print(
-                                      '${e.getTagValue('p')} | ${event.pubkey}');
-                                  return false;
-                                }
-                                return true;
-                              },
-                              itemBuilder: (context, event) => Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                                child: MessageItem(
-                                  event: event,
-                                  isCompact: false,
-                                  enableActionBar: true,
+                          widget: FutureBuilder(
+                            future: getDirectMessages(event.pubkey),
+                            builder: (context, snapshot) {
+                              return Scaffold(
+                                appBar: AppBar(
+                                  title: const Text('Messages'),
                                 ),
-                              ),
-                            ),
+                                body: ListView.builder(
+                                  reverse: true,
+                                  itemCount: snapshot.data?.length,
+                                  itemBuilder: (context, index) {
+                                    if (snapshot.data == null) {
+                                      return const Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text('No items'),
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                    final event = snapshot.data![index];
+                                    return Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          16, 0, 16, 12),
+                                      child: MessageItem(
+                                        event: event,
+                                        isCompact: false,
+                                        enableActionBar: true,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
@@ -152,7 +103,7 @@ class MessagesContainer extends StatelessWidget {
                           children: [
                             PostComposer(event: event, enableMenu: false),
                             PostContent(
-                              content: content.trim(),
+                              content: event.content!.trim(),
                               enableMedia: false,
                               enablePreview: false,
                               enableElementTap: false,

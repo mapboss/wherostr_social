@@ -4,6 +4,7 @@ import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
+import 'package:wherostr_social/widgets/messages_badge_button.dart';
 import 'package:wherostr_social/widgets/notification_badge_button.dart';
 import 'package:wherostr_social/widgets/messages_container.dart';
 import 'package:wherostr_social/widgets/profile.dart';
@@ -11,11 +12,13 @@ import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
 
 class MainFeedContainer extends StatelessWidget {
-  final Function() onNotificationCenterTap;
+  final Function()? onNotificationCenterTap;
+  final Function()? onMessagesTap;
 
   const MainFeedContainer({
     super.key,
-    required this.onNotificationCenterTap,
+    this.onNotificationCenterTap,
+    this.onMessagesTap,
   });
 
   @override
@@ -77,17 +80,13 @@ class MainFeedContainer extends StatelessWidget {
                       color: themeData.colorScheme.surfaceDim,
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.sms,
-                              color: themeData.colorScheme.primary,
-                            ),
+                          MessagesBadgeButton(
                             onPressed: () => appState.navigatorPush(
                               widget: const MessagesContainer(),
                             ),
                           ),
                           NotificationBadgeButton(
-                            onPressed: () => onNotificationCenterTap(),
+                            onPressed: () => onNotificationCenterTap?.call(),
                           )
                         ],
                       ),

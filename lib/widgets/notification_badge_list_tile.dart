@@ -52,10 +52,6 @@ class NotificationBadgeListTileState extends State<NotificationBadgeListTile> {
     if (appNotification.notificationMentions) {
       kinds.add(1);
     }
-    if (appNotification.notificationDirectMessages) {
-      kinds.add(1059);
-      kinds.add(4);
-    }
     if (appNotification.notificationZaps) {
       kinds.add(9735);
     }

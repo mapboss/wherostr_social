@@ -8,12 +8,13 @@ import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_locale.dart';
+import 'package:wherostr_social/models/app_messaging.dart';
 import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
-import 'package:wherostr_social/models/encrypted_message.dart';
+import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/screens/app_relay_settings.dart';
 import 'package:wherostr_social/screens/create_account.dart';
 import 'package:wherostr_social/screens/home.dart';
@@ -25,7 +26,7 @@ import 'package:wherostr_social/screens/welcome.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init('app');
-  await Future.wait([AppRelays.init(), EncryptedMessage.init()]);
+  await Future.wait([AppRelays.init(), DataMessage.init()]);
   runApp(const MainApp());
 }
 
@@ -83,6 +84,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppThemeProvider()),
         ChangeNotifierProvider(create: (_) => AppSettingsProvider()),
         ChangeNotifierProvider(create: (_) => AppNotificationProvider()),
+        ChangeNotifierProvider(create: (_) => AppMessagingProvider()),
         ChangeNotifierProvider(create: (_) => AppStatesProvider()),
       ],
       child: Consumer2<AppLocaleProvider, AppThemeProvider>(
