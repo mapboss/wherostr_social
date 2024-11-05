@@ -109,7 +109,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
           onDebounce: () {
             if (mounted) {
               geojson.features.sort((a, b) =>
-                  b.properties?['createdAt'] - a.properties?['createdAt']);
+                  b.properties?['created_at'] - a.properties?['created_at']);
               _updateSource();
             }
           },
@@ -128,7 +128,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
           "kind": event.kind,
           "sig": event.sig,
           "tags": event.tags,
-          "createdAt": event.createdAt?.millisecondsSinceEpoch,
+          "created_at": (event.createdAt?.millisecondsSinceEpoch ?? 0) ~/ 1000
         },
         'geometry': {
           "type": "Point",
@@ -186,7 +186,7 @@ class _MapEventsFilterState extends State<MapEventsFilter> {
           iconAllowOverlap: true,
           iconImage: 'assets/app/app-icon-circle.png',
           iconSize: Platform.isIOS ? 0.25 : 0.3,
-          symbolSortKey: 'createdAt',
+          symbolSortKey: 'created_at',
         ),
       );
     }
