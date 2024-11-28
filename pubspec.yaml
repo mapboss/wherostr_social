@@ -11,7 +11,7 @@ flutter_native_splash:
     color_dark: "#121212"
 
 flutter_launcher_icons:
-  image_path: "assets/icon/1024.png"
+  image_path: "assets/icon/christmas/1024.png"
   android: true
   adaptive_icon_background: "assets/icon/christmas/android/ic_launcher_background.png" # only available for Android 8.0 devices and above
   adaptive_icon_foreground: "assets/icon/christmas/android/ic_launcher_foreground.png" # only available for Android 8.0 devices and above
