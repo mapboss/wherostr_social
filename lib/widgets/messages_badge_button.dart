@@ -49,12 +49,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
     final appState = context.read<AppStatesProvider>();
     final relays = appState.me.relayList.clone();
 
-    final List<int> kinds = [];
-    if (appNotification.notificationDirectMessages) {
-      kinds.add(1059);
-      kinds.add(4);
-    }
-
+    final List<NostrFilter> filters = [];
     var rows = [];
     try {
       rows = await DataMessage.database.query(
@@ -66,19 +61,28 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
     } catch (err) {
       print('query: $err');
     }
-    final filter = NostrFilter(
-      kinds: kinds,
-      p: [appState.me.pubkey],
-      since: rows.isEmpty
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(rows[0]['created_at'] as int)
-              .add(Duration(milliseconds: 1000)),
-    );
-
+    if (appNotification.notificationDirectMessages) {
+      filters.add(NostrFilter(
+        kinds: [4, 1059],
+        p: [appState.me.pubkey],
+        since: rows.isEmpty
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(rows[0]['created_at'] as int)
+                .add(Duration(milliseconds: 1000)),
+      ));
+      filters.add(NostrFilter(
+        kinds: [4],
+        authors: [appState.me.pubkey],
+        since: rows.isEmpty
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(rows[0]['created_at'] as int)
+                .add(Duration(milliseconds: 1000)),
+      ));
+    }
     final keyPairs = await AppSecret.read();
     final batch = DataMessage.database.batch();
     _newEventStream = NostrService.subscribe(
-      [filter],
+      filters,
       relays: relays,
       onEose: (relay, ease) async {
         if (batch.length == 0) return;
