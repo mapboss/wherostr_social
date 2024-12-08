@@ -4,19 +4,19 @@ import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/utils/safe_parser.dart';
 
 class DataMessage {
-  static final String tableName = 'encrypted_message';
+  static const String tableName = 'encrypted_message';
   static late Database database;
   final String id;
   final String sender;
   final String plainText;
-  final String reciever;
+  final String receiver;
   final int createdAt;
 
   DataMessage({
     required this.id,
     required this.plainText,
     required this.sender,
-    required this.reciever,
+    required this.receiver,
     required this.createdAt,
   });
 
@@ -28,15 +28,15 @@ class DataMessage {
       onCreate: (db, version) async {
         print('onCreate');
         await db.execute(
-            'CREATE TABLE $tableName(id TEXT PRIMARY KEY, plain_text TEXT, sender TEXT, reciever TEXT, created_at INTEGER, sig TEXT)');
+            'CREATE TABLE $tableName(id TEXT PRIMARY KEY, plain_text TEXT, sender TEXT, receiver TEXT, created_at INTEGER, sig TEXT)');
         await db.execute(
             'CREATE UNIQUE INDEX ${tableName}_id_idx ON $tableName (id);');
         await db.execute(
             'CREATE INDEX ${tableName}_sender_idx ON $tableName (sender);');
         await db.execute(
-            'CREATE INDEX ${tableName}_reciever_idx ON $tableName (reciever);');
+            'CREATE INDEX ${tableName}_receiver_idx ON $tableName (receiver);');
         await db.execute(
-            'CREATE INDEX ${tableName}_sender_reciever_idx ON $tableName (sender,reciever);');
+            'CREATE INDEX ${tableName}_sender_receiver_idx ON $tableName (sender,receiver);');
       },
       version: 1,
     );
@@ -47,7 +47,7 @@ class DataMessage {
       id: SafeParser.parseString(data['id'])!,
       plainText: SafeParser.parseString(data['plain_text'])!,
       sender: SafeParser.parseString(data['sender'])!,
-      reciever: SafeParser.parseString(data['reciever'])!,
+      receiver: SafeParser.parseString(data['receiver'])!,
       createdAt: SafeParser.parseInt(data['created_at'])!,
     );
   }
@@ -59,7 +59,7 @@ class DataMessage {
       "id": id,
       "plain_text": plainText,
       "sender": sender,
-      "reciever": reciever,
+      "receiver": receiver,
       "created_at": createdAt,
     };
   }
@@ -67,7 +67,7 @@ class DataMessage {
   // Convert a Dog into a Map. The keys must correspond to the names of the
   // columns in the database.
   String toSqlInsert() {
-    return 'INSERT INTO encrypted_message("$id","$plainText","$sender","$reciever",$createdAt)';
+    return 'INSERT INTO encrypted_message("$id","$plainText","$sender","$receiver",$createdAt)';
   }
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
@@ -80,7 +80,7 @@ class DataMessage {
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       content: plainText,
       tags: [
-        ["p", reciever]
+        ["p", receiver]
       ],
     );
   }
@@ -89,6 +89,6 @@ class DataMessage {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'EncryptedMessage{"id":"$id","plain_text":"$plainText","sender":"$sender","reciever":"$reciever","created_at":$createdAt}';
+    return 'EncryptedMessage{"id":"$id","plain_text":"$plainText","sender":"$sender","receiver":"$receiver","created_at":$createdAt}';
   }
 }

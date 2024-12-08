@@ -105,7 +105,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
             id: newEvent.id!,
             plainText: newEvent.content!,
             sender: newEvent.pubkey,
-            reciever: newEvent.getTagValue('p')!,
+            receiver: newEvent.getTagValue('p')!,
           ).toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -119,7 +119,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
             id: newEvent.id!,
             plainText: msg.content!,
             sender: msg.sender,
-            reciever: msg.receiver,
+            receiver: msg.receiver,
           ).toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );

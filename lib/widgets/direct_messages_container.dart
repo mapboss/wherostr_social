@@ -112,7 +112,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
     final rows = await DataMessage.database.query(
       DataMessage.tableName,
       orderBy: 'created_at DESC',
-      where: "sender = '$pubkey' or reciever = '$pubkey'",
+      where: "sender = '$pubkey' or receiver = '$pubkey'",
     );
     return rows.map((toElement) {
       return DataMessage.fromMap(toElement).toEvent();
