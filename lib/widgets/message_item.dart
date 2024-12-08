@@ -6,7 +6,7 @@ import 'package:dart_nostr/nostr/model/event/event.dart';
 import 'package:dart_nostr/nostr/model/nostr_events_stream.dart';
 import 'package:dart_nostr/nostr/model/request/filter.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -15,6 +15,7 @@ import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
+import 'package:wherostr_social/utils/formatter.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/post_content.dart';
 import 'package:wherostr_social/widgets/profile.dart';
@@ -23,12 +24,15 @@ import 'package:wherostr_social/widgets/profile_display_name.dart';
 import 'package:wherostr_social/widgets/speech_bubble.dart';
 import 'package:wherostr_social/widgets/zap_form.dart';
 
-const actionableKinds = [1311];
+const actionableKinds = [14, 1311];
 
 class MessageItem extends StatefulWidget {
   final DataEvent event;
   final bool enableActionBar;
   final bool isCompact;
+  final bool showAvatar;
+  final bool showName;
+  final bool showTime;
   final Function()? onReplyTap;
 
   const MessageItem({
@@ -36,6 +40,9 @@ class MessageItem extends StatefulWidget {
     required this.event,
     this.enableActionBar = true,
     this.isCompact = false,
+    this.showAvatar = true,
+    this.showName = true,
+    this.showTime = false,
     this.onReplyTap,
   });
 
@@ -301,7 +308,7 @@ class _MessageItemState extends State<MessageItem> {
   Widget _contentWidget() {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
-    final contentLeading = widget.isCompact
+    final contentLeading = widget.isCompact && widget.showName
         ? Padding(
             padding: const EdgeInsets.only(right: 4),
             child: ProfileDisplayName(
@@ -455,30 +462,32 @@ class _MessageItemState extends State<MessageItem> {
       final appState = context.watch<AppStatesProvider>();
       final contentWidget = _contentWidget();
       final activityWidget = _activityWidget();
+      final isMine = widget.event.pubkey == appState.me.pubkey;
       return InkWell(
-        onTap: widget.event.kind == 1311 ? _handleTap : null,
+        onTap: actionableKinds.contains(widget.event.kind) ? _handleTap : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: widget.isCompact ? 24 : 32,
-              height: widget.isCompact ? 24 : 32,
-              child: InkWell(
-                onTap: () => appState.navigatorPush(
-                  widget: Profile(
-                    heroTag: _profileHeroTag,
-                    user: _user!,
+            if (widget.showAvatar)
+              SizedBox(
+                width: widget.isCompact ? 24 : 32,
+                height: widget.isCompact ? 24 : 32,
+                child: InkWell(
+                  onTap: () => appState.navigatorPush(
+                    widget: Profile(
+                      heroTag: _profileHeroTag,
+                      user: _user!,
+                    ),
                   ),
-                ),
-                child: Hero(
-                  tag: _profileHeroTag,
-                  child: ProfileAvatar(
-                    url: _user?.picture,
-                    borderSize: 1,
+                  child: Hero(
+                    tag: _profileHeroTag,
+                    child: ProfileAvatar(
+                      url: _user?.picture,
+                      borderSize: 1,
+                    ),
                   ),
                 ),
               ),
-            ),
             Expanded(
               child: widget.isCompact
                   ? Padding(
@@ -500,23 +509,50 @@ class _MessageItemState extends State<MessageItem> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: ProfileDisplayName(
-                            user: _user,
-                            withBadge: true,
-                            textStyle: themeData.textTheme.bodySmall!
-                                .copyWith(color: themeExtension.textDimColor),
+                        if (widget.showName)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: ProfileDisplayName(
+                              user: _user,
+                              withBadge: true,
+                              textStyle: themeData.textTheme.bodySmall!
+                                  .copyWith(color: themeExtension.textDimColor),
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 4),
-                        SpeechBubble(
-                          padding: widget.event.kind == 9735
-                              ? const EdgeInsets.symmetric(horizontal: 16)
-                              : null,
-                          color:
-                              widget.event.kind == 9735 ? Colors.orange : null,
-                          child: contentWidget,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          textDirection: !widget.isCompact && isMine
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
+                          children: [
+                            Flexible(
+                              child: SpeechBubble(
+                                padding: widget.event.kind == 9735
+                                    ? const EdgeInsets.symmetric(horizontal: 16)
+                                    : null,
+                                color: widget.event.kind == 9735
+                                    ? Colors.orange
+                                    : !widget.isCompact && isMine
+                                        ? themeData.colorScheme.primary
+                                        : null,
+                                origin: !widget.isCompact && isMine
+                                    ? SpeechBubbleOrigin.right
+                                    : SpeechBubbleOrigin.left,
+                                child: contentWidget,
+                              ),
+                            ),
+                            if (widget.showTime)
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  formatTime(widget.event.createdAt),
+                                  style: themeData.textTheme.labelSmall!
+                                      .copyWith(
+                                          color: themeExtension.textDimColor),
+                                ),
+                              ),
+                          ],
                         ),
                         if (activityWidget != null) ...[
                           const SizedBox(height: 4),

@@ -5,6 +5,7 @@ import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed_container.dart';
+import 'package:wherostr_social/widgets/messages_container.dart';
 import 'package:wherostr_social/widgets/notification_badge_list_tile.dart';
 import 'package:wherostr_social/widgets/notification_center_container.dart';
 import 'package:wherostr_social/widgets/post_compose.dart';
@@ -66,110 +67,124 @@ class _HomeScreenState extends State<HomeScreen> {
     final homeNavigatorKey = AppStatesProvider.homeNavigatorKey;
     final child = Stack(
       children: [
-        Scaffold(
-          key: homeScaffoldKey,
-          body: HeroControllerScope(
-            controller: MaterialApp.createMaterialHeroController(),
-            child: Navigator(
-              key: homeNavigatorKey,
-              onGenerateRoute: (routeSettings) {
-                return MaterialPageRoute(
-                  builder: (context) => LazyIndexedStack(
-                    index: _selectedIndex,
-                    children: [
-                      MainFeedContainer(
-                        onNotificationCenterTap: () =>
-                            handleDestinationSelected(5),
-                      ),
-                      _selectedIndex == 1
-                          ? const SearchContainer()
-                          : const SizedBox.shrink(),
-                      const SizedBox.shrink(),
-                      _selectedIndex == 3
-                          ? const SocialMapContainer()
-                          : const SizedBox.shrink(),
-                      const SettingsContainer(),
-                      _selectedIndex == 5
-                          ? const NotificationCenterContainer()
-                          : const SizedBox.shrink(),
-                    ],
+        if (!isLargeDisplay)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: NavigationBar(
+              elevation: 1,
+              selectedIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
+              indicatorColor: themeData.colorScheme.primary.withOpacity(0.38),
+              onDestinationSelected: handleDestinationSelected,
+              height: 64,
+              destinations: [
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.home,
+                    color: themeData.textTheme.bodyMedium!.color,
                   ),
-                );
-              },
-            ),
-          ),
-          bottomNavigationBar: isLargeDisplay
-              ? null
-              : Material(
-                  elevation: 1,
-                  child: NavigationBar(
-                    selectedIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
-                    indicatorColor:
-                        themeData.colorScheme.primary.withOpacity(0.38),
-                    onDestinationSelected: handleDestinationSelected,
-                    height: 64,
-                    destinations: [
-                      NavigationDestination(
-                        icon: Icon(
-                          Icons.home,
-                          color: themeData.textTheme.bodyMedium!.color,
+                  label: "Home",
+                ),
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.search,
+                    color: themeData.textTheme.bodyMedium!.color,
+                  ),
+                  label: "Search",
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 8,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(12),
+                    ),
+                    child: Container(
+                      color: themeData.colorScheme.primary.withOpacity(0.38),
+                      child: InkWell(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
                         ),
-                        label: "Home",
-                      ),
-                      NavigationDestination(
-                        icon: Icon(
-                          Icons.search,
-                          color: themeData.textTheme.bodyMedium!.color,
-                        ),
-                        label: "Search",
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 6,
-                          horizontal: 8,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(12),
-                          ),
-                          child: Container(
-                            color:
-                                themeData.colorScheme.primary.withOpacity(0.38),
-                            child: InkWell(
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(12),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.add,
-                                  color: themeData.textTheme.bodyMedium!.color,
-                                ),
-                              ),
-                              onTap: () => appState.navigatorPush(
-                                widget: const PostCompose(),
-                                rootNavigator: true,
-                              ),
-                            ),
+                        child: Center(
+                          child: Icon(
+                            Icons.add,
+                            color: themeData.textTheme.bodyMedium!.color,
                           ),
                         ),
-                      ),
-                      NavigationDestination(
-                        icon: Icon(
-                          Icons.map,
-                          color: themeData.textTheme.bodyMedium!.color,
+                        onTap: () => appState.navigatorPush(
+                          widget: const PostCompose(),
+                          rootNavigator: true,
                         ),
-                        label: "Map",
                       ),
-                      NavigationDestination(
-                        icon: Icon(
-                          Icons.settings,
-                          color: themeData.textTheme.bodyMedium!.color,
-                        ),
-                        label: "Settings",
-                      ),
-                    ],
+                    ),
                   ),
                 ),
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.map,
+                    color: themeData.textTheme.bodyMedium!.color,
+                  ),
+                  label: "Map",
+                ),
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.settings,
+                    color: themeData.textTheme.bodyMedium!.color,
+                  ),
+                  label: "Settings",
+                ),
+              ],
+            ),
+          ),
+        Positioned(
+          top: 0,
+          bottom: MediaQuery.of(context).padding.bottom +
+              (!isLargeDisplay && appState.isBottomNavigationBarVisible
+                  ? 64
+                  : 0),
+          left: 0,
+          right: 0,
+          child: Scaffold(
+            key: homeScaffoldKey,
+            body: HeroControllerScope(
+              controller: MaterialApp.createMaterialHeroController(),
+              child: Navigator(
+                key: homeNavigatorKey,
+                observers: [AppStatesProvider.routeObserver],
+                onGenerateRoute: (routeSettings) {
+                  return MaterialPageRoute(
+                    builder: (context) => LazyIndexedStack(
+                      index: _selectedIndex,
+                      children: [
+                        MainFeedContainer(
+                          onNotificationCenterTap: () =>
+                              handleDestinationSelected(5),
+                          onMessagesTap: () => handleDestinationSelected(6),
+                        ),
+                        _selectedIndex == 1
+                            ? const SearchContainer()
+                            : const SizedBox.shrink(),
+                        const SizedBox.shrink(),
+                        _selectedIndex == 3
+                            ? const SocialMapContainer()
+                            : const SizedBox.shrink(),
+                        const SettingsContainer(),
+                        _selectedIndex == 5
+                            ? const NotificationCenterContainer()
+                            : const SizedBox.shrink(),
+                        _selectedIndex == 6
+                            ? const MessagesContainer()
+                            : const SizedBox.shrink(),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
         ),
         Positioned(
           top: 0,

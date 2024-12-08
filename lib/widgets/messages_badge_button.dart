@@ -146,9 +146,9 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       icon: _badgeCount > 0
           ? Badge.count(
               count: _badgeCount,
-              child: Icon(Icons.sms),
+              child: Icon(Icons.message),
             )
-          : Icon(Icons.sms),
+          : Icon(Icons.message),
       onPressed: () {
         widget.onPressed?.call();
         final appNotifications = context.read<AppNotificationProvider>();

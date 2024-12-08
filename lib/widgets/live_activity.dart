@@ -170,6 +170,7 @@ class _LiveActivityState extends State<LiveActivity> {
         },
         startingOpacity: 0,
         child: SafeArea(
+          bottom: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -6,7 +6,6 @@ import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
 import 'package:wherostr_social/widgets/messages_badge_button.dart';
 import 'package:wherostr_social/widgets/notification_badge_button.dart';
-import 'package:wherostr_social/widgets/messages_container.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -81,9 +80,7 @@ class MainFeedContainer extends StatelessWidget {
                       child: Row(
                         children: [
                           MessagesBadgeButton(
-                            onPressed: () => appState.navigatorPush(
-                              widget: const MessagesContainer(),
-                            ),
+                            onPressed: () => onMessagesTap?.call(),
                           ),
                           NotificationBadgeButton(
                             onPressed: () => onNotificationCenterTap?.call(),

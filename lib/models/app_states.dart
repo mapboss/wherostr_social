@@ -1,6 +1,7 @@
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:nwc/nwc.dart';
+import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/custom_keypairs.dart';
@@ -10,7 +11,69 @@ import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/nwc.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
 
+class RouteWrapper extends StatefulWidget {
+  final Widget child;
+  final bool isBottomNavigationBarVisible;
+
+  const RouteWrapper({
+    super.key,
+    required this.child,
+    this.isBottomNavigationBarVisible = true,
+  });
+
+  @override
+  State<RouteWrapper> createState() => _RouteWrapperState();
+}
+
+class _RouteWrapperState extends State<RouteWrapper> with RouteAware {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AppStatesProvider.routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    AppStatesProvider.routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    if (widget.isBottomNavigationBarVisible) {
+      context.read<AppStatesProvider>().showBottomNavigationBar();
+    } else {
+      context.read<AppStatesProvider>().hideBottomNavigationBar();
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (widget.isBottomNavigationBarVisible) {
+      context.read<AppStatesProvider>().showBottomNavigationBar();
+    } else {
+      context.read<AppStatesProvider>().hideBottomNavigationBar();
+    }
+  }
+
+  @override
+  void didPop() {
+    final context = AppStatesProvider.homeNavigatorKey.currentContext!;
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final navigator = Navigator.of(context);
+    if (!rootNavigator.canPop() && !navigator.canPop()) {
+      context.read<AppStatesProvider>().showBottomNavigationBar();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}
+
 class AppStatesProvider with ChangeNotifier {
+  static RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
   static GlobalKey<ScaffoldState> homeScaffoldKey = GlobalKey();
   static GlobalKey<NavigatorState> homeNavigatorKey = GlobalKey();
   static GlobalKey<MainFeedState> mainFeedKey = GlobalKey();
@@ -18,11 +81,18 @@ class AppStatesProvider with ChangeNotifier {
 
   NostrUser? _me;
   NostrUser get me => _me ?? NostrUser(pubkey: '');
+  bool _isBottomNavigationBarVisible = true;
+  bool get isBottomNavigationBarVisible => _isBottomNavigationBarVisible;
 
   void navigatorPush({
     required Widget widget,
     bool rootNavigator = false,
+    bool isBottomNavigationBarVisible = true,
   }) {
+    Widget wrappedWidget = RouteWrapper(
+      isBottomNavigationBarVisible: isBottomNavigationBarVisible,
+      child: widget,
+    );
     Navigator.of(homeNavigatorKey.currentContext!, rootNavigator: rootNavigator)
         .push(MaterialPageRoute(
             builder: (context) => rootNavigator
@@ -34,11 +104,11 @@ class AppStatesProvider with ChangeNotifier {
                                 Constants.largeDisplayWidth
                             ? Constants.largeDisplayContentWidth
                             : null,
-                        child: widget,
+                        child: wrappedWidget,
                       ),
                     ),
                   )
-                : widget));
+                : wrappedWidget));
   }
 
   void navigatorPop({
@@ -223,5 +293,23 @@ class AppStatesProvider with ChangeNotifier {
 
   Future<void> disconnectNWC() async {
     await disposeNWC();
+  }
+
+  void showBottomNavigationBar() {
+    if (!_isBottomNavigationBarVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isBottomNavigationBarVisible = true;
+        notifyListeners();
+      });
+    }
+  }
+
+  void hideBottomNavigationBar() {
+    if (_isBottomNavigationBarVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isBottomNavigationBarVisible = false;
+        notifyListeners();
+      });
+    }
   }
 }
