@@ -24,7 +24,7 @@ class DataMessage {
 
   static Future<void> init() async {
     final dbpath = join(await getDatabasesPath(), '$tableName.db');
-    await deleteDatabase(dbpath);
+    // await deleteDatabase(dbpath);
     DataMessage.database = await openDatabase(
       dbpath,
       onCreate: (db, version) async {
