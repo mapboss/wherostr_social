@@ -12,6 +12,12 @@ import 'package:wherostr_social/utils/safe_parser.dart';
 const defaultEmoji =
     '30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr';
 
+const defaultDMRelays = [
+  'wss://auth.nostr1.com',
+  'wss://relay.0xchat.com',
+  'wss://inbox.nostr.wine'
+];
+
 class NostrUser {
   NostrUser(
       {required this.pubkey,
@@ -71,6 +77,9 @@ class NostrUser {
   DataRelayList? _relayList;
   DataRelayList get relayList => _relayList ?? DataRelayList();
 
+  DataRelayList? _dmRelayList;
+  DataRelayList get dmRelayList => _dmRelayList ?? DataRelayList();
+
   String get npub => Nostr.instance.keysService.encodePublicKeyToNpub(pubkey);
 
   set displayName(String? value) {
@@ -99,7 +108,8 @@ class NostrUser {
       initInterestSets(),
       initFollowSets(),
       initEmojiList(),
-      setRelays(DataRelayList())
+      initRelayList(),
+      initDMRelayList(),
     ]);
   }
 
@@ -123,6 +133,14 @@ class NostrUser {
       ['a', defaultEmoji]
     ]);
     await event.publish(relays: _relayList);
+  }
+
+  Future<void> initRelayList() async {
+    return setRelays(DataRelayList());
+  }
+
+  Future<void> initDMRelayList() async {
+    return setDMRelays(DataRelayList.fromListString(defaultDMRelays));
   }
 
   factory NostrUser.fromJson(Map<String, dynamic> data) {
@@ -462,6 +480,17 @@ class NostrUser {
     return relayList;
   }
 
+  Future<DataRelayList> fetchDMRelayList([bool force = false]) async {
+    if (!force && _dmRelayList != null) {
+      return dmRelayList;
+    }
+    final items = await NostrService.instance
+        .fetchDMRelayList(pubkey, relays: _relayList);
+    _dmRelayList = items;
+    print('fetchDMRelayList: ${dmRelayList.length}');
+    return dmRelayList;
+  }
+
   Future<void> setFollowing(List<String> users) async {
     final event = DataEvent(
       kind: 3,
@@ -613,6 +642,15 @@ class NostrUser {
       tags: relayList.toTags(),
     );
     await event.publish(relays: relayList);
+  }
+
+  Future<void> setDMRelays(DataRelayList relays) async {
+    _dmRelayList = relays;
+    final event = DataEvent(
+      kind: 10050,
+      tags: relays.toDMTags(),
+    );
+    await event.publish(relays: relays.clone());
   }
 
   Future<void> reportUser(String pubkey, [String type = "spam"]) async {
