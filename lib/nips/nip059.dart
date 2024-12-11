@@ -6,12 +6,12 @@ import 'package:wherostr_social/nips/nip044.dart';
 /// Gift Wrap
 /// https://github.com/v0l/nips/blob/59/59.md
 class Nip59 {
-  static Future<DataEvent> encode(NostrEvent event, String receiver,
+  static Future<NostrEvent> encode(NostrEvent event, String receiver,
       {String? sealedPrivkey,
       String? kind,
       int? expiration,
       DateTime? createAt}) async {
-    String encodedEvent = jsonEncode(event);
+    String encodedEvent = jsonEncode(event.toMap());
     late NostrKeyPairs keychain;
     if (sealedPrivkey == null) {
       keychain = NostrKeyPairs.generate();
@@ -19,7 +19,6 @@ class Nip59 {
     } else {
       keychain = NostrKeyPairs(private: sealedPrivkey);
     }
-    Nip44.shareSecret(sealedPrivkey, receiver);
     String content = await Nip44.encrypt(
         encodedEvent, Nip44.shareSecret(keychain.private, receiver));
     List<List<String>> tags = [
@@ -27,12 +26,12 @@ class Nip59 {
     ];
     if (kind != null) tags.add(['k', kind]);
     if (expiration != null) tags.add(['expiration', '$expiration']);
-    return DataEvent.fromEvent(NostrEvent.fromPartialData(
+    return NostrEvent.fromPartialData(
         kind: 1059,
         tags: tags,
         content: content,
         keyPairs: keychain,
-        createdAt: createAt ?? DateTime.now()));
+        createdAt: createAt ?? DateTime.now());
   }
 
   static Future<DataEvent> decode(DataEvent event, String privkey) async {

@@ -10,7 +10,7 @@ import 'package:wherostr_social/nips/nip059.dart';
 /// Private Direct Messages
 /// https://github.com/nostr-protocol/nips/blob/master/17.md
 class Nip17 {
-  static Future<DataEvent> encode(
+  static Future<NostrEvent> encode(
       NostrEvent event, String receiver, String myPubkey, String privkey,
       {int? kind,
       int? expiration,
@@ -28,10 +28,11 @@ class Nip17 {
 
   static Future<NostrEvent> _encodeSealedGossip(NostrEvent event,
       String receiver, String myPubkey, String privkey) async {
-    String encodedEvent = jsonEncode(event);
+    String encodedEvent = jsonEncode(event.toMap());
     String content =
         await Nip44.encrypt(encodedEvent, Nip44.shareSecret(privkey, receiver));
 
+    print('fromPartialData');
     return NostrEvent.fromPartialData(
       kind: 13,
       tags: [],
@@ -64,8 +65,8 @@ class Nip17 {
         createdAt: createAt);
   }
 
-  static Future<DataEvent> encodeSealedGossipDM(String receiver, String content,
-      String replyId, String myPubkey, String privKey,
+  static Future<NostrEvent> encodeSealedGossipDM(String receiver,
+      String content, String replyId, String myPubkey, String privKey,
       {String? sealedPrivkey,
       String? sealedReceiver,
       DateTime? createAt,
@@ -73,16 +74,21 @@ class Nip17 {
       int? expiration,
       NostrEvent? innerEvent,
       List<String>? members}) async {
-    innerEvent ??= await encodeInnerEvent(
-        receiver, content, replyId, myPubkey, privKey,
-        subContent: subContent, expiration: expiration);
-    DataEvent event = await encode(innerEvent, receiver, myPubkey, privKey,
-        sealedPrivkey: sealedPrivkey,
-        sealedReceiver: sealedReceiver,
-        createAt: createAt,
-        expiration: expiration);
-    event.innerEvent = DataEvent.fromEvent(innerEvent);
-    return event;
+    try {
+      innerEvent ??= await encodeInnerEvent(
+          receiver, content, replyId, myPubkey, privKey,
+          subContent: subContent, expiration: expiration);
+      NostrEvent event = await encode(innerEvent, receiver, myPubkey, privKey,
+          sealedPrivkey: sealedPrivkey,
+          sealedReceiver: sealedReceiver,
+          createAt: createAt,
+          expiration: expiration);
+      // event.innerEvent = DataEvent.fromEvent(innerEvent);
+      return event;
+    } catch (err) {
+      print(err);
+      throw err;
+    }
   }
 
   static Future<DataEvent> decode(DataEvent event, String privkey,
