@@ -544,9 +544,10 @@ class _MessageItemState extends State<MessageItem> {
                             ),
                             if (widget.showTime)
                               Padding(
-                                padding: EdgeInsets.only(bottom: 4),
+                                padding: EdgeInsets.only(bottom: 8),
                                 child: Text(
-                                  formatTime(widget.event.createdAt),
+                                  formatTime(widget.event.createdAt,
+                                      format: 'd/M/yy'),
                                   style: themeData.textTheme.labelSmall!
                                       .copyWith(
                                           color: themeExtension.textDimColor),

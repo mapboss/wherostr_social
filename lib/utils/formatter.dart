@@ -36,7 +36,10 @@ class EnShortMessages implements timeago.EnShortMessages {
   String wordSeparator() => ' ';
 }
 
-String formatTime(DateTime? date) {
+String formatTime(
+  DateTime? date, {
+  String format = 'd MMM yyyy',
+}) {
   timeago.setLocaleMessages('en_short', EnShortMessages());
   if (date == null) {
     return '';
@@ -45,11 +48,14 @@ String formatTime(DateTime? date) {
   if (now.difference(date).inDays < 3) {
     return timeago.format(date, locale: 'en_short');
   } else {
-    return DateFormat('d MMM yyyy', 'en_US').format(date);
+    return DateFormat(format, 'en_US').format(date);
   }
 }
 
-String formatTimeAgo(DateTime? date) {
+String formatTimeAgo(
+  DateTime? date, {
+  String format = 'd MMM yyyy',
+}) {
   timeago.setLocaleMessages('en_short', EnShortMessages());
   if (date == null) {
     return '';
@@ -59,7 +65,7 @@ String formatTimeAgo(DateTime? date) {
     final elapsedTime = timeago.format(date, locale: 'en_short');
     return '$elapsedTime${elapsedTime == 'now' ? '' : ' ago'}';
   } else {
-    return 'on ${DateFormat('d MMM yyyy', 'en_US').format(date)}';
+    return 'on ${DateFormat(format, 'en_US').format(date)}';
   }
 }
 

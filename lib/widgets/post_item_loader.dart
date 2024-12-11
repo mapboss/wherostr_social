@@ -20,6 +20,7 @@ class PostItemLoader extends StatefulWidget {
   final bool enableProofOfWork;
   final bool enablePreview;
   final bool enableMedia;
+  final bool enableReplyLabel;
   final EdgeInsetsGeometry? contentPadding;
   final int depth;
   final double? maxHeight;
@@ -37,6 +38,7 @@ class PostItemLoader extends StatefulWidget {
     this.enableProofOfWork = true,
     this.enablePreview = true,
     this.enableMedia = true,
+    this.enableReplyLabel = false,
     this.contentPadding,
     this.depth = 0,
     this.maxHeight,
@@ -159,6 +161,7 @@ class _PostItemLoaderState extends State<PostItemLoader> {
                 enableProofOfWork: widget.enableProofOfWork,
                 enablePreview: widget.enablePreview,
                 enableMedia: widget.enableMedia,
+                enableReplyLabel: widget.enableReplyLabel,
                 contentPadding: widget.contentPadding,
                 depth: widget.depth,
                 maxHeight: widget.maxHeight,

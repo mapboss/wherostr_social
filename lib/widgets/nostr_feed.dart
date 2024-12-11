@@ -255,7 +255,9 @@ class NostrFeedState extends State<NostrFeed> {
         oldWidget.authors?.length != widget.authors?.length ||
         oldWidget.t?.elementAtOrNull(0) != widget.t?.elementAtOrNull(0) ||
         oldWidget.isAscending != widget.isAscending ||
-        oldRelay != newRelay) {
+        oldRelay != newRelay ||
+        oldWidget.kinds.join(',') != widget.kinds.join(',') ||
+        oldWidget.includeReplies != widget.includeReplies) {
       unsubscribe().whenComplete(() {
         clearState();
         initialize();
