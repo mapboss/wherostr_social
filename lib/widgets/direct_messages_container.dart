@@ -10,6 +10,7 @@ import 'package:wherostr_social/nips/nip017.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/widgets/message_item.dart';
+import 'package:wherostr_social/widgets/post_item.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -167,91 +168,158 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
               )
             : null,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: FutureBuilder(
-              future: getDirectMessages(widget.pubkey),
-              builder: (context, snapshot) {
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: snapshot.data?.length,
-                  itemBuilder: (context, index) {
-                    if (snapshot.data == null) {
-                      return const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('No items'),
-                          ],
-                        ),
-                      );
-                    }
-                    final event = snapshot.data![index];
-                    return Column(
-                      crossAxisAlignment: event.pubkey == appState.me.pubkey
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        IntrinsicWidth(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-                            child: MessageItem(
-                              event: event,
-                              isCompact: false,
-                              showAvatar: false,
-                              showName: false,
-                              showTime: true,
-                              enableActionBar: true,
-                              onReplyTap: () => _handleOnReplyTap(event),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
-            child: Row(
+          Positioned.fill(
+            child: Column(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    focusNode: _focusNode,
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      filled: true,
-                      fillColor: themeData.colorScheme.surfaceDim,
-                      prefixIcon: const Icon(Icons.comment_outlined),
-                      hintText: 'Send a message',
-                    ),
-                    readOnly: _isLoading,
+                  child: FutureBuilder(
+                    future: getDirectMessages(widget.pubkey),
+                    builder: (context, snapshot) {
+                      return ListView.builder(
+                        reverse: true,
+                        itemCount: snapshot.data?.length,
+                        itemBuilder: (context, index) {
+                          if (snapshot.data == null) {
+                            return const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('No items'),
+                                ],
+                              ),
+                            );
+                          }
+                          final event = snapshot.data![index];
+                          return Column(
+                            crossAxisAlignment:
+                                event.pubkey == appState.me.pubkey
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                            children: [
+                              IntrinsicWidth(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                                  child: MessageItem(
+                                    event: event,
+                                    isCompact: false,
+                                    showAvatar: false,
+                                    showName: false,
+                                    showTime: true,
+                                    enableActionBar: true,
+                                    onReplyTap: () => _handleOnReplyTap(event),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
-                SizedBox(width: 8),
-                _isLoading
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Center(
-                          child: SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          focusNode: _focusNode,
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            filled: true,
+                            fillColor: themeData.colorScheme.surfaceDim,
+                            prefixIcon: const Icon(Icons.comment_outlined),
+                            hintText: 'Send a message',
                           ),
-                        ))
-                    : IconButton(
-                        onPressed: _isEmpty ? null : _handleSendPressed,
-                        icon: Icon(Icons.send),
-                        color: _isEmpty ? null : themeData.colorScheme.primary,
+                          readOnly: _isLoading,
+                        ),
                       ),
+                      SizedBox(width: 8),
+                      _isLoading
+                          ? Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Center(
+                                child: SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ))
+                          : IconButton(
+                              onPressed: _isEmpty ? null : _handleSendPressed,
+                              icon: Icon(Icons.send),
+                              color: _isEmpty
+                                  ? null
+                                  : themeData.colorScheme.primary,
+                            ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+          if (_quotedEvent != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 60,
+              child: Material(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Container(
+                            foregroundDecoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: themeData.colorScheme.primary,
+                              ),
+                            ),
+                            child: LimitedBox(
+                              maxHeight: 108,
+                              child: SingleChildScrollView(
+                                physics: const NeverScrollableScrollPhysics(),
+                                primary: false,
+                                child: PostItem(
+                                  key: ValueKey(_quotedEvent!.id),
+                                  event: _quotedEvent!,
+                                  enableTap: false,
+                                  enableElementTap: false,
+                                  enableMenu: false,
+                                  enableActionBar: false,
+                                  enableLocation: false,
+                                  enableProofOfWork: false,
+                                  enableShowProfileAction: false,
+                                  depth: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () => setState(() {
+                                  _quotedEvent = null;
+                                }),
+                        icon: Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
