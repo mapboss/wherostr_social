@@ -6,6 +6,7 @@ import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
+import 'package:wherostr_social/nips/nip004.dart';
 import 'package:wherostr_social/nips/nip017.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
@@ -45,6 +46,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
 
   void initialize() async {
     NostrUser user = await NostrService.fetchUser(widget.pubkey);
+    Future.wait([user.fetchDMRelayList(), user.fetchRelayList()]);
     if (mounted) {
       setState(() {
         _user = user;
@@ -84,16 +86,41 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
       _focusNode.unfocus();
       final keyPairs = await AppSecret.read();
       String content = _messageController.text.trim();
-      final event = await Nip17.encodeSealedGossipDM(
-          widget.pubkey,
-          content,
-          _quotedEvent != null ? _quotedEvent!.id! : '',
-          keyPairs!.public,
-          keyPairs.private);
-      final me = context.read<AppStatesProvider>().me;
-      await event.publish(
-        relays: me.relayList,
-      );
+      final receiverRelayList = await _user?.fetchDMRelayList();
+      if ((receiverRelayList?.length ?? 0) > 0) {
+        final msgReceiver = await Nip17.encodeSealedGossipDM(
+            widget.pubkey,
+            content,
+            _quotedEvent != null ? _quotedEvent!.id! : '',
+            keyPairs!.public,
+            keyPairs.private);
+
+        final msgSender = await Nip17.encodeSealedGossipDM(
+            keyPairs.public,
+            content,
+            _quotedEvent != null ? _quotedEvent!.id! : '',
+            keyPairs.public,
+            keyPairs.private);
+
+        final me = context.read<AppStatesProvider>().me;
+        final senderRelayList = await me.fetchDMRelayList();
+        await Future.wait([
+          NostrService.instance.relaysService.sendEventToRelaysAsync(
+            msgSender,
+            timeout: Duration(seconds: 10),
+            relays: senderRelayList.toListString(),
+          ),
+          NostrService.instance.relaysService.sendEventToRelaysAsync(
+            msgReceiver,
+            timeout: Duration(seconds: 10),
+            relays: receiverRelayList?.toListString(),
+          )
+        ]);
+      } else {
+        final event = await Nip4.encode(keyPairs!.public, widget.pubkey,
+            content, _quotedEvent?.id ?? '', keyPairs.private);
+        await event.publish();
+      }
       setState(() {
         _quotedEvent = null;
       });

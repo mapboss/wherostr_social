@@ -35,6 +35,21 @@ extension OutBoxModel on Nostr {
     return DataRelayList.fromEvent(events.elementAtOrNull(0));
   }
 
+  Future<DataRelayList> fetchDMRelayList(String pubkey,
+      {Duration timeout = const Duration(seconds: 3),
+      DataRelayList? relays}) async {
+    List<NostrFilter> request = [
+      NostrFilter(kinds: const [10050], authors: [pubkey], limit: 1),
+    ];
+    final events = await fetchEvents(
+      request,
+      timeout: timeout,
+      relays: relays,
+    );
+    events.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+    return DataRelayList.fromEvent(events.elementAtOrNull(0));
+  }
+
   Future<List<DataEvent>> fetchEvents(
     List<NostrFilter> filters, {
     double eoseRatio = 1.5,

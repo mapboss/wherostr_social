@@ -6,7 +6,7 @@ import 'package:wherostr_social/nips/nip044.dart';
 /// Gift Wrap
 /// https://github.com/v0l/nips/blob/59/59.md
 class Nip59 {
-  static Future<DataEvent> encode(DataEvent event, String receiver,
+  static Future<DataEvent> encode(NostrEvent event, String receiver,
       {String? sealedPrivkey,
       String? kind,
       int? expiration,

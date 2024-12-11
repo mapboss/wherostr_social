@@ -11,6 +11,7 @@ class DataMessage {
   final String plainText;
   final String receiver;
   final int createdAt;
+  final String? replyId;
 
   DataMessage({
     required this.id,
@@ -18,6 +19,7 @@ class DataMessage {
     required this.sender,
     required this.receiver,
     required this.createdAt,
+    this.replyId,
   });
 
   static Future<void> init() async {
@@ -28,7 +30,7 @@ class DataMessage {
       onCreate: (db, version) async {
         print('onCreate');
         await db.execute(
-            'CREATE TABLE $tableName(id TEXT PRIMARY KEY, plain_text TEXT, sender TEXT, receiver TEXT, created_at INTEGER, sig TEXT)');
+            'CREATE TABLE $tableName(id TEXT PRIMARY KEY, plain_text TEXT, sender TEXT, receiver TEXT, reply_id TEXT, created_at INTEGER, sig TEXT)');
         await db.execute(
             'CREATE UNIQUE INDEX ${tableName}_id_idx ON $tableName (id);');
         await db.execute(
@@ -48,6 +50,7 @@ class DataMessage {
       plainText: SafeParser.parseString(data['plain_text'])!,
       sender: SafeParser.parseString(data['sender'])!,
       receiver: SafeParser.parseString(data['receiver'])!,
+      replyId: SafeParser.parseString(data['reply_id']),
       createdAt: SafeParser.parseInt(data['created_at'])!,
     );
   }
@@ -61,13 +64,14 @@ class DataMessage {
       "sender": sender,
       "receiver": receiver,
       "created_at": createdAt,
+      "reply_id": replyId
     };
   }
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
   // columns in the database.
   String toSqlInsert() {
-    return 'INSERT INTO encrypted_message("$id","$plainText","$sender","$receiver",$createdAt)';
+    return 'INSERT INTO encrypted_message("$id","$plainText","$sender","$receiver","$replyId",$createdAt)';
   }
 
   // Convert a Dog into a Map. The keys must correspond to the names of the
@@ -80,6 +84,7 @@ class DataMessage {
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       content: plainText,
       tags: [
+        if (replyId?.isNotEmpty == true) ["e", replyId!],
         ["p", receiver]
       ],
     );
@@ -89,6 +94,6 @@ class DataMessage {
   // each dog when using the print statement.
   @override
   String toString() {
-    return 'EncryptedMessage{"id":"$id","plain_text":"$plainText","sender":"$sender","receiver":"$receiver","created_at":$createdAt}';
+    return 'EncryptedMessage{"id":"$id","plain_text":"$plainText","sender":"$sender","receiver":"$receiver","reply_id":"$replyId","created_at":$createdAt}';
   }
 }

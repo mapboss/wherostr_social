@@ -11,13 +11,13 @@ import 'package:wherostr_social/nips/nip059.dart';
 /// https://github.com/nostr-protocol/nips/blob/master/17.md
 class Nip17 {
   static Future<DataEvent> encode(
-      DataEvent event, String receiver, String myPubkey, String privkey,
+      NostrEvent event, String receiver, String myPubkey, String privkey,
       {int? kind,
       int? expiration,
       String? sealedPrivkey,
       String? sealedReceiver,
       DateTime? createAt}) async {
-    DataEvent sealedGossipEvent = await _encodeSealedGossip(
+    NostrEvent sealedGossipEvent = await _encodeSealedGossip(
         event, sealedReceiver ?? receiver, myPubkey, privkey);
     return await Nip59.encode(sealedGossipEvent, sealedReceiver ?? receiver,
         kind: kind?.toString(),
@@ -26,23 +26,22 @@ class Nip17 {
         createAt: createAt);
   }
 
-  static Future<DataEvent> _encodeSealedGossip(
-      DataEvent event, String receiver, String myPubkey, String privkey) async {
-    event.sig = '';
+  static Future<NostrEvent> _encodeSealedGossip(NostrEvent event,
+      String receiver, String myPubkey, String privkey) async {
     String encodedEvent = jsonEncode(event);
     String content =
         await Nip44.encrypt(encodedEvent, Nip44.shareSecret(privkey, receiver));
 
-    return DataEvent.fromEvent(NostrEvent.fromPartialData(
+    return NostrEvent.fromPartialData(
       kind: 13,
       tags: [],
       createdAt: randomTimeUpTo2DaysInThePast(),
       content: content,
       keyPairs: NostrKeyPairs(private: privkey),
-    ));
+    );
   }
 
-  static Future<DataEvent> encodeInnerEvent(String receiver, String content,
+  static Future<NostrEvent> encodeInnerEvent(String receiver, String content,
       String replyId, String myPubkey, String privKey,
       {String? subContent,
       int? expiration,
@@ -57,12 +56,12 @@ class Nip17 {
     if (subject != null && subject.isNotEmpty) {
       tags.add(['subject', subject]);
     }
-    return DataEvent.fromEvent(NostrEvent.fromPartialData(
+    return NostrEvent.fromPartialData(
         kind: 14,
         tags: tags,
         content: content,
         keyPairs: NostrKeyPairs(private: privKey),
-        createdAt: createAt));
+        createdAt: createAt);
   }
 
   static Future<DataEvent> encodeSealedGossipDM(String receiver, String content,
@@ -72,7 +71,7 @@ class Nip17 {
       DateTime? createAt,
       String? subContent,
       int? expiration,
-      DataEvent? innerEvent,
+      NostrEvent? innerEvent,
       List<String>? members}) async {
     innerEvent ??= await encodeInnerEvent(
         receiver, content, replyId, myPubkey, privKey,
@@ -82,7 +81,7 @@ class Nip17 {
         sealedReceiver: sealedReceiver,
         createAt: createAt,
         expiration: expiration);
-    event.innerEvent = innerEvent;
+    event.innerEvent = DataEvent.fromEvent(innerEvent);
     return event;
   }
 

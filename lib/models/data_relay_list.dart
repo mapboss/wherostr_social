@@ -49,7 +49,8 @@ class DataRelayList extends ListBase<DataRelay> {
   factory DataRelayList.fromTags(List<List<String>>? tags) {
     return DataRelayList(
         innerList: tags
-            ?.where((e) => e.elementAtOrNull(0) == 'r')
+            ?.where((e) =>
+                e.elementAtOrNull(0) == 'r' || e.elementAtOrNull(0) == 'relay')
             .map((e) => DataRelay.fromTag(e))
             .toList());
   }
@@ -62,6 +63,10 @@ class DataRelayList extends ListBase<DataRelay> {
             ?.map((e) => ['r', e.url, if (e.marker != null) e.marker!])
             .toList() ??
         [];
+  }
+
+  List<List<String>> toDMTags() {
+    return innerList?.map((e) => ['relay', e.url]).toList() ?? [];
   }
 
   DataRelayList clone() {

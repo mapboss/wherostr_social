@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_secret.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_message.dart';
@@ -46,9 +47,9 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
 
   void _subscribe() async {
     final appNotification = context.read<AppNotificationProvider>();
+    final appSettings = context.read<AppSettingsProvider>();
     final appState = context.read<AppStatesProvider>();
-    final relays = appState.me.relayList.clone();
-
+    if (appSettings.initializedMessages != true) return;
     final List<NostrFilter> filters = [];
     var rows = [];
     try {
@@ -61,22 +62,29 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
     } catch (err) {
       print('query: $err');
     }
+    if (rows.isEmpty) {
+      return;
+    }
+    final relays = await appState.me.fetchDMRelayList();
+    final createdAt = rows[0]['created_at'] as int;
     if (appNotification.notificationDirectMessages) {
       filters.add(NostrFilter(
-        kinds: [4, 1059],
+        kinds: [1059],
         p: [appState.me.pubkey],
-        since: rows.isEmpty
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(rows[0]['created_at'] as int)
-                .add(Duration(milliseconds: 1000)),
+        since: DateTime.fromMillisecondsSinceEpoch(createdAt)
+            .subtract(Duration(days: 2)),
+      ));
+      filters.add(NostrFilter(
+        kinds: [4],
+        p: [appState.me.pubkey],
+        since: DateTime.fromMillisecondsSinceEpoch(createdAt)
+            .add(Duration(milliseconds: 1000)),
       ));
       filters.add(NostrFilter(
         kinds: [4],
         authors: [appState.me.pubkey],
-        since: rows.isEmpty
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(rows[0]['created_at'] as int)
-                .add(Duration(milliseconds: 1000)),
+        since: DateTime.fromMillisecondsSinceEpoch(createdAt)
+            .add(Duration(milliseconds: 1000)),
       ));
     }
     final keyPairs = await AppSecret.read();
@@ -106,6 +114,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
             plainText: newEvent.content!,
             sender: newEvent.pubkey,
             receiver: newEvent.getTagValue('p')!,
+            replyId: newEvent.getTagValue('e'),
           ).toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -120,14 +129,16 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
             plainText: msg.content!,
             sender: msg.sender,
             receiver: msg.receiver,
+            replyId: msg.replyId,
           ).toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
-
-      setState(() {
-        _badgeCount += 1;
-      });
+      if (appState.me.pubkey != newEvent.pubkey) {
+        setState(() {
+          _badgeCount += 1;
+        });
+      }
     });
   }
 

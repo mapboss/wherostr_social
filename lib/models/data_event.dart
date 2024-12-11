@@ -76,6 +76,7 @@ class DataEvent extends NostrEvent {
     final kindToUse = SafeParser.parseInt(data.kind);
     final pubkeyToUse = SafeParser.parseString(data.pubkey);
     final id = SafeParser.parseString(data.id);
+    final sig = SafeParser.parseString(data.sig);
 
     return DataEvent(
       id: id,
@@ -84,7 +85,7 @@ class DataEvent extends NostrEvent {
       content: contentToUse ?? '',
       createdAt: createdAtToUse,
       tags: tagsToUse,
-      sig: data.sig,
+      sig: sig,
     );
   }
   factory DataEvent.fromJson(Map<String, dynamic> data) {
@@ -198,8 +199,9 @@ class DataEvent extends NostrEvent {
     data['pubkey'] = pubkey;
     data['kind'] = kind;
     data['content'] = content;
-    data['createdAt'] = createdAt?.millisecondsSinceEpoch;
+    data['createdAt'] = (createdAt?.millisecondsSinceEpoch ?? 0) ~/ 1000;
     data['tags'] = tags;
+    data['sig'] = sig;
     return jsonEncode(data);
   }
 
