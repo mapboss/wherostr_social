@@ -41,7 +41,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   bool _isEmpty = true;
   bool _isLoading = false;
   bool _nip17Enabled = false;
-  List<DataEvent> _messages = [];
+  final List<DataEvent> _messages = [];
 
   Stream<List<DataMessage>>? _newMessageStream;
   StreamSubscription<List<DataMessage>>? _newMessageListener;
@@ -73,6 +73,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
     _messageController.removeListener(_checkIfTextIsNotEmpty);
     _messageController.dispose();
     _focusNode.dispose();
+    _newMessageListener?.cancel();
     super.dispose();
   }
 
@@ -166,7 +167,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
 
   Future<void> initMessages(String pubkey) async {
     _newMessageStream = MessageService.isar.dataMessages
-        .where()
+        .filter()
         .senderEqualTo(pubkey)
         .or()
         .receiverEqualTo(pubkey)

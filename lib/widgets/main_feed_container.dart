@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed.dart';
@@ -28,6 +29,7 @@ class MainFeedContainer extends StatelessWidget {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final appState = context.watch<AppStatesProvider>();
+    final appSettings = context.watch<AppSettingsProvider>();
     return Scaffold(
       appBar: isLargeDisplay
           ? null
@@ -80,6 +82,8 @@ class MainFeedContainer extends StatelessWidget {
                       child: Row(
                         children: [
                           MessagesBadgeButton(
+                            initializedMessages:
+                                appSettings.initializedMessages,
                             onPressed: () => onMessagesTap?.call(),
                           ),
                           NotificationBadgeButton(

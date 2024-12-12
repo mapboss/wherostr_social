@@ -12,11 +12,7 @@ import 'package:wherostr_social/utils/safe_parser.dart';
 const defaultEmoji =
     '30030:fc43cb888ec0fbb74a75c19e80738a88706eab2e9959616b94624a718a60fa73:Wherostr';
 
-const defaultDMRelays = [
-  'wss://auth.nostr1.com',
-  'wss://relay.0xchat.com',
-  'wss://inbox.nostr.wine'
-];
+const defaultDMRelays = ['wss://relay.0xchat.com'];
 
 class NostrUser {
   NostrUser(

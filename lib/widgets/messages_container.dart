@@ -85,7 +85,6 @@ class MessagesContainerState extends State<MessagesContainer> {
         .createdAtGreaterThan(since?.millisecondsSinceEpoch ?? 0)
         .watch(fireImmediately: true);
     _newMessageListener = _newMessageStream?.listen((items) {
-      print('subscribeMessages items: $items');
       for (var item in items) {
         late DataEvent? existingMessage;
         late String key;
@@ -115,15 +114,15 @@ class MessagesContainerState extends State<MessagesContainer> {
     final appSettings = context.read<AppSettingsProvider>();
     if (appSettings.initializedMessages) {
       initMessages();
-      subscribe();
+      // subscribe();
     }
   }
 
-  @override
-  void dispose() {
-    unsubscribe();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   unsubscribe();
+  //   super.dispose();
+  // }
 
   Future<void> subscribe() async {
     final completer = Completer();
@@ -141,7 +140,6 @@ class MessagesContainerState extends State<MessagesContainer> {
     }
     final relays = await appState.me.fetchDMRelayList();
     final createdAt = latest?.createdAt;
-
     filters.add(NostrFilter(
       kinds: [1059],
       p: [appState.me.pubkey],
@@ -168,19 +166,25 @@ class MessagesContainerState extends State<MessagesContainer> {
     ));
 
     final keyPairs = await AppSecret.read();
+    // _newEventStream =
+    //     NostrService.instance.relaysService.startEventsSubscription(
+    //   relays: relays.toListString(),
+    //   request: NostrRequest(filters: filters),
+    //   onEose: (relay, ease) {
+    //     print('onEose: $relay');
+    //     completer.complete();
+    //     _newEventStream?.close();
+    //   },
+    // );
     _newEventStream = NostrService.subscribe(
       filters,
       relays: relays,
       onEose: (relay, ease) async {
-        _debouncer.debounce(
-          duration: Duration(milliseconds: 3000),
-          onDebounce: () async {
-            completer.complete();
-          },
-        );
+        print('onEose: $relay');
+        completer.complete();
       },
     );
-    _newEventListener = _newEventStream!.stream.listen((e) async {
+    _newEventStream!.stream.listen((e) async {
       var newEvent = e;
       if (e.kind == 1059) {
         final event = await Nip17.decode(newEvent, keyPairs!.private);

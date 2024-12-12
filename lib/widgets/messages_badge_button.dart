@@ -7,7 +7,6 @@ import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_secret.dart';
-import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/nips/nip004.dart';
@@ -17,9 +16,11 @@ import 'package:wherostr_social/services/nostr.dart';
 
 class MessagesBadgeButton extends StatefulWidget {
   final Function()? onPressed;
+  final bool initializedMessages;
 
   const MessagesBadgeButton({
     super.key,
+    this.initializedMessages = false,
     this.onPressed,
   });
   @override
@@ -38,8 +39,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
   @override
   void initState() {
     super.initState();
-    final appSettings = context.read<AppSettingsProvider>();
-    _initializedMessages = appSettings.initializedMessages;
+    _initializedMessages = widget.initializedMessages;
     subscribe();
   }
 
@@ -52,9 +52,8 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
   @override
   void didUpdateWidget(covariant MessagesBadgeButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final appSettings = context.read<AppSettingsProvider>();
-    if (_initializedMessages != appSettings.initializedMessages) {
-      _initializedMessages = appSettings.initializedMessages;
+    if (widget.initializedMessages != oldWidget.initializedMessages) {
+      _initializedMessages = widget.initializedMessages;
       if (_initializedMessages) {
         subscribe();
       }
@@ -110,6 +109,11 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       var newEvent = e;
       if (e.kind == 1059) {
         final event = await Nip17.decode(newEvent, keyPairs!.private);
+        if (appState.me.pubkey != event.pubkey) {
+          setState(() {
+            _badgeCount += 1;
+          });
+        }
         MessageService.isar.writeTxnSync(() {
           MessageService.isar.dataMessages.putSync(DataMessage(
             createdAt: event.createdAt!.millisecondsSinceEpoch,
@@ -123,6 +127,11 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       } else if (e.kind == 4) {
         final msg =
             await Nip4.decode(newEvent, keyPairs!.public, keyPairs.private);
+        if (appState.me.pubkey != msg?.sender) {
+          setState(() {
+            _badgeCount += 1;
+          });
+        }
         MessageService.isar.writeTxnSync(() {
           MessageService.isar.dataMessages.putSync(DataMessage(
             createdAt: msg!.createdAt!.millisecondsSinceEpoch,
@@ -132,11 +141,6 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
             receiver: msg.receiver,
             replyId: msg.replyId,
           ));
-        });
-      }
-      if (appState.me.pubkey != newEvent.pubkey) {
-        setState(() {
-          _badgeCount += 1;
         });
       }
     });

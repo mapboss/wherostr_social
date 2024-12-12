@@ -7,7 +7,7 @@ class MessageService {
 
   static Future<void> init() async {
     final dir = await getApplicationDocumentsDirectory();
-    MessageService.isar = await Isar.open(
+    MessageService.isar = Isar.openSync(
       [DataMessageSchema],
       directory: dir.path,
     );
