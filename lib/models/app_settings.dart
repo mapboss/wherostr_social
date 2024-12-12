@@ -19,6 +19,8 @@ class AppSettingsProvider with ChangeNotifier {
     _collapseLongPost = storage.read('app_settings_collapse_long_post') ?? true;
     _contentFontSizeDelta =
         storage.read('app_settings_content_font_size_delta') ?? 0;
+    // _initializedMessages =
+    //     storage.read('app_settings_initialized_messages') ?? false;
   }
 
   Future<void> setCollapseLongPost(bool collapseLongPost) async {

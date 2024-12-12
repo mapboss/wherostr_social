@@ -6,7 +6,7 @@ class AppNotificationProvider with ChangeNotifier {
     _init();
   }
 
-  int? _messagingLastSeen;
+  int _messagingLastSeen = DateTime.now().millisecondsSinceEpoch;
   int _notificationLastSeen = DateTime.now().millisecondsSinceEpoch;
   bool _notificationOn = false;
   bool _notificationSound = false;
@@ -18,7 +18,7 @@ class AppNotificationProvider with ChangeNotifier {
   bool _notificationMentions = true;
   bool _notificationReposts = true;
 
-  int? get messagingLastSeen => _messagingLastSeen;
+  int get messagingLastSeen => _messagingLastSeen;
   int get notificationLastSeen => _notificationLastSeen;
   bool get notificationOn => _notificationOn;
   bool get notificationSound => _notificationSound;
@@ -31,7 +31,8 @@ class AppNotificationProvider with ChangeNotifier {
 
   Future<void> _init() async {
     final storage = GetStorage('app');
-    _messagingLastSeen = storage.read<int?>('app_messaging_last_seen');
+    _messagingLastSeen = storage.read<int?>('app_messaging_last_seen') ??
+        DateTime.now().millisecondsSinceEpoch;
     _notificationLastSeen = storage.read<int>('app_notification_last_seen') ??
         DateTime.now().millisecondsSinceEpoch;
     _notificationOn = storage.read('app_notification_on') ?? false;

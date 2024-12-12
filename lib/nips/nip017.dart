@@ -91,7 +91,7 @@ class Nip17 {
     }
   }
 
-  static Future<DataEvent> decode(DataEvent event, String privkey,
+  static Future<DataEvent> decode(NostrEvent event, String privkey,
       {String? sealedPrivkey}) async {
     DataEvent sealedGossipEvent =
         await Nip59.decode(event, sealedPrivkey ?? privkey);

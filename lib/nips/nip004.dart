@@ -21,7 +21,7 @@ class Nip4 {
   ///  EDMessage eDMessage = Nip4.decode(event);
   ///```
   static Future<EDMessage?> decode(
-      DataEvent event, String myPubkey, String privkey) async {
+      NostrEvent event, String myPubkey, String privkey) async {
     if (event.kind == 4) {
       return await _toEDMessage(event, myPubkey, privkey);
     }
@@ -30,7 +30,7 @@ class Nip4 {
 
   /// Returns EDMessage from event
   static Future<EDMessage> _toEDMessage(
-      DataEvent event, String myPubkey, String privkey) async {
+      NostrEvent event, String myPubkey, String privkey) async {
     String sender = event.pubkey;
     DateTime? createdAt = event.createdAt ?? DateTime.now();
     String receiver = "";

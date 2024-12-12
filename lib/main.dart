@@ -13,7 +13,6 @@ import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
-import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/screens/app_relay_settings.dart';
 import 'package:wherostr_social/screens/create_account.dart';
 import 'package:wherostr_social/screens/home.dart';
@@ -21,11 +20,12 @@ import 'package:wherostr_social/screens/login.dart';
 import 'package:wherostr_social/screens/splash.dart';
 import 'package:wherostr_social/screens/test.dart';
 import 'package:wherostr_social/screens/welcome.dart';
+import 'package:wherostr_social/services/message.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init('app');
-  await Future.wait([AppRelays.init(), DataMessage.init()]);
+  await Future.wait([AppRelays.init(), MessageService.init()]);
   runApp(const MainApp());
 }
 

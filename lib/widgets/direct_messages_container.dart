@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -8,6 +11,7 @@ import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/nips/nip004.dart';
 import 'package:wherostr_social/nips/nip017.dart';
+import 'package:wherostr_social/services/message.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/widgets/message_item.dart';
@@ -36,6 +40,11 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   DataEvent? _quotedEvent;
   bool _isEmpty = true;
   bool _isLoading = false;
+  bool _nip17Enabled = false;
+  List<DataEvent> _messages = [];
+
+  Stream<List<DataMessage>>? _newMessageStream;
+  StreamSubscription<List<DataMessage>>? _newMessageListener;
 
   @override
   void initState() {
@@ -46,7 +55,12 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
 
   void initialize() async {
     NostrUser user = await NostrService.fetchUser(widget.pubkey);
-    Future.wait([user.fetchDMRelayList(), user.fetchRelayList()]);
+    // _nip17Enabled =
+    await Future.wait([
+      initMessages(widget.pubkey),
+      user.fetchDMRelayList(),
+      user.fetchRelayList(),
+    ]);
     if (mounted) {
       setState(() {
         _user = user;
@@ -83,27 +97,41 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
       _isLoading = true;
     });
     try {
+      final appState = context.read<AppStatesProvider>();
       _focusNode.unfocus();
       final keyPairs = await AppSecret.read();
       String content = _messageController.text.trim();
       final receiverRelayList = await _user?.fetchDMRelayList();
       if ((receiverRelayList?.length ?? 0) > 0) {
-        final msgReceiver = await Nip17.encodeSealedGossipDM(
-            widget.pubkey,
-            content,
-            _quotedEvent != null ? _quotedEvent!.id! : '',
-            keyPairs!.public,
-            keyPairs.private);
-
-        final msgSender = await Nip17.encodeSealedGossipDM(
-            keyPairs.public,
-            content,
-            _quotedEvent != null ? _quotedEvent!.id! : '',
-            keyPairs.public,
-            keyPairs.private);
-
-        final me = context.read<AppStatesProvider>().me;
-        final senderRelayList = await me.fetchDMRelayList();
+        final innerEvent = await Nip17.encodeInnerEvent(
+          widget.pubkey,
+          content,
+          _quotedEvent != null ? _quotedEvent!.id! : '',
+          appState.me.pubkey,
+          keyPairs!.private,
+        );
+        final msgReceiver = await Nip17.encode(
+          innerEvent,
+          widget.pubkey,
+          appState.me.pubkey,
+          keyPairs.private,
+        );
+        final msgSender = await Nip17.encode(
+          innerEvent,
+          appState.me.pubkey,
+          appState.me.pubkey,
+          keyPairs.private,
+        );
+        // final message = DataMessage(
+        //   eventId: innerEvent.id!,
+        //   plainText: content,
+        //   receiver: widget.pubkey,
+        //   sender: keyPairs.public,
+        //   replyId: _quotedEvent?.id,
+        //   createdAt: innerEvent.createdAt!.microsecondsSinceEpoch,
+        // );
+        // await MessageService.isar.dataMessages.put(message);
+        final senderRelayList = await appState.me.fetchDMRelayList();
         await Future.wait([
           NostrService.instance.relaysService.sendEventToRelaysAsync(
             msgSender,
@@ -136,15 +164,19 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
     }
   }
 
-  Future<List<DataEvent>> getDirectMessages(String pubkey) async {
-    final rows = await DataMessage.database.query(
-      DataMessage.tableName,
-      orderBy: 'created_at DESC',
-      where: "sender = '$pubkey' or receiver = '$pubkey'",
-    );
-    return rows.map((toElement) {
-      return DataMessage.fromMap(toElement).toEvent();
-    }).toList();
+  Future<void> initMessages(String pubkey) async {
+    _newMessageStream = MessageService.isar.dataMessages
+        .where()
+        .senderEqualTo(pubkey)
+        .or()
+        .receiverEqualTo(pubkey)
+        .sortByCreatedAtDesc()
+        .watch(fireImmediately: true);
+    _newMessageListener = _newMessageStream?.listen((items) {
+      setState(() {
+        _messages.insertAll(0, items.map((e) => e.toEvent()));
+      });
+    });
   }
 
   @override
@@ -201,14 +233,13 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
             child: Column(
               children: [
                 Expanded(
-                  child: FutureBuilder(
-                    future: getDirectMessages(widget.pubkey),
-                    builder: (context, snapshot) {
+                  child: Builder(
+                    builder: (context) {
                       return ListView.builder(
                         reverse: true,
-                        itemCount: snapshot.data?.length,
+                        itemCount: _messages.length,
                         itemBuilder: (context, index) {
-                          if (snapshot.data == null) {
+                          if (_messages.isEmpty) {
                             return const Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -218,7 +249,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
                               ),
                             );
                           }
-                          final event = snapshot.data![index];
+                          final event = _messages[index];
                           return Column(
                             crossAxisAlignment:
                                 event.pubkey == appState.me.pubkey

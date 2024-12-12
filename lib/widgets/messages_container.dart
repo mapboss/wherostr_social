@@ -3,9 +3,8 @@ import 'dart:async';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
+import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
@@ -13,8 +12,8 @@ import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/nips/nip004.dart';
 import 'package:wherostr_social/nips/nip017.dart';
+import 'package:wherostr_social/services/message.dart';
 import 'package:wherostr_social/services/nostr.dart';
-import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/widgets/direct_messages_container.dart';
 import 'package:wherostr_social/widgets/post_composer.dart';
 import 'package:wherostr_social/widgets/post_content.dart';
@@ -28,149 +27,208 @@ class MessagesContainer extends StatefulWidget {
 class MessagesContainerState extends State<MessagesContainer> {
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
+
+  Stream<List<DataMessage>>? _newMessageStream;
+  StreamSubscription<List<DataMessage>>? _newMessageListener;
   final _debouncer = Debouncer();
 
-  Future<List<DataEvent>> getAllMessages(BuildContext context) async {
+  List<DataEvent> _topics = [];
+  final groupedByPartner = <String, DataEvent>{};
+
+  Future<void> initMessages() async {
     final appState = context.read<AppStatesProvider>();
-    const query = '''
-    WITH combined AS (
-        SELECT *, receiver AS chat_partner
-        FROM ${DataMessage.tableName}
-        WHERE sender == ?
-        UNION
-        SELECT *, sender AS chat_partner
-        FROM ${DataMessage.tableName}
-        WHERE receiver == ?
-    ),
-    ranked_messages AS (
-        SELECT 
-            *,
-            ROW_NUMBER() OVER (
-                PARTITION BY chat_partner 
-                ORDER BY created_at DESC
-            ) AS rank
-        FROM combined
-    )
-    SELECT 
-        *
-    FROM ranked_messages
-    WHERE rank = 1
-    ORDER BY created_at DESC;
-    ''';
-    final rows = await DataMessage.database
-        .rawQuery(query, [appState.me.pubkey, appState.me.pubkey]);
-    return rows.map((e) => DataMessage.fromMap(e).toEvent()).toList();
+    final sentMessages = await MessageService.isar.dataMessages
+        .filter()
+        .senderEqualTo(appState.me.pubkey)
+        .and()
+        .not()
+        .receiverEqualTo(appState.me.pubkey)
+        .findAll();
+
+    final receivedMessages = await MessageService.isar.dataMessages
+        .filter()
+        .receiverEqualTo(appState.me.pubkey)
+        .and()
+        .not()
+        .senderEqualTo(appState.me.pubkey)
+        .findAll();
+
+    for (var item in sentMessages) {
+      final existingMessage = groupedByPartner[item.receiver];
+      if (existingMessage == null ||
+          item.createdAt.compareTo(
+                  existingMessage.createdAt!.millisecondsSinceEpoch) >
+              0) {
+        groupedByPartner[item.receiver] = item.toEvent();
+      }
+    }
+    for (var item in receivedMessages) {
+      final existingMessage = groupedByPartner[item.sender];
+      if (existingMessage == null ||
+          item.createdAt.compareTo(
+                  existingMessage.createdAt!.millisecondsSinceEpoch) >
+              0) {
+        groupedByPartner[item.sender] = item.toEvent();
+      }
+    }
+    _topics = groupedByPartner.values.toList();
+    setState(() {
+      _topics.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+    });
+    subscribeMessages(_topics.firstOrNull?.createdAt);
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _subscribe();
-  // }
+  void subscribeMessages(DateTime? since) {
+    final appState = context.read<AppStatesProvider>();
+    _newMessageStream = MessageService.isar.dataMessages
+        .filter()
+        .createdAtGreaterThan(since?.millisecondsSinceEpoch ?? 0)
+        .watch(fireImmediately: true);
+    _newMessageListener = _newMessageStream?.listen((items) {
+      print('subscribeMessages items: $items');
+      for (var item in items) {
+        late DataEvent? existingMessage;
+        late String key;
+        if (item.receiver == appState.me.pubkey) {
+          key = item.sender;
+        } else if (item.sender == appState.me.pubkey) {
+          key = item.receiver;
+        }
+        existingMessage = groupedByPartner[key];
+        if (existingMessage == null ||
+            item.createdAt.compareTo(
+                    existingMessage.createdAt!.millisecondsSinceEpoch) >
+                0) {
+          groupedByPartner[key] = item.toEvent();
+        }
+      }
+      _topics = groupedByPartner.values.toList();
+      setState(() {
+        _topics.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final appSettings = context.read<AppSettingsProvider>();
+    if (appSettings.initializedMessages) {
+      initMessages();
+      subscribe();
+    }
+  }
 
   @override
   void dispose() {
-    _unsubscribe();
+    unsubscribe();
     super.dispose();
   }
 
-  Future<void> _subscribe() async {
-    final appNotification = context.read<AppNotificationProvider>();
+  Future<void> subscribe() async {
+    final completer = Completer();
     final appState = context.read<AppStatesProvider>();
     final List<NostrFilter> filters = [];
-    var rows = [];
+    late DataMessage? latest;
     try {
-      rows = await DataMessage.database.query(
-        DataMessage.tableName,
-        orderBy: 'created_at DESC',
-        limit: 1,
-      );
-      print('rows: $rows');
+      latest = await MessageService.isar.dataMessages
+          .where()
+          .sortByCreatedAtDesc()
+          .limit(1)
+          .findFirst();
     } catch (err) {
       print('query: $err');
     }
     final relays = await appState.me.fetchDMRelayList();
-    final createdAt = rows.isEmpty ? null : rows[0]['created_at'] as int;
-    if (appNotification.notificationDirectMessages) {
-      filters.add(NostrFilter(
-        kinds: [1059],
-        p: [appState.me.pubkey],
-        since: createdAt == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(createdAt)
-                .subtract(Duration(days: 2)),
-      ));
-      filters.add(NostrFilter(
-        kinds: [4],
-        p: [appState.me.pubkey],
-        since: createdAt == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(createdAt)
-                .add(Duration(milliseconds: 1000)),
-      ));
-      filters.add(NostrFilter(
-        kinds: [4],
-        authors: [appState.me.pubkey],
-        since: createdAt == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(createdAt)
-                .add(Duration(milliseconds: 1000)),
-      ));
-    }
+    final createdAt = latest?.createdAt;
+
+    filters.add(NostrFilter(
+      kinds: [1059],
+      p: [appState.me.pubkey],
+      since: createdAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(createdAt)
+              .subtract(Duration(days: 2)),
+    ));
+    filters.add(NostrFilter(
+      kinds: [4],
+      p: [appState.me.pubkey],
+      since: createdAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(createdAt)
+              .add(Duration(milliseconds: 1000)),
+    ));
+    filters.add(NostrFilter(
+      kinds: [4],
+      authors: [appState.me.pubkey],
+      since: createdAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(createdAt)
+              .add(Duration(milliseconds: 1000)),
+    ));
+
     final keyPairs = await AppSecret.read();
-    final batch = DataMessage.database.batch();
     _newEventStream = NostrService.subscribe(
       filters,
       relays: relays,
       onEose: (relay, ease) async {
-        if (batch.length == 0) return;
         _debouncer.debounce(
-          duration: Duration(milliseconds: 2000),
+          duration: Duration(milliseconds: 3000),
           onDebounce: () async {
-            final appSettings = context.read<AppSettingsProvider>();
-            await batch.commit();
-            await appSettings.setInitializedMessages(true);
-            appState.navigatorPop();
+            completer.complete();
           },
         );
       },
     );
     _newEventListener = _newEventStream!.stream.listen((e) async {
-      var newEvent = DataEvent.fromEvent(e);
+      var newEvent = e;
       if (e.kind == 1059) {
-        newEvent = await Nip17.decode(newEvent, keyPairs!.private);
-        batch.insert(
-          DataMessage.tableName,
-          DataMessage(
-            createdAt: newEvent.createdAt!.millisecondsSinceEpoch,
-            id: newEvent.id!,
-            plainText: newEvent.content!,
-            sender: newEvent.pubkey,
-            receiver: newEvent.getTagValue('p')!,
-            replyId: newEvent.getTagValue('e'),
-          ).toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        final event = await Nip17.decode(newEvent, keyPairs!.private);
+        // items.add(DataMessage(
+        //   createdAt: event.createdAt!.millisecondsSinceEpoch,
+        //   eventId: event.id!,
+        //   plainText: event.content!,
+        //   sender: event.pubkey,
+        //   receiver: event.getTagValue('p')!,
+        //   replyId: event.getTagValue('e'),
+        // ));
+        MessageService.isar.writeTxnSync(() {
+          MessageService.isar.dataMessages.putSync(DataMessage(
+            createdAt: event.createdAt!.millisecondsSinceEpoch,
+            eventId: event.id!,
+            plainText: event.content!,
+            sender: event.pubkey,
+            receiver: event.getTagValue('p')!,
+            replyId: event.getTagValue('e'),
+          ));
+        });
       } else if (e.kind == 4) {
         final msg =
             await Nip4.decode(newEvent, keyPairs!.public, keyPairs.private);
-        batch.insert(
-          DataMessage.tableName,
-          DataMessage(
+        // items.add(DataMessage(
+        //   createdAt: msg!.createdAt!.millisecondsSinceEpoch,
+        //   eventId: newEvent.id!,
+        //   plainText: msg.content!,
+        //   sender: msg.sender,
+        //   receiver: msg.receiver,
+        //   replyId: msg.replyId,
+        // ));
+        MessageService.isar.writeTxnSync(() {
+          MessageService.isar.dataMessages.putSync(DataMessage(
             createdAt: msg!.createdAt!.millisecondsSinceEpoch,
-            id: newEvent.id!,
+            eventId: newEvent.id!,
             plainText: msg.content!,
             sender: msg.sender,
             receiver: msg.receiver,
             replyId: msg.replyId,
-          ).toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+          ));
+        });
       }
     });
+    return completer.future;
   }
 
-  Future<void> _unsubscribe() async {
+  Future<void> unsubscribe() async {
     if (_newEventListener != null) {
       await _newEventListener!.cancel();
       _newEventListener = null;
@@ -178,6 +236,13 @@ class MessagesContainerState extends State<MessagesContainer> {
     if (_newEventStream != null) {
       _newEventStream!.close();
       _newEventStream = null;
+    }
+    if (_newMessageListener != null) {
+      await _newMessageListener?.cancel();
+      _newMessageListener = null;
+    }
+    if (_newMessageStream != null) {
+      _newMessageStream = null;
     }
   }
 
@@ -190,20 +255,19 @@ class MessagesContainerState extends State<MessagesContainer> {
       appBar: AppBar(
         title: const Text('Messages'),
       ),
-      body: FutureBuilder(
-        future: getAllMessages(context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Loading'),
-                ],
-              ),
-            );
-          }
-          if ((!snapshot.hasData || (snapshot.data?.isEmpty ?? true))) {
+      body: Builder(
+        builder: (context) {
+          // if (_topics.isEmpty && !appSettings.initializedMessages) {
+          //   return const Center(
+          //     child: Column(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         Text('Loading'),
+          //       ],
+          //     ),
+          //   );
+          // }
+          if (_topics.isEmpty) {
             if (appSettings.initializedMessages) {
               return const Center(
                 child: Column(
@@ -241,7 +305,7 @@ class MessagesContainerState extends State<MessagesContainer> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  _unsubscribe();
+                                  unsubscribe();
                                   appState.navigatorPop();
                                 },
                                 child: const Text('Cancel'),
@@ -254,7 +318,10 @@ class MessagesContainerState extends State<MessagesContainer> {
                       if (relays.isEmpty) {
                         await appState.me.initDMRelayList();
                       }
-                      _subscribe();
+                      await initMessages();
+                      await subscribe();
+                      await appSettings.setInitializedMessages(true);
+                      appState.navigatorPop();
                     },
                     child: Text("Start Using Direct Messages"),
                   )
@@ -263,9 +330,9 @@ class MessagesContainerState extends State<MessagesContainer> {
             );
           }
           return ListView.builder(
-            itemCount: snapshot.data?.length,
+            itemCount: _topics.length,
             itemBuilder: (context, index) {
-              final event = snapshot.data![index];
+              final event = _topics[index];
               if (event.pubkey == appState.me.pubkey &&
                   event.getTagValue('p') == appState.me.pubkey) {
                 return SizedBox();

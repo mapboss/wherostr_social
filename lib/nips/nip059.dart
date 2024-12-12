@@ -34,7 +34,7 @@ class Nip59 {
         createdAt: createAt ?? DateTime.now());
   }
 
-  static Future<DataEvent> decode(DataEvent event, String privkey) async {
+  static Future<DataEvent> decode(NostrEvent event, String privkey) async {
     if (event.kind == 1059) {
       String content = await Nip44.decrypt(
           event.content!, Nip44.shareSecret(privkey, event.pubkey));

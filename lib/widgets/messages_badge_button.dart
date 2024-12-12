@@ -3,16 +3,16 @@ import 'dart:async';
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_debouncer/flutter_debouncer.dart';
+import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
-import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/nips/nip004.dart';
 import 'package:wherostr_social/nips/nip017.dart';
+import 'package:wherostr_social/services/message.dart';
 import 'package:wherostr_social/services/nostr.dart';
 
 class MessagesBadgeButton extends StatefulWidget {
@@ -33,106 +33,106 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
 
   final _debouncer = Debouncer();
 
+  bool _initializedMessages = false;
+
   @override
   void initState() {
     super.initState();
-    _subscribe();
+    final appSettings = context.read<AppSettingsProvider>();
+    _initializedMessages = appSettings.initializedMessages;
+    subscribe();
   }
 
   @override
   void dispose() {
-    _unsubscribe();
+    unsubscribe();
     super.dispose();
   }
 
-  void _subscribe() async {
-    final appNotification = context.read<AppNotificationProvider>();
+  @override
+  void didUpdateWidget(covariant MessagesBadgeButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
     final appSettings = context.read<AppSettingsProvider>();
+    if (_initializedMessages != appSettings.initializedMessages) {
+      _initializedMessages = appSettings.initializedMessages;
+      if (_initializedMessages) {
+        subscribe();
+      }
+    }
+  }
+
+  void subscribe() async {
+    final appNotification = context.read<AppNotificationProvider>();
     final appState = context.read<AppStatesProvider>();
-    if (appSettings.initializedMessages != true) return;
+    if (_initializedMessages != true) return;
     final List<NostrFilter> filters = [];
-    var rows = [];
+    late DataMessage? latest;
     try {
-      rows = await DataMessage.database.query(
-        DataMessage.tableName,
-        orderBy: 'created_at DESC',
-        limit: 1,
-      );
-      print('rows: $rows');
+      latest = await MessageService.isar.dataMessages
+          .where()
+          .sortByCreatedAtDesc()
+          .limit(1)
+          .findFirst();
     } catch (err) {
       print('query: $err');
     }
-    if (rows.isEmpty) {
+    if (latest == null) {
       return;
     }
     final relays = await appState.me.fetchDMRelayList();
-    final createdAt = rows[0]['created_at'] as int;
-    if (appNotification.notificationDirectMessages) {
-      filters.add(NostrFilter(
-        kinds: [1059],
-        p: [appState.me.pubkey],
-        since: DateTime.fromMillisecondsSinceEpoch(createdAt)
-            .subtract(Duration(days: 2)),
-      ));
-      filters.add(NostrFilter(
-        kinds: [4],
-        p: [appState.me.pubkey],
-        since: DateTime.fromMillisecondsSinceEpoch(createdAt)
-            .add(Duration(milliseconds: 1000)),
-      ));
-      filters.add(NostrFilter(
-        kinds: [4],
-        authors: [appState.me.pubkey],
-        since: DateTime.fromMillisecondsSinceEpoch(createdAt)
-            .add(Duration(milliseconds: 1000)),
-      ));
-    }
+    final since = appNotification.messagingLastSeen;
+
+    filters.add(NostrFilter(
+      kinds: [1059],
+      p: [appState.me.pubkey],
+      since: DateTime.fromMillisecondsSinceEpoch(since)
+          .subtract(Duration(days: 2)),
+    ));
+    filters.add(NostrFilter(
+      kinds: [4],
+      p: [appState.me.pubkey],
+      since: DateTime.fromMillisecondsSinceEpoch(since)
+          .add(Duration(milliseconds: 1000)),
+    ));
+    filters.add(NostrFilter(
+      kinds: [4],
+      authors: [appState.me.pubkey],
+      since: DateTime.fromMillisecondsSinceEpoch(since)
+          .add(Duration(milliseconds: 1000)),
+    ));
+
     final keyPairs = await AppSecret.read();
-    final batch = DataMessage.database.batch();
     _newEventStream = NostrService.subscribe(
       filters,
       relays: relays,
-      onEose: (relay, ease) async {
-        if (batch.length == 0) return;
-        _debouncer.debounce(
-          duration: Duration(milliseconds: 1000),
-          onDebounce: () async {
-            print('COMMIT ${await batch.commit()}');
-          },
-        );
-      },
     );
     _newEventListener = _newEventStream!.stream.listen((e) async {
-      var newEvent = DataEvent.fromEvent(e);
+      var newEvent = e;
       if (e.kind == 1059) {
-        newEvent = await Nip17.decode(newEvent, keyPairs!.private);
-        batch.insert(
-          DataMessage.tableName,
-          DataMessage(
-            createdAt: newEvent.createdAt!.millisecondsSinceEpoch,
-            id: newEvent.id!,
-            plainText: newEvent.content!,
-            sender: newEvent.pubkey,
-            receiver: newEvent.getTagValue('p')!,
-            replyId: newEvent.getTagValue('e'),
-          ).toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        final event = await Nip17.decode(newEvent, keyPairs!.private);
+        MessageService.isar.writeTxnSync(() {
+          MessageService.isar.dataMessages.putSync(DataMessage(
+            createdAt: event.createdAt!.millisecondsSinceEpoch,
+            eventId: event.id!,
+            plainText: event.content!,
+            sender: event.pubkey,
+            receiver: event.getTagValue('p')!,
+            replyId: event.getTagValue('e'),
+          ));
+        });
       } else if (e.kind == 4) {
         final msg =
             await Nip4.decode(newEvent, keyPairs!.public, keyPairs.private);
-        batch.insert(
-          DataMessage.tableName,
-          DataMessage(
+        MessageService.isar.writeTxnSync(() {
+          MessageService.isar.dataMessages.putSync(DataMessage(
             createdAt: msg!.createdAt!.millisecondsSinceEpoch,
-            id: newEvent.id!,
+            eventId: newEvent.id!,
             plainText: msg.content!,
             sender: msg.sender,
             receiver: msg.receiver,
             replyId: msg.replyId,
-          ).toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+          ));
+        });
       }
       if (appState.me.pubkey != newEvent.pubkey) {
         setState(() {
@@ -142,7 +142,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
     });
   }
 
-  Future<void> _unsubscribe() async {
+  Future<void> unsubscribe() async {
     if (_newEventListener != null) {
       await _newEventListener!.cancel();
       _newEventListener = null;

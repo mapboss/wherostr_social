@@ -47,6 +47,8 @@ PODS:
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
+  - isar_flutter_libs (1.0.0):
+    - Flutter
   - libwebp (1.3.2):
     - libwebp/demux (= 1.3.2)
     - libwebp/mux (= 1.3.2)
@@ -132,6 +134,7 @@ DEPENDENCIES:
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
   - image_gallery_saver (from `.symlinks/plugins/image_gallery_saver/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - maplibre_gl (from `.symlinks/plugins/maplibre_gl/ios`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/ios`)
@@ -187,6 +190,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_gallery_saver/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  isar_flutter_libs:
+    :path: ".symlinks/plugins/isar_flutter_libs/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
   maplibre_gl:
@@ -234,6 +239,7 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   image_gallery_saver: cb43cc43141711190510e92c460eb1655cd343cb
   image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  isar_flutter_libs: b69f437aeab9c521821c3f376198c4371fa21073
   libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   local_auth_darwin: 66e40372f1c29f383a314c738c7446e2f7fdadc3
   MapLibre: 0ebfa9329d313cec8bf0a5ba5a336a1dc903785e
