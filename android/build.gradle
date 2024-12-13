@@ -23,6 +23,25 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(':app')
 }
+subprojects {
+    // TODO: Remove this when image_gallery_saver is updated to support Flutter 3.24.3
+    if (project.name == "image_gallery_saver") {
+        afterEvaluate {
+            android {
+                compileSdkVersion 34
+            }
+        }
+    }
+
+    // TODO: Remove this when isar_flutter_libs is updated to support Flutter 3.24.3
+    if (project.name == "isar_flutter_libs") {
+        afterEvaluate {
+            android {
+                compileSdkVersion 34
+            }
+        }
+    }
+}
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
