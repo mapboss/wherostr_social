@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:dart_nostr/dart_nostr.dart';
+import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:wherostr_social/models/app_relays.dart';
 import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
@@ -25,6 +25,7 @@ class MessageService {
   static Completer<void> sync(NostrKeyPairs keyPairs, NostrUser me) {
     final completer = Completer<void>();
     final List<NostrFilter> filters = [];
+    final debouncer = Debouncer();
     Future.wait([
       MessageService.isar.dataMessages
           .where()
@@ -60,19 +61,22 @@ class MessageService {
             : DateTime.fromMillisecondsSinceEpoch(createdAt)
                 .add(Duration(milliseconds: 1000)),
       ));
-      var relayEosCount = 0;
-      var totalRelays = AppRelays.defaults.length + (relays?.length ?? 0);
+      // var relayEosCount = 0;
+      // var totalRelays = AppRelays.defaults.length + (relays?.length ?? 0);
       final newEventStream = NostrService.subscribe(
         filters,
         relays: relays,
         onEose: (relay, ease) async {
-          relayEosCount += 1;
+          // relayEosCount += 1;
           print('onEos: $relay');
-          if (relayEosCount >= totalRelays) {
-            if (!completer.isCompleted) {
-              completer.complete();
-            }
-          }
+          debouncer.debounce(
+            duration: Duration(seconds: 10),
+            onDebounce: () {
+              if (!completer.isCompleted) {
+                completer.complete();
+              }
+            },
+          );
         },
       );
       late StreamSubscription newEventListener;
