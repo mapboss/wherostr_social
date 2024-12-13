@@ -11,11 +11,11 @@ flutter_native_splash:
     color_dark: "#121212"
 
 flutter_launcher_icons:
-  image_path: "assets/icon/1024.png"
+  image_path: "assets/icon/christmas/1024.png"
   android: true
-  adaptive_icon_background: "assets/icon/android/ic_launcher_background.png" # only available for Android 8.0 devices and above
-  adaptive_icon_foreground: "assets/icon/android/ic_launcher_foreground.png" # only available for Android 8.0 devices and above
-  image_path_android: "assets/icon/android/ic_launcher.png" # only available for Android 13 devices and above
+  adaptive_icon_background: "assets/icon/christmas/android/ic_launcher_background.png" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground: "assets/icon/christmas/android/ic_launcher_foreground.png" # only available for Android 8.0 devices and above
+  image_path_android: "assets/icon/christmas/android/ic_launcher.png" # only available for Android 13 devices and above
   ios: true
   remove_alpha_ios: true
   windows:
@@ -105,11 +105,17 @@ dependencies:
   flutter_hls_parser: ^2.0.1
   flutter_markdown: ^0.7.4+1
   markdown: ^7.2.2
+  path: ^1.9.0
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.13
 
 flutter:
   uses-material-design: true

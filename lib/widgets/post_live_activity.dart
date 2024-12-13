@@ -24,6 +24,7 @@ class PostLiveActivity extends StatefulWidget {
 class _PostLiveActivityState extends State<PostLiveActivity> {
   void openLiveActivity() {
     context.read<AppStatesProvider>().navigatorPush(
+          isBottomNavigationBarVisible: false,
           widget: LiveActivity(
             event: widget.event,
           ),

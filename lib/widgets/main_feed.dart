@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_feed.dart';
 import 'package:wherostr_social/models/app_states.dart';
-import 'package:wherostr_social/models/feed_menu_item.dart';
 import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/widgets/feed_menu.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
@@ -19,7 +18,9 @@ class MainFeed extends StatefulWidget {
 
 class MainFeedState extends State<MainFeed> {
   List<String>? _authors;
+  late List<int> _kinds;
   List<String>? _t;
+  late bool _includeReplies;
   GlobalKey<NostrFeedState> nostrFeedKey = GlobalKey();
 
   @override
@@ -30,32 +31,46 @@ class MainFeedState extends State<MainFeed> {
 
   void initialize() {
     final appFeed = context.read<AppFeedProvider>();
-    _handleChange(appFeed.selectedItem);
+
+    _handleChange(appFeed.feedFilters);
   }
 
-  void _handleChange(FeedMenuItem item) {
-    if (item.id == 'following') {
-      final me = context.read<AppStatesProvider>().me;
-      setState(() {
-        _authors = [me.pubkey, if (me.following.isNotEmpty) ...me.following];
-        _t = null;
-      });
-    } else if (item.type == 'tag') {
-      setState(() {
-        _authors = null;
-        _t = item.value;
-      });
-    } else if (item.type == 'list') {
-      setState(() {
-        _authors = item.value;
-        _t = null;
-      });
-    } else if (item.id == 'global') {
-      setState(() {
-        _authors = null;
-        _t = null;
-      });
+  void _handleChange(FeedFilters feedFilters) {
+    final appState = context.read<AppStatesProvider>();
+    final me = appState.me;
+    List<String>? authors;
+    final kinds = [
+      1,
+      if (feedFilters.articlesSelected) ...[30023],
+      if (feedFilters.liveActivitiesSelected) ...[30311],
+      if (feedFilters.repostsSelected) ...[6, 16],
+    ];
+    final List<String> tags = me.interestSets
+        .where((item) => feedFilters.selectedFollowingHashtags.contains(item))
+        .toList();
+    if (feedFilters.selectedFollowingSets.isNotEmpty) {
+      authors = [];
+      for (var item in me.followSets) {
+        if (feedFilters.selectedFollowingSets.contains(item.id)) {
+          authors.addAll(item.value);
+        }
+      }
     }
+    if (feedFilters.followingSelected) {
+      final followingAuthors = [me.pubkey, ...me.following];
+      if (authors != null) {
+        authors = List<String>.from(
+            Set.from(authors).intersection(Set.from(followingAuthors)));
+      } else {
+        authors = followingAuthors;
+      }
+    }
+    setState(() {
+      _authors = (authors ?? []).isNotEmpty ? authors : null;
+      _kinds = kinds;
+      _t = tags.isNotEmpty ? tags : null;
+      _includeReplies = feedFilters.repliesSelected;
+    });
   }
 
   @override
@@ -89,7 +104,7 @@ class MainFeedState extends State<MainFeed> {
           return NostrFeed(
             key: nostrFeedKey,
             scrollController: scrollController,
-            kinds: const [1, 6, 16],
+            kinds: _kinds,
             authors: _authors,
             relays: relayList,
             ids: difficulty != null && difficulty > 0
@@ -97,13 +112,17 @@ class MainFeedState extends State<MainFeed> {
                 : null,
             t: _t,
             isDynamicHeight: true,
-            itemBuilder: (context, item) => Container(
+            includeReplies: _includeReplies,
+            itemBuilder: (context, event) => Container(
               margin: const EdgeInsets.only(bottom: 4),
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(
                   Radius.circular(12),
                 ),
-                child: PostItem(event: item),
+                child: PostItem(
+                  event: event,
+                  enableReplyLabel: _includeReplies,
+                ),
               ),
             ),
           );

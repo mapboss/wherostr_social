@@ -10,14 +10,14 @@ import 'package:wherostr_social/nips/nip059.dart';
 /// Private Direct Messages
 /// https://github.com/nostr-protocol/nips/blob/master/17.md
 class Nip17 {
-  static Future<DataEvent> encode(
-      DataEvent event, String receiver, String myPubkey, String privkey,
+  static Future<NostrEvent> encode(
+      NostrEvent event, String receiver, String myPubkey, String privkey,
       {int? kind,
       int? expiration,
       String? sealedPrivkey,
       String? sealedReceiver,
       DateTime? createAt}) async {
-    DataEvent sealedGossipEvent = await _encodeSealedGossip(
+    NostrEvent sealedGossipEvent = await _encodeSealedGossip(
         event, sealedReceiver ?? receiver, myPubkey, privkey);
     return await Nip59.encode(sealedGossipEvent, sealedReceiver ?? receiver,
         kind: kind?.toString(),
@@ -26,23 +26,21 @@ class Nip17 {
         createAt: createAt);
   }
 
-  static Future<DataEvent> _encodeSealedGossip(
-      DataEvent event, String receiver, String myPubkey, String privkey) async {
-    event.sig = '';
-    String encodedEvent = jsonEncode(event);
+  static Future<NostrEvent> _encodeSealedGossip(NostrEvent event,
+      String receiver, String myPubkey, String privkey) async {
+    String encodedEvent = jsonEncode(event.toMap());
     String content =
         await Nip44.encrypt(encodedEvent, Nip44.shareSecret(privkey, receiver));
-
-    return DataEvent.fromEvent(NostrEvent.fromPartialData(
+    return NostrEvent.fromPartialData(
       kind: 13,
       tags: [],
       createdAt: randomTimeUpTo2DaysInThePast(),
       content: content,
       keyPairs: NostrKeyPairs(private: privkey),
-    ));
+    );
   }
 
-  static Future<DataEvent> encodeInnerEvent(String receiver, String content,
+  static Future<NostrEvent> encodeInnerEvent(String receiver, String content,
       String replyId, String myPubkey, String privKey,
       {String? subContent,
       int? expiration,
@@ -57,36 +55,41 @@ class Nip17 {
     if (subject != null && subject.isNotEmpty) {
       tags.add(['subject', subject]);
     }
-    return DataEvent.fromEvent(NostrEvent.fromPartialData(
+    return NostrEvent.fromPartialData(
         kind: 14,
         tags: tags,
         content: content,
         keyPairs: NostrKeyPairs(private: privKey),
-        createdAt: createAt));
+        createdAt: createAt);
   }
 
-  static Future<DataEvent> encodeSealedGossipDM(String receiver, String content,
-      String replyId, String myPubkey, String privKey,
+  static Future<NostrEvent> encodeSealedGossipDM(String receiver,
+      String content, String replyId, String myPubkey, String privKey,
       {String? sealedPrivkey,
       String? sealedReceiver,
       DateTime? createAt,
       String? subContent,
       int? expiration,
-      DataEvent? innerEvent,
+      NostrEvent? innerEvent,
       List<String>? members}) async {
-    innerEvent ??= await encodeInnerEvent(
-        receiver, content, replyId, myPubkey, privKey,
-        subContent: subContent, expiration: expiration);
-    DataEvent event = await encode(innerEvent, receiver, myPubkey, privKey,
-        sealedPrivkey: sealedPrivkey,
-        sealedReceiver: sealedReceiver,
-        createAt: createAt,
-        expiration: expiration);
-    event.innerEvent = innerEvent;
-    return event;
+    try {
+      innerEvent ??= await encodeInnerEvent(
+          receiver, content, replyId, myPubkey, privKey,
+          subContent: subContent, expiration: expiration);
+      NostrEvent event = await encode(innerEvent, receiver, myPubkey, privKey,
+          sealedPrivkey: sealedPrivkey,
+          sealedReceiver: sealedReceiver,
+          createAt: createAt,
+          expiration: expiration);
+      // event.innerEvent = DataEvent.fromEvent(innerEvent);
+      return event;
+    } catch (err) {
+      print(err);
+      throw err;
+    }
   }
 
-  static Future<DataEvent> decode(DataEvent event, String privkey,
+  static Future<DataEvent> decode(NostrEvent event, String privkey,
       {String? sealedPrivkey}) async {
     DataEvent sealedGossipEvent =
         await Nip59.decode(event, sealedPrivkey ?? privkey);

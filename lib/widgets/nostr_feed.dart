@@ -135,12 +135,7 @@ class NostrFeedState extends State<NostrFeed> {
                       child: NotificationListener(
                         onNotification: _handleNotification,
                         child: ListView.builder(
-                          padding:
-                              MediaQuery.maybeOf(context)?.padding.copyWith(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                  ),
+                          padding: EdgeInsets.all(0),
                           controller: widget.scrollController == null
                               ? _scrollController
                               : null,
@@ -255,7 +250,9 @@ class NostrFeedState extends State<NostrFeed> {
         oldWidget.authors?.length != widget.authors?.length ||
         oldWidget.t?.elementAtOrNull(0) != widget.t?.elementAtOrNull(0) ||
         oldWidget.isAscending != widget.isAscending ||
-        oldRelay != newRelay) {
+        oldRelay != newRelay ||
+        oldWidget.kinds.join(',') != widget.kinds.join(',') ||
+        oldWidget.includeReplies != widget.includeReplies) {
       unsubscribe().whenComplete(() {
         clearState();
         initialize();

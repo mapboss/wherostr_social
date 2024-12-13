@@ -4,6 +4,7 @@ import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
+import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/utils/pow.dart';
 import 'package:wherostr_social/widgets/message_item.dart';
 import 'package:wherostr_social/widgets/post_article.dart';
@@ -31,6 +32,7 @@ class PostItem extends StatelessWidget {
   final bool enableProofOfWork;
   final bool enablePreview;
   final bool enableMedia;
+  final bool enableReplyLabel;
   final EdgeInsetsGeometry? contentPadding;
   final int depth;
   final double? maxHeight;
@@ -47,6 +49,7 @@ class PostItem extends StatelessWidget {
     this.enableProofOfWork = true,
     this.enablePreview = true,
     this.enableMedia = true,
+    this.enableReplyLabel = false,
     this.contentPadding,
     this.depth = 0,
     this.maxHeight,
@@ -68,6 +71,7 @@ class PostItem extends StatelessWidget {
           enableProofOfWork: enableProofOfWork,
           enablePreview: enablePreview,
           enableMedia: enableMedia,
+          enableReplyLabel: enableReplyLabel,
           contentPadding: contentPadding,
           depth: depth,
         );
@@ -109,6 +113,7 @@ class PostItem extends StatelessWidget {
         widget = PostArticle(
           event: event,
         );
+      case 14:
       case 1311:
         ThemeData themeData = Theme.of(context);
         return Container(
@@ -120,6 +125,7 @@ class PostItem extends StatelessWidget {
               event: event,
               enableActionBar: false,
               isCompact: true,
+              showReplied: false,
             ),
           ),
         );
@@ -225,6 +231,7 @@ class ShortTextNote extends PostItem {
     super.enableProofOfWork = true,
     super.enablePreview = true,
     super.enableMedia = true,
+    super.enableReplyLabel = false,
     super.contentPadding,
     super.depth = 0,
   });
@@ -233,6 +240,8 @@ class ShortTextNote extends PostItem {
   Widget build(BuildContext context) {
     final appSettings = context.watch<AppSettingsProvider>();
     final appState = context.watch<AppStatesProvider>();
+    ThemeData themeData = Theme.of(context);
+    MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final postContentWidget = Padding(
       padding: contentPadding ?? const EdgeInsets.all(0),
       child: PostContent(
@@ -258,6 +267,26 @@ class ShortTextNote extends PostItem {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (enableReplyLabel && isReply(event: event))
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.reply,
+                      size: 16,
+                      color: themeExtension.textDimColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Replied',
+                      style: TextStyle(
+                        color: themeExtension.textDimColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             PostComposer(
               event: event,
               enableShowProfileAction: enableShowProfileAction,

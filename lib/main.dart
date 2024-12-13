@@ -20,10 +20,12 @@ import 'package:wherostr_social/screens/login.dart';
 import 'package:wherostr_social/screens/splash.dart';
 import 'package:wherostr_social/screens/test.dart';
 import 'package:wherostr_social/screens/welcome.dart';
+import 'package:wherostr_social/services/message.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init('app');
-  await AppRelays.init();
+  await Future.wait([AppRelays.init(), MessageService.init()]);
   runApp(const MainApp());
 }
 

@@ -36,7 +36,10 @@ class EnShortMessages implements timeago.EnShortMessages {
   String wordSeparator() => ' ';
 }
 
-String formatTime(DateTime? date) {
+String formatTime(
+  DateTime? date, {
+  String format = 'd MMM yyyy',
+}) {
   timeago.setLocaleMessages('en_short', EnShortMessages());
   if (date == null) {
     return '';
@@ -45,11 +48,14 @@ String formatTime(DateTime? date) {
   if (now.difference(date).inDays < 3) {
     return timeago.format(date, locale: 'en_short');
   } else {
-    return DateFormat.yMMMMd('en_US').format(date);
+    return DateFormat(format, 'en_US').format(date);
   }
 }
 
-String formatTimeAgo(DateTime? date) {
+String formatTimeAgo(
+  DateTime? date, {
+  String format = 'd MMM yyyy',
+}) {
   timeago.setLocaleMessages('en_short', EnShortMessages());
   if (date == null) {
     return '';
@@ -59,7 +65,23 @@ String formatTimeAgo(DateTime? date) {
     final elapsedTime = timeago.format(date, locale: 'en_short');
     return '$elapsedTime${elapsedTime == 'now' ? '' : ' ago'}';
   } else {
-    return 'on ${DateFormat.yMMMMd('en_US').format(date)}';
+    return 'on ${DateFormat(format, 'en_US').format(date)}';
+  }
+}
+
+String formatMessageTime(
+  DateTime? date, {
+  String format = 'd MMM yyyy',
+}) {
+  timeago.setLocaleMessages('en_short', EnShortMessages());
+  if (date == null) {
+    return '';
+  }
+  final now = DateTime.now();
+  if (now.year == date.year && now.month == date.month && now.day == date.day) {
+    return DateFormat('HH:mm', 'en_US').format(date);
+  } else {
+    return DateFormat(format, 'en_US').format(date);
   }
 }
 

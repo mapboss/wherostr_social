@@ -1,12 +1,53 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:wherostr_social/models/feed_menu_item.dart';
 import 'package:wherostr_social/models/pow_filter.dart';
 
-final followingMenuItem = FeedMenuItem(
-    id: 'following', name: 'Following', type: 'default', value: ['following']);
-final globalMenuItem = FeedMenuItem(
-    id: 'global', name: 'Global', type: 'default', value: ['global']);
+class FeedFilters {
+  bool followingSelected;
+  bool articlesSelected;
+  bool liveActivitiesSelected;
+  bool repliesSelected;
+  bool repostsSelected;
+  List<String> selectedFollowingSets;
+  List<String> selectedFollowingHashtags;
+
+  FeedFilters({
+    this.followingSelected = true,
+    this.articlesSelected = true,
+    this.liveActivitiesSelected = true,
+    this.repliesSelected = false,
+    this.repostsSelected = true,
+    this.selectedFollowingSets = const [],
+    this.selectedFollowingHashtags = const [],
+  });
+
+  factory FeedFilters.fromJson(Map<String, dynamic> json) {
+    return FeedFilters(
+      followingSelected: json['followingSelected'],
+      articlesSelected: json['articlesSelected'],
+      liveActivitiesSelected: json['liveActivitiesSelected'],
+      repliesSelected: json['repliesSelected'],
+      repostsSelected: json['repostsSelected'],
+      selectedFollowingSets: List<String>.from(json['selectedFollowingSets']),
+      selectedFollowingHashtags:
+          List<String>.from(json['selectedFollowingHashtags']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'followingSelected': followingSelected,
+      'articlesSelected': articlesSelected,
+      'liveActivitiesSelected': liveActivitiesSelected,
+      'repliesSelected': repliesSelected,
+      'repostsSelected': repostsSelected,
+      'selectedFollowingSets': selectedFollowingSets,
+      'selectedFollowingHashtags': selectedFollowingHashtags,
+    };
+  }
+}
 
 class AppFeedProvider with ChangeNotifier {
   final _storage = GetStorage('app');
@@ -14,21 +55,17 @@ class AppFeedProvider with ChangeNotifier {
   AppFeedProvider() {
     _init();
   }
-
+  FeedFilters _feedFilters = FeedFilters();
+  FeedFilters get feedFilters => _feedFilters;
   PoWfilter _powPostFilter = PoWfilter(enabled: false, value: 16);
   PoWfilter _powCommentFilter = PoWfilter(enabled: false, value: 8);
   PoWfilter get powPostFilter => _powPostFilter;
   PoWfilter get powCommentFilter => _powCommentFilter;
 
-  FeedMenuItem _selectedItem = followingMenuItem;
-
-  FeedMenuItem get selectedItem => _selectedItem;
-
   Future<void> _init() async {
-    if (_storage.hasData('app_feed')) {
-      _selectedItem = FeedMenuItem.fromString(_storage.read('app_feed'));
-    } else {
-      _selectedItem = followingMenuItem;
+    if (_storage.hasData('app_feed_filters')) {
+      _feedFilters =
+          FeedFilters.fromJson(jsonDecode(_storage.read('app_feed_filters')));
     }
     try {
       if (_storage.hasData('app_pow_post')) {
@@ -43,9 +80,9 @@ class AppFeedProvider with ChangeNotifier {
     }
   }
 
-  Future<void> setSelectedItem(FeedMenuItem item) async {
-    await _storage.write('app_feed', item.toString());
-    _selectedItem = item;
+  Future<void> setFeedFilters(FeedFilters feedFilters) async {
+    await _storage.write('app_feed_filters', jsonEncode(feedFilters.toJson()));
+    _feedFilters = feedFilters;
     notifyListeners();
   }
 

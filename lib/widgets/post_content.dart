@@ -60,6 +60,15 @@ class _PostContentState extends State<PostContent> {
     initialize();
   }
 
+  @override
+  void didUpdateWidget(covariant PostContent oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+    if (widget.content != oldWidget.content) {
+      initialize();
+    }
+  }
+
   void initialize() {
     // _elementWidgets = [TextSpan(text: widget.content)];
     // List<InlineSpan> elementWidgets = [];
