@@ -41,8 +41,8 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   DataEvent? _quotedEvent;
   bool _isEmpty = true;
   bool _isLoading = false;
-  bool _nip17Enabled = false;
   final List<DataEvent> _messages = [];
+  String _sendingText = '';
 
   Stream<List<DataMessage>>? _newMessageStream;
   StreamSubscription<List<DataMessage>>? _newMessageListener;
@@ -89,6 +89,9 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   }
 
   void _checkIfTextIsNotEmpty() {
+    if (_isLoading) {
+      _messageController.text = _sendingText;
+    }
     setState(() {
       _isEmpty = !_messageController.text.trim().isNotEmpty;
     });
@@ -97,10 +100,10 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   void _handleSendPressed() async {
     setState(() {
       _isLoading = true;
+      _sendingText = _messageController.text;
     });
     try {
       final appState = context.read<AppStatesProvider>();
-      _focusNode.unfocus();
       final keyPairs = await AppSecret.read();
       String content = _messageController.text.trim();
       final receiverRelayList = await _user?.fetchDMRelayList();
@@ -151,18 +154,22 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
             content, _quotedEvent?.id ?? '', keyPairs.private);
         await event.publish();
       }
-      setState(() {
-        _quotedEvent = null;
-      });
-      _messageController.clear();
+      if (mounted) {
+        setState(() {
+          _quotedEvent = null;
+          _isLoading = false;
+          _sendingText = '';
+          _messageController.clear();
+        });
+      }
     } catch (error) {
-      AppUtils.handleError();
-    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _sendingText = '';
         });
       }
+      AppUtils.handleError();
     }
   }
 
@@ -200,6 +207,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final appState = context.watch<AppStatesProvider>();
     return Scaffold(
+      backgroundColor: themeData.colorScheme.surfaceDim,
       appBar: AppBar(
         titleSpacing: 0,
         title: _user != null
@@ -251,6 +259,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
                   child: Builder(
                     builder: (context) {
                       return ListView.builder(
+                        padding: EdgeInsets.all(0),
                         reverse: true,
                         itemCount: _messages.length,
                         itemBuilder: (context, index) {
@@ -309,7 +318,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
                             prefixIcon: const Icon(Icons.comment_outlined),
                             hintText: 'Send a message',
                           ),
-                          readOnly: _isLoading,
+                          autofocus: true,
                         ),
                       ),
                       SizedBox(width: 8),

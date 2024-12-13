@@ -70,7 +70,7 @@ class DataMessage {
       content: plainText,
       tags: [
         ["p", receiver],
-        if (replyId?.isNotEmpty == true) ["e", replyId!],
+        if (replyId?.isNotEmpty == true) ["e", replyId!, '', 'reply'],
       ],
     );
   }

@@ -125,6 +125,7 @@ class PostItem extends StatelessWidget {
               event: event,
               enableActionBar: false,
               isCompact: true,
+              showReplied: false,
             ),
           ),
         );

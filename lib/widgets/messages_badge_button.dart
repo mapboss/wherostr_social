@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_notification.dart';
@@ -31,9 +30,6 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
   int _badgeCount = 0;
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
-
-  final _debouncer = Debouncer();
-
   bool _initializedMessages = false;
 
   @override
