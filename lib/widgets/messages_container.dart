@@ -123,114 +123,6 @@ class MessagesContainerState extends State<MessagesContainer> {
   //   super.dispose();
   // }
 
-  Future<void> subscribe() async {
-    final completer = Completer();
-    final appState = context.read<AppStatesProvider>();
-    final List<NostrFilter> filters = [];
-    late DataMessage? latest;
-    try {
-      latest = await MessageService.isar.dataMessages
-          .where()
-          .sortByCreatedAtDesc()
-          .limit(1)
-          .findFirst();
-    } catch (err) {
-      print('query: $err');
-    }
-    final relays = await appState.me.fetchDMRelayList();
-    final createdAt = latest?.createdAt;
-    filters.add(NostrFilter(
-      kinds: [1059],
-      p: [appState.me.pubkey],
-      since: createdAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(createdAt)
-              .subtract(Duration(days: 2)),
-    ));
-    filters.add(NostrFilter(
-      kinds: [4],
-      p: [appState.me.pubkey],
-      since: createdAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(createdAt)
-              .add(Duration(milliseconds: 1000)),
-    ));
-    filters.add(NostrFilter(
-      kinds: [4],
-      authors: [appState.me.pubkey],
-      since: createdAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(createdAt)
-              .add(Duration(milliseconds: 1000)),
-    ));
-
-    final keyPairs = await AppSecret.read();
-    // _newEventStream =
-    //     NostrService.instance.relaysService.startEventsSubscription(
-    //   relays: relays.toListString(),
-    //   request: NostrRequest(filters: filters),
-    //   onEose: (relay, ease) {
-    //     print('onEose: $relay');
-    //     completer.complete();
-    //     _newEventStream?.close();
-    //   },
-    // );
-    _newEventStream = NostrService.subscribe(
-      filters,
-      relays: relays,
-      onEose: (relay, ease) async {
-        print('onEose: $relay');
-        completer.complete();
-      },
-    );
-    _newEventStream!.stream.listen((e) async {
-      var newEvent = e;
-      if (e.kind == 1059) {
-        final event = await Nip17.decode(newEvent, keyPairs!.private);
-        // items.add(DataMessage(
-        //   createdAt: event.createdAt!.millisecondsSinceEpoch,
-        //   eventId: event.id!,
-        //   plainText: event.content!,
-        //   sender: event.pubkey,
-        //   receiver: event.getTagValue('p')!,
-        //   replyId: event.getTagValue('e'),
-        // ));
-        MessageService.isar.writeTxnSync(() {
-          MessageService.isar.dataMessages.putSync(DataMessage(
-            createdAt: event.createdAt!.millisecondsSinceEpoch,
-            eventId: event.id!,
-            plainText: event.content!,
-            sender: event.pubkey,
-            receiver: event.getTagValue('p')!,
-            replyId: event.getTagValue('e'),
-          ));
-        });
-      } else if (e.kind == 4) {
-        final msg =
-            await Nip4.decode(newEvent, keyPairs!.public, keyPairs.private);
-        // items.add(DataMessage(
-        //   createdAt: msg!.createdAt!.millisecondsSinceEpoch,
-        //   eventId: newEvent.id!,
-        //   plainText: msg.content!,
-        //   sender: msg.sender,
-        //   receiver: msg.receiver,
-        //   replyId: msg.replyId,
-        // ));
-        MessageService.isar.writeTxnSync(() {
-          MessageService.isar.dataMessages.putSync(DataMessage(
-            createdAt: msg!.createdAt!.millisecondsSinceEpoch,
-            eventId: newEvent.id!,
-            plainText: msg.content!,
-            sender: msg.sender,
-            receiver: msg.receiver,
-            replyId: msg.replyId,
-          ));
-        });
-      }
-    });
-    return completer.future;
-  }
-
   Future<void> unsubscribe() async {
     if (_newEventListener != null) {
       await _newEventListener!.cancel();
@@ -312,6 +204,7 @@ class MessagesContainerState extends State<MessagesContainer> {
                           minimumSize: const Size(double.infinity, 48),
                         ),
                         onPressed: () async {
+                          late Completer completer;
                           showDialog(
                             context: context,
                             useRootNavigator: true,
@@ -334,7 +227,7 @@ class MessagesContainerState extends State<MessagesContainer> {
                                 actions: [
                                   TextButton(
                                     onPressed: () {
-                                      unsubscribe();
+                                      completer.completeError('Cancel');
                                       appState.navigatorPop();
                                     },
                                     child: const Text('Cancel'),
@@ -347,8 +240,11 @@ class MessagesContainerState extends State<MessagesContainer> {
                           if (relays.isEmpty) {
                             await appState.me.initDMRelayList();
                           }
+                          final keyPairs = await AppSecret.read();
                           await initMessages();
-                          await subscribe();
+                          completer =
+                              MessageService.sync(keyPairs!, appState.me);
+                          await completer.future;
                           await appSettings.setInitializedMessages(true);
                           appState.navigatorPop();
                         },
