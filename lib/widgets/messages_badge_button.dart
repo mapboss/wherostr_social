@@ -61,22 +61,8 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
     final appState = context.read<AppStatesProvider>();
     if (_initializedMessages != true) return;
     final List<NostrFilter> filters = [];
-    late DataMessage? latest;
-    try {
-      latest = await MessageService.isar.dataMessages
-          .where()
-          .sortByCreatedAtDesc()
-          .limit(1)
-          .findFirst();
-    } catch (err) {
-      print('query: $err');
-    }
-    if (latest == null) {
-      return;
-    }
     final relays = await appState.me.fetchDMRelayList();
     final since = appNotification.messagingLastSeen;
-
     filters.add(NostrFilter(
       kinds: [1059],
       p: [appState.me.pubkey],
