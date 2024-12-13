@@ -40,6 +40,14 @@ class _PostComposerState extends State<PostComposer> {
     initialize();
   }
 
+  @override
+  void didUpdateWidget(covariant PostComposer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.event.pubkey != oldWidget.event.pubkey) {
+      initialize();
+    }
+  }
+
   void initialize() async {
     try {
       late String pubkey;

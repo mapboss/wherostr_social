@@ -109,6 +109,10 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       var newEvent = e;
       if (e.kind == 1059) {
         final event = await Nip17.decode(newEvent, keyPairs!.private);
+        if ((event.createdAt?.millisecondsSinceEpoch.compareTo(since) ?? 0) <=
+            0) {
+          return;
+        }
         if (appState.me.pubkey != event.pubkey) {
           setState(() {
             _badgeCount += 1;
@@ -127,6 +131,10 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       } else if (e.kind == 4) {
         final msg =
             await Nip4.decode(newEvent, keyPairs!.public, keyPairs.private);
+        if ((msg?.createdAt?.millisecondsSinceEpoch.compareTo(since) ?? 0) <=
+            0) {
+          return;
+        }
         if (appState.me.pubkey != msg?.sender) {
           setState(() {
             _badgeCount += 1;
