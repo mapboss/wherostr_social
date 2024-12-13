@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,9 +10,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
 import 'package:wherostr_social/extension/multi_image_savable_provider.dart';
+import 'package:wherostr_social/models/app_secret.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
+import 'package:wherostr_social/services/message.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/widgets/direct_messages_container.dart';
 import 'package:wherostr_social/widgets/nostr_feed.dart';
@@ -51,9 +56,9 @@ class _ProfileState extends State<Profile> {
 
   void initialize() async {
     final me = context.read<AppStatesProvider>().me;
+    _isMe = me.pubkey == widget.user.pubkey;
     await widget.user.fetchProfile(true);
     setState(() {
-      _isMe = me.pubkey == widget.user.pubkey;
       _isFollowing = me.following.contains(widget.user.pubkey);
     });
     widget.user.fetchFollowing().then((value) {
@@ -369,14 +374,76 @@ class _ProfileState extends State<Profile> {
                             const Spacer(),
                             if (!_isMe)
                               IconButton.outlined(
-                                onPressed: () {
+                                onPressed: () async {
                                   final appState =
                                       context.read<AppStatesProvider>();
-                                  appState.navigatorPush(
-                                    isBottomNavigationBarVisible: false,
-                                    widget: DirectMessagesContainer(
-                                        pubkey: widget.user.pubkey),
-                                  );
+                                  final appSettings =
+                                      context.read<AppSettingsProvider>();
+                                  if (appSettings.initializedMessages) {
+                                    appState.navigatorPush(
+                                      isBottomNavigationBarVisible: false,
+                                      widget: DirectMessagesContainer(
+                                        pubkey: widget.user.pubkey,
+                                      ),
+                                    );
+                                  } else {
+                                    late Completer completer;
+                                    showDialog(
+                                      context: context,
+                                      useRootNavigator: true,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('Starting...'),
+                                              SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              ),
+                                            ],
+                                          ),
+                                          content: const Text(
+                                              'Syncing all messages...'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                completer
+                                                    .completeError('Cancel');
+                                                appState.navigatorPop();
+                                              },
+                                              child: const Text('Cancel'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                    final relays =
+                                        await appState.me.fetchDMRelayList();
+                                    if (relays.isEmpty) {
+                                      await appState.me.initDMRelayList();
+                                    }
+                                    final keyPairs = await AppSecret.read();
+                                    completer = MessageService.sync(
+                                        keyPairs!, appState.me);
+                                    await completer.future;
+                                    await appSettings
+                                        .setInitializedMessages(true);
+                                    appState.navigatorPop();
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      appState.navigatorPush(
+                                        isBottomNavigationBarVisible: false,
+                                        widget: DirectMessagesContainer(
+                                          pubkey: widget.user.pubkey,
+                                        ),
+                                      );
+                                    });
+                                  }
                                 },
                                 icon: const Icon(Icons.message),
                               ),

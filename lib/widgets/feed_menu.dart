@@ -248,6 +248,7 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
             TextButton(
               child: Text('Ok'),
               onPressed: () {
+                final appState = context.read<AppStatesProvider>();
                 final appFeedMenu = context.read<AppFeedProvider>();
                 final feedFilters = FeedFilters(
                   followingSelected: _followingSelected,
@@ -262,7 +263,7 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
                 );
                 appFeedMenu.setFeedFilters(feedFilters);
                 widget.onChange!(feedFilters);
-                Navigator.of(context).pop();
+                appState.navigatorPop();
               },
             ),
           ],
