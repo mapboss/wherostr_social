@@ -104,7 +104,8 @@ class _ZapFormState extends State<ZapForm> {
           }
         });
       } else {
-        final nwcString = await appState.conectNWC();
+        final nwcString =
+            await appState.conectNWC().timeout(Duration(seconds: 10));
         useNWC = nwcString?.isNotEmpty ?? false;
         if (useNWC) {
           AppUtils.showSnackBar(
@@ -112,7 +113,7 @@ class _ZapFormState extends State<ZapForm> {
             withProgressBar: true,
             autoHide: false,
           );
-          await payInvoice(invoice);
+          await payInvoice(invoice).timeout(Duration(seconds: 10));
           await appState.disconnectNWC();
         } else {
           AppUtils.hideSnackBar();
