@@ -57,14 +57,14 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   }
 
   void initialize() async {
-    late NostrUser user;
-    await Future.wait([
-      NostrService.fetchUser(widget.pubkey).then((v) => user = v),
-      NostrService.instance
-          .fetchDMRelayList(widget.pubkey)
-          .then((v) => _receiverRelayList = v),
-      initMessages(widget.pubkey),
-    ]);
+    final user = await NostrService.fetchUser(widget.pubkey);
+    NostrService.instance.fetchDMRelayList(widget.pubkey).then((v) {
+      setState(() {
+        _receiverRelayList = v;
+      });
+    });
+    initMessages(widget.pubkey);
+
     if (mounted) {
       setState(() {
         _user = user;

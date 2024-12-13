@@ -73,13 +73,13 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       kinds: [4],
       p: [appState.me.pubkey],
       since: DateTime.fromMillisecondsSinceEpoch(since)
-          .add(Duration(milliseconds: 1000)),
+          .subtract(Duration(milliseconds: 1000)),
     ));
     filters.add(NostrFilter(
       kinds: [4],
       authors: [appState.me.pubkey],
       since: DateTime.fromMillisecondsSinceEpoch(since)
-          .add(Duration(milliseconds: 1000)),
+          .subtract(Duration(milliseconds: 1000)),
     ));
 
     final keyPairs = await AppSecret.read();
@@ -92,9 +92,13 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
       late DataMessage dataMessage;
       if (e.kind == 1059) {
         final event = await Nip17.decode(newEvent, keyPairs!.private);
-        if ((event.createdAt?.millisecondsSinceEpoch.compareTo(since) ?? 0) <=
+        if ((event.createdAt?.millisecondsSinceEpoch.compareTo(since) ?? 0) >
             0) {
-          return;
+          if (appState.me.pubkey != event.pubkey) {
+            setState(() {
+              _badgeCount += 1;
+            });
+          }
         }
         dataMessage = DataMessage(
           createdAt: event.createdAt!.millisecondsSinceEpoch,
@@ -104,17 +108,16 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
           receiver: event.getTagValue('p')!,
           replyId: event.getTagValue('e'),
         );
-        if (appState.me.pubkey != event.pubkey) {
-          setState(() {
-            _badgeCount += 1;
-          });
-        }
       } else if (e.kind == 4) {
         final msg =
             await Nip4.decode(newEvent, keyPairs!.public, keyPairs.private);
-        if ((msg?.createdAt?.millisecondsSinceEpoch.compareTo(since) ?? 0) <=
+        if ((msg?.createdAt?.millisecondsSinceEpoch.compareTo(since) ?? 0) >
             0) {
-          return;
+          if (appState.me.pubkey != msg?.sender) {
+            setState(() {
+              _badgeCount += 1;
+            });
+          }
         }
         dataMessage = DataMessage(
           createdAt: msg!.createdAt!.millisecondsSinceEpoch,
@@ -124,11 +127,6 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
           receiver: msg.receiver,
           replyId: msg.replyId,
         );
-        if (appState.me.pubkey != msg.sender) {
-          setState(() {
-            _badgeCount += 1;
-          });
-        }
       }
       await MessageService.isar.writeTxn(() async {
         await MessageService.isar.dataMessages.put(dataMessage);
