@@ -31,8 +31,6 @@ class Nip17 {
     String encodedEvent = jsonEncode(event.toMap());
     String content =
         await Nip44.encrypt(encodedEvent, Nip44.shareSecret(privkey, receiver));
-
-    print('fromPartialData');
     return NostrEvent.fromPartialData(
       kind: 13,
       tags: [],

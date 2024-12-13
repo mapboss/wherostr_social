@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
+import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
@@ -58,7 +59,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
     // _nip17Enabled =
     await Future.wait([
       initMessages(widget.pubkey),
-      user.fetchDMRelayList(),
+      NostrService.instance.fetchDMRelayList(widget.pubkey),
       user.fetchRelayList(),
     ]);
     if (mounted) {
@@ -168,14 +169,27 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   Future<void> initMessages(String pubkey) async {
     _newMessageStream = MessageService.isar.dataMessages
         .filter()
-        .senderEqualTo(pubkey)
+        .group(
+          (q) => q.senderEqualTo(pubkey).and().not().receiverEqualTo(pubkey),
+        )
         .or()
-        .receiverEqualTo(pubkey)
+        .group(
+          (q) => q.receiverEqualTo(pubkey).and().not().senderEqualTo(pubkey),
+        )
         .sortByCreatedAtDesc()
         .watch(fireImmediately: true);
     _newMessageListener = _newMessageStream?.listen((items) {
+      final newItems = items
+          .where((e) =>
+              e.createdAt.compareTo(_messages
+                      .elementAtOrNull(0)
+                      ?.createdAt
+                      ?.millisecondsSinceEpoch ??
+                  0) >
+              0)
+          .map((e) => e.toEvent());
       setState(() {
-        _messages.insertAll(0, items.map((e) => e.toEvent()));
+        _messages.insertAll(0, newItems);
       });
     });
   }
