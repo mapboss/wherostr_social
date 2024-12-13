@@ -160,8 +160,8 @@ class MessagesContainerState extends State<MessagesContainer> {
           //     ),
           //   );
           // }
-          if (_topics.isEmpty) {
-            if (appSettings.initializedMessages) {
+          if (appSettings.initializedMessages) {
+            if (_topics.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -170,7 +170,58 @@ class MessagesContainerState extends State<MessagesContainer> {
                   ],
                 ),
               );
+            } else {
+              return ListView.builder(
+                itemCount: _topics.length,
+                itemBuilder: (context, index) {
+                  final event = _topics[index];
+                  if (event.pubkey == appState.me.pubkey &&
+                      event.getTagValue('p') == appState.me.pubkey) {
+                    return SizedBox();
+                  }
+                  final chatPartner = event.pubkey == appState.me.pubkey
+                      ? event.getTagValue('p')!
+                      : event.pubkey;
+                  final composerEvent = DataEvent(
+                      pubkey: chatPartner, createdAt: event.createdAt);
+                  return Material(
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            final appState = context.read<AppStatesProvider>();
+                            appState.navigatorPush(
+                              isBottomNavigationBarVisible: false,
+                              widget:
+                                  DirectMessagesContainer(pubkey: chatPartner),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PostComposer(
+                                    event: composerEvent, enableMenu: false),
+                                PostContent(
+                                  content: event.content!.trim(),
+                                  enableMedia: false,
+                                  enablePreview: false,
+                                  enableElementTap: false,
+                                  depth: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 1),
+                      ],
+                    ),
+                  );
+                },
+              );
             }
+          } else {
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -253,54 +304,6 @@ class MessagesContainerState extends State<MessagesContainer> {
               ),
             );
           }
-          return ListView.builder(
-            itemCount: _topics.length,
-            itemBuilder: (context, index) {
-              final event = _topics[index];
-              if (event.pubkey == appState.me.pubkey &&
-                  event.getTagValue('p') == appState.me.pubkey) {
-                return SizedBox();
-              }
-              final chatPartner = event.pubkey == appState.me.pubkey
-                  ? event.getTagValue('p')!
-                  : event.pubkey;
-              final composerEvent =
-                  DataEvent(pubkey: chatPartner, createdAt: event.createdAt);
-              return Material(
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        final appState = context.read<AppStatesProvider>();
-                        appState.navigatorPush(
-                          isBottomNavigationBarVisible: false,
-                          widget: DirectMessagesContainer(pubkey: chatPartner),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            PostComposer(
-                                event: composerEvent, enableMenu: false),
-                            PostContent(
-                              content: event.content!.trim(),
-                              enableMedia: false,
-                              enablePreview: false,
-                              enableElementTap: false,
-                              depth: 1,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1),
-                  ],
-                ),
-              );
-            },
-          );
         },
       ),
     );
