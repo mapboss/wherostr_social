@@ -710,11 +710,11 @@ class _MessageItemState extends State<MessageItem> {
                                     ),
                                   ),
                                 ),
-                                if (widget.showTime)
+                                if (!widget.isCompact && widget.showTime) ...[
                                   Padding(
-                                    padding: EdgeInsets.only(bottom: 8),
+                                    padding: EdgeInsets.only(bottom: 4),
                                     child: Text(
-                                      formatTime(widget.event.createdAt,
+                                      formatMessageTime(widget.event.createdAt,
                                           format: 'd/M/yy'),
                                       style: themeData.textTheme.labelSmall!
                                           .copyWith(
@@ -722,6 +722,8 @@ class _MessageItemState extends State<MessageItem> {
                                                   themeExtension.textDimColor),
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
+                                ],
                               ],
                             ),
                             if (activityWidget != null) ...[

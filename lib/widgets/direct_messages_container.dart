@@ -9,6 +9,7 @@ import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_message.dart';
+import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
 import 'package:wherostr_social/nips/nip004.dart';
 import 'package:wherostr_social/nips/nip017.dart';
@@ -43,6 +44,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   bool _isLoading = false;
   final List<DataEvent> _messages = [];
   String _sendingText = '';
+  DataRelayList? _receiverRelayList;
 
   Stream<List<DataMessage>>? _newMessageStream;
   StreamSubscription<List<DataMessage>>? _newMessageListener;
@@ -56,6 +58,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
 
   void initialize() async {
     NostrUser user = await NostrService.fetchUser(widget.pubkey);
+    _receiverRelayList = await user.fetchDMRelayList();
     // _nip17Enabled =
     await Future.wait([
       initMessages(widget.pubkey),
@@ -106,8 +109,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
       final appState = context.read<AppStatesProvider>();
       final keyPairs = await AppSecret.read();
       String content = _messageController.text.trim();
-      final receiverRelayList = await _user?.fetchDMRelayList();
-      if ((receiverRelayList?.length ?? 0) > 0) {
+      if ((_receiverRelayList?.length ?? 0) > 0) {
         final innerEvent = await Nip17.encodeInnerEvent(
           widget.pubkey,
           content,
@@ -146,7 +148,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
           NostrService.instance.relaysService.sendEventToRelaysAsync(
             msgReceiver,
             timeout: Duration(seconds: 10),
-            relays: receiverRelayList?.toListString(),
+            relays: _receiverRelayList?.toListString(),
           )
         ]);
       } else {
@@ -275,6 +277,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
                           }
                           final event = _messages[index];
                           return Column(
+                            key: Key(event.id!),
                             crossAxisAlignment:
                                 event.pubkey == appState.me.pubkey
                                     ? CrossAxisAlignment.end
@@ -302,6 +305,28 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
                     },
                   ),
                 ),
+                if ((_receiverRelayList?.length ?? 0) == 0)
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.warning,
+                          color: themeExtension.textDimColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Warning: The recipient has not set up a DM relay and may not receive your private message.',
+                            style: themeData.textTheme.labelSmall!
+                                .copyWith(color: themeExtension.textDimColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
                   child: Row(
@@ -318,7 +343,6 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
                             prefixIcon: const Icon(Icons.comment_outlined),
                             hintText: 'Send a message',
                           ),
-                          autofocus: true,
                         ),
                       ),
                       SizedBox(width: 8),

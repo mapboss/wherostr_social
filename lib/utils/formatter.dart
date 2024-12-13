@@ -69,6 +69,22 @@ String formatTimeAgo(
   }
 }
 
+String formatMessageTime(
+  DateTime? date, {
+  String format = 'd MMM yyyy',
+}) {
+  timeago.setLocaleMessages('en_short', EnShortMessages());
+  if (date == null) {
+    return '';
+  }
+  final now = DateTime.now();
+  if (now.year == date.year && now.month == date.month && now.day == date.day) {
+    return DateFormat('HH:mm', 'en_US').format(date);
+  } else {
+    return DateFormat(format, 'en_US').format(date);
+  }
+}
+
 String formatDuration(Duration? duration) {
   if (duration == null) {
     return '';
