@@ -59,9 +59,8 @@ class MainFeedState extends State<MainFeed> {
     if (feedFilters.followingSelected) {
       final followingAuthors = [me.pubkey, ...me.following];
       if (authors != null) {
-        authors = Set.from(authors)
-            .intersection(Set.from(followingAuthors))
-            .toList() as List<String>;
+        authors = List<String>.from(
+            Set.from(authors).intersection(Set.from(followingAuthors)));
       } else {
         authors = followingAuthors;
       }

@@ -111,12 +111,14 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
                       }),
                       Center(
                         child: TextButton(
+                          onPressed: _selectedFollowingSets.isEmpty
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _selectedFollowingSets.clear();
+                                  });
+                                },
                           child: Text('Clear set selection'),
-                          onPressed: () {
-                            setState(() {
-                              _selectedFollowingSets.clear();
-                            });
-                          },
                         ),
                       ),
                       const Divider(),
@@ -153,12 +155,14 @@ class _FeedFilterMenuState extends State<FeedFilterMenu> {
                       }),
                       Center(
                         child: TextButton(
+                          onPressed: _selectedFollowingHashtags.isEmpty
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _selectedFollowingHashtags.clear();
+                                  });
+                                },
                           child: Text('Clear hashtag selection'),
-                          onPressed: () {
-                            setState(() {
-                              _selectedFollowingHashtags.clear();
-                            });
-                          },
                         ),
                       ),
                       const Divider(),
