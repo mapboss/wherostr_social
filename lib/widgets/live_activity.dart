@@ -92,17 +92,12 @@ class _LiveActivityState extends State<LiveActivity> {
     });
     try {
       _focusNode.unfocus();
-      String content = _messageController.text;
       final event = DataEvent(kind: 1311);
       if (_quotedEvent != null) {
-        content = 'nostr:${NostrService.instance.utilsService.encodeNevent(
-          eventId: _quotedEvent!.id!,
-          pubkey: _quotedEvent!.pubkey,
-        )}\n$content';
         event.addTagIfNew(['e', _quotedEvent!.id!, '', 'reply']);
         event.addTagIfNew(['p', _quotedEvent!.pubkey]);
       }
-      event.content = content.trim();
+      event.content = _messageController.text.trim();
       event.addTagIfNew(['a', widget.event.getAddressId()!, '', 'root']);
       final me = context.read<AppStatesProvider>().me;
       await event.publish(

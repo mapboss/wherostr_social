@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_debouncer/flutter_debouncer.dart';
 import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
+import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
 import 'package:wherostr_social/models/data_message.dart';
 import 'package:wherostr_social/nips/nip004.dart';
@@ -30,7 +30,6 @@ class MessagesContainerState extends State<MessagesContainer> {
 
   Stream<List<DataMessage>>? _newMessageStream;
   StreamSubscription<List<DataMessage>>? _newMessageListener;
-  final _debouncer = Debouncer();
 
   List<DataEvent> _topics = [];
   final groupedByPartner = <String, DataEvent>{};
@@ -254,7 +253,8 @@ class MessagesContainerState extends State<MessagesContainer> {
   Widget build(BuildContext context) {
     final appState = context.read<AppStatesProvider>();
     final appSettings = context.watch<AppSettingsProvider>();
-
+    ThemeData themeData = Theme.of(context);
+    MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
@@ -282,54 +282,81 @@ class MessagesContainerState extends State<MessagesContainer> {
                 ),
               );
             }
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FilledButton(
-                    onPressed: () async {
-                      showDialog(
-                        context: context,
-                        useRootNavigator: true,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Starting...'),
-                                SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(),
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        'How Nostr DMs Work',
+                        style: themeData.textTheme.titleMedium,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text.rich(
+                        TextSpan(
+                          text:
+                              'Nostr direct messages use public and private keys to ensure secure communication. Messages are sent via relays, which help distribute and sync them across devices. Only the intended recipient can decrypt and read your messages, ensuring complete privacy.',
+                          style: TextStyle(color: themeExtension.textDimColor),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        onPressed: () async {
+                          showDialog(
+                            context: context,
+                            useRootNavigator: true,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Starting...'),
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            content: const Text('Syncing all messages...'),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  unsubscribe();
-                                  appState.navigatorPop();
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                            ],
+                                content: const Text('Syncing all messages...'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      unsubscribe();
+                                      appState.navigatorPop();
+                                    },
+                                    child: const Text('Cancel'),
+                                  ),
+                                ],
+                              );
+                            },
                           );
+                          final relays = await appState.me.fetchDMRelayList();
+                          if (relays.isEmpty) {
+                            await appState.me.initDMRelayList();
+                          }
+                          await initMessages();
+                          await subscribe();
+                          await appSettings.setInitializedMessages(true);
+                          appState.navigatorPop();
                         },
-                      );
-                      final relays = await appState.me.fetchDMRelayList();
-                      if (relays.isEmpty) {
-                        await appState.me.initDMRelayList();
-                      }
-                      await initMessages();
-                      await subscribe();
-                      await appSettings.setInitializedMessages(true);
-                      appState.navigatorPop();
-                    },
-                    child: Text("Start Using Direct Messages"),
-                  )
-                ],
+                        child: const Text("Start Using DMs"),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }

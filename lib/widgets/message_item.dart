@@ -8,16 +8,22 @@ import 'package:dart_nostr/nostr/model/request/filter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:wherostr_social/extension/nostr_instance.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
+import 'package:wherostr_social/models/data_message.dart';
+import 'package:wherostr_social/models/data_relay_list.dart';
 import 'package:wherostr_social/models/nostr_user.dart';
+import 'package:wherostr_social/services/message.dart';
 import 'package:wherostr_social/services/nostr.dart';
 import 'package:wherostr_social/utils/app_utils.dart';
 import 'package:wherostr_social/utils/formatter.dart';
 import 'package:wherostr_social/utils/nostr_event.dart';
 import 'package:wherostr_social/widgets/post_content.dart';
+import 'package:wherostr_social/widgets/post_item.dart';
+import 'package:wherostr_social/widgets/post_item_loader.dart';
 import 'package:wherostr_social/widgets/profile.dart';
 import 'package:wherostr_social/widgets/profile_avatar.dart';
 import 'package:wherostr_social/widgets/profile_display_name.dart';
@@ -33,6 +39,7 @@ class MessageItem extends StatefulWidget {
   final bool showAvatar;
   final bool showName;
   final bool showTime;
+  final bool showReplied;
   final Function()? onReplyTap;
 
   const MessageItem({
@@ -43,6 +50,7 @@ class MessageItem extends StatefulWidget {
     this.showAvatar = true,
     this.showName = true,
     this.showTime = false,
+    this.showReplied = true,
     this.onReplyTap,
   });
 
@@ -305,6 +313,70 @@ class _MessageItemState extends State<MessageItem> {
     );
   }
 
+  Future<DataEvent?> _queryMessageEvent(String eventId) async =>
+      (await MessageService.isar.dataMessages.getByEventId(eventId))?.toEvent();
+
+  Widget? _repliedWidget() {
+    final repliedEtag = widget.event
+        .getMatchedTags('e')
+        ?.where((tag) => tag.elementAtOrNull(3) == 'reply')
+        .firstOrNull;
+    if (repliedEtag != null) {
+      final eventId = repliedEtag.elementAtOrNull(1)!;
+      final relayUrl = repliedEtag.elementAtOrNull(2);
+      if (widget.event.kind == 14) {
+        return FutureBuilder(
+          future: _queryMessageEvent(eventId),
+          builder: (BuildContext context, AsyncSnapshot<DataEvent?> snapshot) {
+            ThemeData themeData = Theme.of(context);
+            MyThemeExtension themeExtension =
+                themeData.extension<MyThemeExtension>()!;
+            return snapshot.hasData
+                ? PostItem(
+                    event: snapshot.data!,
+                  )
+                : Shimmer.fromColors(
+                    baseColor: themeExtension.shimmerBaseColor!,
+                    highlightColor: themeExtension.shimmerHighlightColor!,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 16,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  );
+          },
+        );
+      } else {
+        return PostItemLoader(
+          relays: relayUrl != null
+              ? DataRelayList.fromListString([relayUrl])
+              : null,
+          eventId: eventId,
+          enableMenu: false,
+          enableTap: false,
+          enableActionBar: false,
+          enableLocation: false,
+          enableProofOfWork: false,
+          enablePreview: false,
+          enableMedia: false,
+          depth: 1,
+        );
+      }
+    } else {
+      return null;
+    }
+  }
+
   Widget _contentWidget() {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
@@ -460,113 +532,212 @@ class _MessageItemState extends State<MessageItem> {
       MyThemeExtension themeExtension =
           themeData.extension<MyThemeExtension>()!;
       final appState = context.watch<AppStatesProvider>();
+      final repliedWidget = widget.showReplied ? _repliedWidget() : null;
       final contentWidget = _contentWidget();
       final activityWidget = _activityWidget();
       final isMine = widget.event.pubkey == appState.me.pubkey;
-      return InkWell(
-        onTap: actionableKinds.contains(widget.event.kind) ? _handleTap : null,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.showAvatar)
-              SizedBox(
-                width: widget.isCompact ? 24 : 32,
-                height: widget.isCompact ? 24 : 32,
-                child: InkWell(
-                  onTap: () => appState.navigatorPush(
-                    widget: Profile(
-                      heroTag: _profileHeroTag,
-                      user: _user!,
-                    ),
-                  ),
-                  child: Hero(
-                    tag: _profileHeroTag,
-                    child: ProfileAvatar(
-                      url: _user?.picture,
-                      borderSize: 1,
-                    ),
-                  ),
-                ),
-              ),
-            Expanded(
-              child: widget.isCompact
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          contentWidget,
-                          if (activityWidget != null) ...[
-                            const SizedBox(height: 4),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 2),
-                              child: activityWidget,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.isCompact && repliedWidget != null) ...[
+            IntrinsicWidth(
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(top: 16, left: 12),
+                      child: Container(
+                        foregroundDecoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                          ),
+                          border: Border(
+                            top: BorderSide(
+                              color: themeData.colorScheme.primary,
                             ),
-                          ],
-                        ],
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.showName)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: ProfileDisplayName(
-                              user: _user,
-                              withBadge: true,
-                              textStyle: themeData.textTheme.bodySmall!
-                                  .copyWith(color: themeExtension.textDimColor),
+                            left: BorderSide(
+                              color: themeData.colorScheme.primary,
                             ),
                           ),
-                        const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          textDirection: !widget.isCompact && isMine
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          children: [
-                            Flexible(
-                              child: SpeechBubble(
-                                padding: widget.event.kind == 9735
-                                    ? const EdgeInsets.symmetric(horizontal: 16)
-                                    : null,
-                                color: widget.event.kind == 9735
-                                    ? Colors.orange
-                                    : !widget.isCompact && isMine
-                                        ? themeData.colorScheme.primary
-                                        : null,
-                                origin: !widget.isCompact && isMine
-                                    ? SpeechBubbleOrigin.right
-                                    : SpeechBubbleOrigin.left,
-                                child: contentWidget,
+                        ),
+                        child: SizedBox(
+                          width: 12,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Icon(
+                              Icons.reply,
+                              size: 24,
+                              color: themeExtension.textDimColor,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: IntrinsicHeight(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  foregroundDecoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: themeData.colorScheme.primary,
+                                    ),
+                                  ),
+                                  child: repliedWidget,
+                                ),
                               ),
                             ),
-                            if (widget.showTime)
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+          InkWell(
+            onTap:
+                actionableKinds.contains(widget.event.kind) ? _handleTap : null,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.showAvatar)
+                  SizedBox(
+                    width: widget.isCompact ? 24 : 32,
+                    height: widget.isCompact ? 24 : 32,
+                    child: InkWell(
+                      onTap: () => appState.navigatorPush(
+                        widget: Profile(
+                          heroTag: _profileHeroTag,
+                          user: _user!,
+                        ),
+                      ),
+                      child: Hero(
+                        tag: _profileHeroTag,
+                        child: ProfileAvatar(
+                          url: _user?.picture,
+                          borderSize: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: widget.isCompact
+                      ? Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              contentWidget,
+                              if (activityWidget != null) ...[
+                                const SizedBox(height: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 2),
+                                  child: activityWidget,
+                                ),
+                              ],
+                            ],
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.showName)
                               Padding(
-                                padding: EdgeInsets.only(bottom: 8),
-                                child: Text(
-                                  formatTime(widget.event.createdAt,
-                                      format: 'd/M/yy'),
-                                  style: themeData.textTheme.labelSmall!
+                                padding: const EdgeInsets.only(left: 8),
+                                child: ProfileDisplayName(
+                                  user: _user,
+                                  withBadge: true,
+                                  textStyle: themeData.textTheme.bodySmall!
                                       .copyWith(
                                           color: themeExtension.textDimColor),
                                 ),
                               ),
+                            const SizedBox(height: 4),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              textDirection: !widget.isCompact && isMine
+                                  ? TextDirection.rtl
+                                  : TextDirection.ltr,
+                              children: [
+                                Flexible(
+                                  child: SpeechBubble(
+                                    padding: widget.event.kind == 9735
+                                        ? const EdgeInsets.symmetric(
+                                            horizontal: 16)
+                                        : null,
+                                    color: widget.event.kind == 9735
+                                        ? Colors.orange
+                                        : !widget.isCompact && isMine
+                                            ? themeData.colorScheme.primary
+                                                .withOpacity(0.19)
+                                            : null,
+                                    origin: !widget.isCompact && isMine
+                                        ? SpeechBubbleOrigin.right
+                                        : SpeechBubbleOrigin.left,
+                                    child: Column(
+                                      children: [
+                                        if (repliedWidget != null)
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Container(
+                                              foregroundDecoration:
+                                                  BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: themeData
+                                                      .colorScheme.primary,
+                                                ),
+                                              ),
+                                              child: repliedWidget,
+                                            ),
+                                          ),
+                                        contentWidget,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (widget.showTime)
+                                  Padding(
+                                    padding: EdgeInsets.only(bottom: 8),
+                                    child: Text(
+                                      formatTime(widget.event.createdAt,
+                                          format: 'd/M/yy'),
+                                      style: themeData.textTheme.labelSmall!
+                                          .copyWith(
+                                              color:
+                                                  themeExtension.textDimColor),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            if (activityWidget != null) ...[
+                              const SizedBox(height: 4),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 24),
+                                child: activityWidget,
+                              ),
+                            ],
                           ],
                         ),
-                        if (activityWidget != null) ...[
-                          const SizedBox(height: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 24),
-                            child: activityWidget,
-                          ),
-                        ],
-                      ],
-                    ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
   }

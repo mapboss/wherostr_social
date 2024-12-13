@@ -135,12 +135,7 @@ class NostrFeedState extends State<NostrFeed> {
                       child: NotificationListener(
                         onNotification: _handleNotification,
                         child: ListView.builder(
-                          padding:
-                              MediaQuery.maybeOf(context)?.padding.copyWith(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                  ),
+                          padding: EdgeInsets.all(0),
                           controller: widget.scrollController == null
                               ? _scrollController
                               : null,
