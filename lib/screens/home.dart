@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lazy_indexed_stack/flutter_lazy_indexed_stack.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/constant.dart';
+import 'package:wherostr_social/models/app_settings.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/widgets/main_feed_container.dart';
+import 'package:wherostr_social/widgets/messages_badge_list_tile.dart';
 import 'package:wherostr_social/widgets/messages_container.dart';
 import 'package:wherostr_social/widgets/notification_badge_list_tile.dart';
 import 'package:wherostr_social/widgets/notification_center_container.dart';
@@ -63,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ThemeData themeData = Theme.of(context);
     MyThemeExtension themeExtension = themeData.extension<MyThemeExtension>()!;
     final appState = context.watch<AppStatesProvider>();
+    final appSettings = context.watch<AppSettingsProvider>();
     final homeScaffoldKey = AppStatesProvider.homeScaffoldKey;
     final homeNavigatorKey = AppStatesProvider.homeNavigatorKey;
     final child = Stack(
@@ -315,6 +318,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       title: const Text("Map"),
                                       selected: _selectedIndex == 3,
+                                    ),
+                                    MessagesBadgeListTile(
+                                      onTap: () => handleDestinationSelected(6),
+                                      initializedMessages:
+                                          appSettings.initializedMessages,
+                                      leading: const SizedBox(
+                                        width: 36,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.message),
+                                        ),
+                                      ),
+                                      title: const Text("Messages"),
+                                      selected: _selectedIndex == 6,
                                     ),
                                     NotificationBadgeListTile(
                                       onTap: () => handleDestinationSelected(5),

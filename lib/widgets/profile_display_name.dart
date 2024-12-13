@@ -32,6 +32,14 @@ class _ProfileDisplayNameState extends State<ProfileDisplayName> {
   NostrUser? _user;
 
   @override
+  void didUpdateWidget(covariant ProfileDisplayName oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.user?.pubkey != oldWidget.user?.pubkey) {
+      initialize();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     initialize();

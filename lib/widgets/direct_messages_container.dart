@@ -57,13 +57,13 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
   }
 
   void initialize() async {
-    NostrUser user = await NostrService.fetchUser(widget.pubkey);
-    _receiverRelayList = await user.fetchDMRelayList();
-    // _nip17Enabled =
+    late NostrUser user;
     await Future.wait([
+      NostrService.fetchUser(widget.pubkey).then((v) => user = v),
+      NostrService.instance
+          .fetchDMRelayList(widget.pubkey)
+          .then((v) => _receiverRelayList = v),
       initMessages(widget.pubkey),
-      NostrService.instance.fetchDMRelayList(widget.pubkey),
-      user.fetchRelayList(),
     ]);
     if (mounted) {
       setState(() {
@@ -129,15 +129,6 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
           appState.me.pubkey,
           keyPairs.private,
         );
-        // final message = DataMessage(
-        //   eventId: innerEvent.id!,
-        //   plainText: content,
-        //   receiver: widget.pubkey,
-        //   sender: keyPairs.public,
-        //   replyId: _quotedEvent?.id,
-        //   createdAt: innerEvent.createdAt!.microsecondsSinceEpoch,
-        // );
-        // await MessageService.isar.dataMessages.put(message);
         final senderRelayList = await appState.me.fetchDMRelayList();
         await Future.wait([
           NostrService.instance.relaysService.sendEventToRelaysAsync(

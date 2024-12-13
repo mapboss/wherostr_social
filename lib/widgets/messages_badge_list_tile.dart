@@ -13,20 +13,28 @@ import 'package:wherostr_social/nips/nip017.dart';
 import 'package:wherostr_social/services/message.dart';
 import 'package:wherostr_social/services/nostr.dart';
 
-class MessagesBadgeButton extends StatefulWidget {
-  final Function()? onPressed;
+class MessagesBadgeListTile extends StatefulWidget {
   final bool initializedMessages;
+  final Function()? onTap;
+  final bool selected;
+  final Widget? leading;
+  final Widget title;
+  final Widget? subtitle;
 
-  const MessagesBadgeButton({
+  const MessagesBadgeListTile({
     super.key,
+    required this.title,
+    this.onTap,
+    this.selected = false,
+    this.leading,
+    this.subtitle,
     this.initializedMessages = false,
-    this.onPressed,
   });
   @override
-  State createState() => MessagesBadgeButtonState();
+  State createState() => MessagesBadgeListTileState();
 }
 
-class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
+class MessagesBadgeListTileState extends State<MessagesBadgeListTile> {
   int _badgeCount = 0;
   NostrEventsStream? _newEventStream;
   StreamSubscription? _newEventListener;
@@ -46,7 +54,7 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
   }
 
   @override
-  void didUpdateWidget(covariant MessagesBadgeButton oldWidget) {
+  void didUpdateWidget(covariant MessagesBadgeListTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initializedMessages != oldWidget.initializedMessages) {
       _initializedMessages = widget.initializedMessages;
@@ -163,17 +171,17 @@ class MessagesBadgeButtonState extends State<MessagesBadgeButton> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData themeData = Theme.of(context);
-    return IconButton(
-      color: themeData.colorScheme.primary,
-      icon: _badgeCount > 0
+    return ListTile(
+      selected: widget.selected,
+      title: widget.title,
+      leading: widget.leading,
+      trailing: _badgeCount > 0
           ? Badge.count(
               count: _badgeCount,
-              child: Icon(Icons.message),
             )
-          : Icon(Icons.message),
-      onPressed: () {
-        widget.onPressed?.call();
+          : null,
+      onTap: () {
+        widget.onTap?.call();
         final appNotifications = context.read<AppNotificationProvider>();
         appNotifications
             .setMessagingLastSeen(DateTime.now().millisecondsSinceEpoch);
