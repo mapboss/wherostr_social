@@ -58,7 +58,7 @@ class _DirectMessagesContainerState extends State<DirectMessagesContainer> {
 
   void initialize() async {
     final user = await NostrService.fetchUser(widget.pubkey);
-    NostrService.instance.fetchDMRelayList(widget.pubkey).then((v) {
+    user.fetchDMRelayList().then((v) {
       setState(() {
         _receiverRelayList = v;
       });
