@@ -308,6 +308,19 @@ class _ProfileState extends State<Profile> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (!_isMe &&
+                            _following?.contains(appState.me.pubkey) == true)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Chip(
+                                label: Text('Follows you'),
+                                labelPadding: EdgeInsets.all(0),
+                                visualDensity: VisualDensity.compact,
+                                labelStyle: themeData.textTheme.labelSmall,
+                              ),
+                            ],
+                          ),
                         Row(
                           children: [
                             InkWell(
