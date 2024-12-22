@@ -525,6 +525,7 @@ class _PostComposeState extends State<PostCompose> {
                             focusNode: _editorFocusNode,
                             controller: _editorController,
                             configurations: QuillEditorConfigurations(
+                              keyboardAppearance: themeData.brightness,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               customStyles: DefaultStyles(
                                 paragraph: DefaultTextBlockStyle(
