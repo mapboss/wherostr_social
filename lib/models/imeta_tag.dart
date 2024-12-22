@@ -44,7 +44,7 @@ class IMetaTag {
     );
   }
 
-  factory IMetaTag.fromNIP94(Map<String, dynamic> data) {
+  factory IMetaTag.fromNIP94Json(Map<String, dynamic> data) {
     return IMetaTag(
       url: data['url']?.toString().toLowerCase() ?? "",
       mimeType: data['m']?.toString().toLowerCase() ?? "",
@@ -58,6 +58,16 @@ class IMetaTag {
       size: SafeParser.parseInt(data['size']),
     );
   }
+
+  factory IMetaTag.fromNIP94(Map<String, dynamic> json) {
+    final nip94Tags = json['tags'] as List<dynamic>;
+    final Map<String, dynamic> nip94Json = {};
+    for (var tag in nip94Tags) {
+      nip94Json[tag[0]] = tag[1];
+    }
+    return IMetaTag.fromNIP94Json(nip94Json);
+  }
+
   factory IMetaTag.fromTag(List<String> tag) {
     try {
       if (tag.elementAtOrNull(0) != 'imeta') throw Exception('Invalid tag');
