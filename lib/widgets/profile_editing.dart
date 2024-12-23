@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:text_parser/text_parser.dart';
 import 'package:wherostr_social/constant.dart';
+import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/services/file.dart';
@@ -160,7 +161,8 @@ class _ProfileEditingState extends State<ProfileEditing> {
             withProgressBar: true,
             autoHide: false,
           );
-          final fileUrls = await FileService.uploadMultiple(files);
+          final keypairs = await AppSecret.read();
+          final fileUrls = await FileService.uploadMultiple(files, keypairs!);
           if (_pictureFile != null) {
             picture = fileUrls[0].url;
             setState(() {

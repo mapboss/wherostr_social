@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 import 'package:wherostr_social/models/app_notification.dart';
 import 'package:wherostr_social/models/app_secret.dart';

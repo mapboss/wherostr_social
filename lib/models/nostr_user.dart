@@ -471,7 +471,9 @@ class NostrUser {
     }
     final items = await NostrService.instance
         .fetchUserRelayList(pubkey, relays: _relayList);
-    _relayList = items;
+    if (items.isNotEmpty) {
+      _relayList = items;
+    }
     print('fetchRelayList: ${relayList.length}');
     return relayList;
   }
@@ -482,7 +484,9 @@ class NostrUser {
     }
     final items = await NostrService.instance
         .fetchDMRelayList(pubkey, relays: _relayList);
-    _dmRelayList = items;
+    if (items.isNotEmpty) {
+      _dmRelayList = items;
+    }
     print('fetchDMRelayList: ${dmRelayList.length}');
     return dmRelayList;
   }

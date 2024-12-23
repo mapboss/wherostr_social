@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:wherostr_social/constant.dart';
+import 'package:wherostr_social/models/app_secret.dart';
 import 'package:wherostr_social/models/app_states.dart';
 import 'package:wherostr_social/models/app_theme.dart';
 import 'package:wherostr_social/models/data_event.dart';
@@ -349,7 +350,8 @@ class _PostComposeState extends State<PostCompose> {
           withProgressBar: true,
           autoHide: false,
         );
-        final fileUrls = await FileService.uploadMultiple(files);
+        final keypairs = await AppSecret.read();
+        final fileUrls = await FileService.uploadMultiple(files, keypairs!);
         for (var index = 0; index < fileUrls.length; index++) {
           content =
               content.replaceAll(fileIds[index], '\n${fileUrls[index].url}\n');
@@ -525,6 +527,7 @@ class _PostComposeState extends State<PostCompose> {
                             focusNode: _editorFocusNode,
                             controller: _editorController,
                             configurations: QuillEditorConfigurations(
+                              keyboardAppearance: themeData.brightness,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               customStyles: DefaultStyles(
                                 paragraph: DefaultTextBlockStyle(
