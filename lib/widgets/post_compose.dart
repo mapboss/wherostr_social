@@ -220,12 +220,12 @@ class _PostComposeState extends State<PostCompose> {
           _addPhoto(file);
         } else if (AppUtils.isVideo(file.path)) {
           final size = await file.length();
-          if (size < 7000000) {
+          if (size < 50000000) {
             AppUtils.hideSnackBar();
             _addVideo(file);
           } else {
             AppUtils.showSnackBar(
-              text: 'Video size limit is 7MB.',
+              text: 'Video size limit is 50MB.',
               status: AppStatus.error,
             );
           }

@@ -67,6 +67,7 @@ class FileService {
         final imeta = IMetaTag.fromNIP94(jsonResponse['nip94_event']);
         return imeta;
       }
+      throw Exception('Failed to upload files');
     });
     final urls = await Future.wait(futures);
     return urls.whereType<IMetaTag>().toList();
