@@ -742,7 +742,9 @@ class _PostComposeState extends State<PostCompose> {
                               ),
                               const Spacer(),
                               FilledButton(
-                                onPressed: _isEmpty ? null : _handlePostPressed,
+                                onPressed: _isEmpty || _isLoading
+                                    ? null
+                                    : _handlePostPressed,
                                 child: const Text('Post'),
                               ),
                             ],
