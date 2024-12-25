@@ -29,7 +29,8 @@ class FileService {
   }
 
   static Future<List<IMetaTag>> uploadMultiple(
-      List<File> files, NostrKeyPairs keyPairs) async {
+      List<File> files, NostrKeyPairs? keyPairs) async {
+    keyPairs = keyPairs ?? NostrKeyPairs.generate();
     final nip96Request = http.MultipartRequest(
         'GET', Uri.parse('$mediaServer/.well-known/nostr/nip96.json'));
     final nip96Response =

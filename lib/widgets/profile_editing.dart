@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:change_case/change_case.dart';
+import 'package:dart_nostr/dart_nostr.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -161,8 +162,11 @@ class _ProfileEditingState extends State<ProfileEditing> {
             withProgressBar: true,
             autoHide: false,
           );
-          final keypairs = await AppSecret.read();
-          final fileUrls = await FileService.uploadMultiple(files, keypairs!);
+          late NostrKeyPairs? keypairs;
+          try {
+            keypairs = await AppSecret.read();
+          } catch (err) {}
+          final fileUrls = await FileService.uploadMultiple(files, keypairs);
           if (_pictureFile != null) {
             picture = fileUrls[0].url;
             setState(() {
