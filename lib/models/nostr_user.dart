@@ -110,7 +110,7 @@ class NostrUser {
   }
 
   Future<void> initInterestSets() async {
-    _interestSets = [];
+    _interestSets = ["siamstr", "nostr", "wherostr"];
     await setInterestSets(interestSets);
   }
 
