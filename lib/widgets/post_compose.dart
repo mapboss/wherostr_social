@@ -801,7 +801,7 @@ Future<String?> getFileLocation(File file) async {
   if (lngRef == 'W') {
     lngVal *= -1;
   }
-  return GeoHash.fromDecimalDegrees(lngVal, latVal).geohash;
+  return GeoHash.fromDecimalDegrees(lngVal, latVal, precision: 11).geohash;
 }
 
 class ImageEmbedBuilder extends EmbedBuilder {

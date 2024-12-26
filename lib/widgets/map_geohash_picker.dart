@@ -68,7 +68,7 @@ class _MapGeohashPickerState extends State<MapGeohashPicker> {
       geohash = GeoHash.fromDecimalDegrees(
         coordinates.longitude,
         coordinates.latitude,
-        precision: 9,
+        precision: 11,
       ).geohash;
       placemark = Placemark(
           name:
