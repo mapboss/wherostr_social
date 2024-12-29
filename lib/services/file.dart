@@ -39,9 +39,15 @@ class FileService {
       throw Exception('Failed to upload files');
     }
     final server = Nip96.decodeServerAdaptation(nip96Response.body);
-    final httpAuth = Nip98.base64Event(server.apiURL!, 'POST', keyPairs);
+    var apiUrl = '';
+    if (server.apiURL!.startsWith('/')) {
+      apiUrl = '$mediaServer${server.apiURL}';
+    } else {
+      apiUrl = server.apiURL!;
+    }
+    final httpAuth = Nip98.base64Event(apiUrl, 'POST', keyPairs);
     final futures = files.map((file) async {
-      final request = http.MultipartRequest('POST', Uri.parse(server.apiURL!));
+      final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
       request.headers['Authorization'] = 'Nostr $httpAuth';
       try {
         final image = await img.decodeImageFile(file.path);
@@ -54,16 +60,26 @@ class FileService {
           resizedImage = img.copyResize(image, width: 1920);
         }
         if (resizedImage != null) {
+          // file: REQUIRED the file to upload
+          // caption: RECOMMENDED loose description;
+          // expiration: UNIX timestamp in seconds. Empty string if file should be stored forever. The server isn't required to honor this.
+          // size: File byte size. This is just a value the server can use to reject early if the file size exceeds the server limits.
+          // alt: RECOMMENDED strict description text for visibility-impaired users.
+          // media_type: "avatar" or "banner". Informs the server if the file will be used as an avatar or banner. If absent, the server will interpret it as a normal upload, without special treatment.
+          // content_type: mime type such as "image/jpeg". This is just a value the server can use to reject early if the mime type isn't supported.
+          // no_transform: "true" asks server not to transform the file and serve the uploaded file as is, may be rejected.
           request.files.add(http.MultipartFile.fromBytes(
             'file',
             img.encodePng(resizedImage),
             filename: 'resized_image.png',
           ));
+        } else {
+          request.files
+              .add(await http.MultipartFile.fromPath('file', file.path));
         }
       } catch (error) {}
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
       final response = await http.Response.fromStream(await request.send());
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
         final imeta = IMetaTag.fromNIP94(jsonResponse['nip94_event']);
         return imeta;
