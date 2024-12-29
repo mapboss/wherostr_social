@@ -31,8 +31,8 @@ class IMetaTag {
 
   factory IMetaTag.fromNostrBuildAPI(Map<String, dynamic> data) {
     return IMetaTag(
-      url: data['url']?.toString().toLowerCase() ?? "",
-      mimeType: data['mime']?.toString().toLowerCase() ?? "",
+      url: data['url']?.toString() ?? "",
+      mimeType: data['mime']?.toString() ?? "",
       blurhash: SafeParser.parseString(data['blurhash']),
       dim: SafeParser.parseString(data['dimensionsString']),
       alt: SafeParser.parseString(data['name']),
@@ -46,8 +46,8 @@ class IMetaTag {
 
   factory IMetaTag.fromNIP94Json(Map<String, dynamic> data) {
     return IMetaTag(
-      url: data['url']?.toString().toLowerCase() ?? "",
-      mimeType: data['m']?.toString().toLowerCase() ?? "",
+      url: data['url']?.toString() ?? "",
+      mimeType: data['m']?.toString() ?? "",
       blurhash: SafeParser.parseString(data['blurhash']),
       dim: SafeParser.parseString(data['dim']),
       alt: SafeParser.parseString(data['alt']),
