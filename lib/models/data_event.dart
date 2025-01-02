@@ -129,7 +129,7 @@ class DataEvent extends NostrEvent {
       if (unix == null) {
         return createdAt;
       }
-      return DateTime.fromMillisecondsSinceEpoch(unix);
+      return DateTime.fromMillisecondsSinceEpoch(unix * 1000);
     }
     return createdAt;
   }
